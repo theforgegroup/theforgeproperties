@@ -9,6 +9,7 @@ export enum PropertyType {
 export enum ListingStatus {
   FOR_SALE = 'For Sale',
   FOR_RENT = 'For Rent',
+  SHORT_LET = 'Short Let',
   SOLD = 'Sold'
 }
 

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, CheckCircle } from 'lucide-react';
+import { 
+  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, CheckCircle, FolderOpen 
+} from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Property, PropertyType, ListingStatus } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -12,6 +14,9 @@ export const AdminPropertyForm: React.FC = () => {
   const isEditing = !!id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Ref for hidden file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Property>({
     id: '',
@@ -46,7 +51,7 @@ export const AdminPropertyForm: React.FC = () => {
         setFeaturesInput(property.features.join(', '));
       }
     } else if (!isEditing) {
-      // Only generate ID for new properties if we don't have one yet
+      // Generate ID for new properties if missing
       setFormData(prev => prev.id ? prev : ({ ...prev, id: Date.now().toString() }));
     }
   }, [id, isEditing, getProperty]);
@@ -71,7 +76,8 @@ export const AdminPropertyForm: React.FC = () => {
     }));
   };
 
-  const addImage = () => {
+  // Add image from URL
+  const addImageUrl = () => {
     if (newImageUrl.trim()) {
       setFormData(prev => ({
         ...prev,
@@ -79,6 +85,23 @@ export const AdminPropertyForm: React.FC = () => {
       }));
       setNewImageUrl('');
     }
+  };
+
+  // Handle file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, base64String]
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeImage = (index: number) => {
@@ -91,15 +114,13 @@ export const AdminPropertyForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Execute save operation immediately to persist data to localStorage
+
     if (isEditing) {
       updateProperty(formData);
     } else {
       addProperty(formData);
     }
 
-    // Show success state briefly before navigating
     setIsSuccess(true);
     setTimeout(() => {
       navigate('/admin');
@@ -125,7 +146,7 @@ export const AdminPropertyForm: React.FC = () => {
         {/* Form Card */}
         <div className="bg-white rounded shadow-xl border-t-4 border-forge-gold overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-8">
-            
+
             {/* Basic Info */}
             <div className="space-y-6">
               <div>
@@ -220,6 +241,15 @@ export const AdminPropertyForm: React.FC = () => {
               </div>
             </div>
 
+            {/* Hidden File Input */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*"
+              onChange={handleFileUpload} 
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Area (Sq Ft)</label>
@@ -278,14 +308,22 @@ export const AdminPropertyForm: React.FC = () => {
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   className="flex-1 bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
-                  placeholder="Paste image URL here..."
+                  placeholder="Paste URL or click upload..."
                 />
                 <button 
                   type="button" 
-                  onClick={addImage}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-slate-100 text-slate-600 px-4 border border-slate-200 hover:bg-slate-200 transition-colors rounded-sm"
+                  title="Upload from computer"
+                >
+                  <FolderOpen size={18} />
+                </button>
+                <button 
+                  type="button" 
+                  onClick={addImageUrl}
                   className="bg-slate-200 text-slate-600 px-6 font-bold uppercase text-xs tracking-wider hover:bg-slate-300 transition-colors rounded-sm flex items-center gap-2"
                 >
-                  <Upload size={16} /> Add
+                  <Upload size={16} /> Add URL
                 </button>
               </div>
 
@@ -304,10 +342,14 @@ export const AdminPropertyForm: React.FC = () => {
                   </div>
                 ))}
                 {formData.images.length === 0 && (
-                   <div className="col-span-2 md:col-span-4 h-32 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded text-slate-400">
-                     <ImageIcon size={32} className="mb-2" />
-                     <span className="text-xs">No images added yet</span>
-                   </div>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="col-span-2 md:col-span-4 h-32 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded text-slate-400 cursor-pointer hover:bg-slate-100 hover:border-forge-gold transition-all"
+                  >
+                    <ImageIcon size={32} className="mb-2" />
+                    <span className="text-xs font-medium">No images added yet</span>
+                    <span className="text-[10px] uppercase tracking-wider mt-1 text-forge-gold font-bold">Click to Upload</span>
+                  </div>
                 )}
               </div>
             </div>
