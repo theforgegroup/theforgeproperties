@@ -47,10 +47,23 @@ export interface Lead {
   type: 'General Inquiry' | 'Viewing Request' | 'Offer';
 }
 
+export interface Subscriber {
+  id: string;
+  email: string;
+  date: string;
+}
+
+export interface TeamMember {
+  name: string;
+  role: string;
+  image: string;
+}
+
 export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  teamMembers: TeamMember[];
 }
 
 export interface FilterCriteria {

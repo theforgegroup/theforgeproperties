@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MapPin, Phone, Mail } from 'lucide-react';
+import { Instagram, MapPin, Phone, Mail, Check } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 
 // Custom TikTok Icon
@@ -18,7 +18,19 @@ const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: 
 );
 
 export const Footer: React.FC = () => {
-  const { settings } = useProperties();
+  const { settings, addSubscriber } = useProperties();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email && email.includes('@')) {
+      addSubscriber(email);
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 5000);
+    }
+  };
 
   return (
     <footer className="bg-forge-dark text-white pt-16 pb-8 border-t border-slate-800">
@@ -93,16 +105,25 @@ export const Footer: React.FC = () => {
           <div className="col-span-1">
             <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Newsletter</h3>
             <p className="text-slate-400 text-sm mb-4">Subscribe for exclusive market insights and off-market opportunities.</p>
-            <form className="flex flex-col gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="bg-slate-800 border border-slate-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-forge-gold transition-colors"
-              />
-              <button className="bg-forge-gold text-forge-navy font-bold uppercase text-xs tracking-widest py-3 hover:bg-white transition-colors">
-                Subscribe
-              </button>
-            </form>
+            {subscribed ? (
+              <div className="bg-green-900/30 border border-green-800 p-4 rounded text-green-400 text-sm flex items-center gap-2">
+                <Check size={16} /> Subscribed Successfully
+              </div>
+            ) : (
+              <form className="flex flex-col gap-2" onSubmit={handleSubscribe}>
+                <input 
+                  type="email" 
+                  required
+                  placeholder="Your email address" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-forge-gold transition-colors"
+                />
+                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-xs tracking-widest py-3 hover:bg-white transition-colors">
+                  Subscribe
+                </button>
+              </form>
+            )}
           </div>
         </div>
 

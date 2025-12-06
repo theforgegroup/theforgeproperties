@@ -1,6 +1,13 @@
 import React from 'react';
+import { User } from 'lucide-react';
+import { useProperties } from '../context/PropertyContext';
 
 export const About: React.FC = () => {
+  const { settings } = useProperties();
+
+  // Fallback if settings haven't loaded yet or are empty, though context ensures default
+  const teamMembers = settings.teamMembers || [];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -62,19 +69,24 @@ export const About: React.FC = () => {
           <h2 className="text-4xl font-serif text-forge-navy mb-16">The Leadership Team</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {[
-              { name: "Alexander Forge", role: "Managing Partner", img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop" },
-              { name: "Victoria Sterling", role: "Head of Sales", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop" },
-              { name: "Michael Adebayo", role: "Investment Director", img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800&auto=format&fit=crop" }
-            ].map((member, i) => (
+            {teamMembers.map((member, i) => (
               <div key={i} className="group cursor-pointer">
-                <div className="relative w-full aspect-[3/4] mb-6 overflow-hidden bg-slate-100">
-                   <div className="absolute inset-0 bg-forge-navy/0 group-hover:bg-forge-navy/20 transition-all duration-500 z-10"></div>
-                  <img 
-                    src={member.img} 
-                    alt={member.name} 
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
-                  />
+                <div className="relative w-full aspect-[3/4] mb-6 overflow-hidden bg-slate-100 flex items-center justify-center shadow-md border border-slate-100">
+                   {member.image ? (
+                     <>
+                       <div className="absolute inset-0 bg-forge-navy/0 group-hover:bg-forge-navy/20 transition-all duration-500 z-10"></div>
+                       <img 
+                         src={member.image} 
+                         alt={member.name} 
+                         className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                       />
+                     </>
+                   ) : (
+                     <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400 group-hover:bg-slate-300 transition-colors">
+                       <User size={64} strokeWidth={1} className="text-forge-gold mb-2" />
+                       <span className="text-[10px] uppercase tracking-widest">Image Coming Soon</span>
+                     </div>
+                   )}
                 </div>
                 <h3 className="text-2xl font-serif text-forge-navy group-hover:text-forge-gold transition-colors">{member.name}</h3>
                 <p className="text-slate-500 text-xs uppercase tracking-widest font-bold mt-1">{member.role}</p>

@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Mail, Phone, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Mail, Phone, MapPin, Upload, X, User } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { SiteSettings } from '../types';
+import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 
 export const AdminSettings: React.FC = () => {
   const { settings, updateSettings } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
   const [message, setMessage] = useState('');
+  
+  // Refs for file inputs array
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Sync if settings change externally
   useEffect(() => {
@@ -19,6 +22,28 @@ export const AdminSettings: React.FC = () => {
     updateSettings(formData);
     setMessage('Settings updated successfully!');
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
+    const updatedMembers = [...formData.teamMembers];
+    updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+    setFormData({ ...formData, teamMembers: updatedMembers });
+  };
+
+  const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        handleMemberChange(index, 'image', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeMemberImage = (index: number) => {
+    handleMemberChange(index, 'image', '');
   };
 
   return (
@@ -33,13 +58,15 @@ export const AdminSettings: React.FC = () => {
         )}
 
         <div className="bg-white rounded shadow-xl border-t-4 border-forge-gold overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-8">
-            <div className="pb-6 border-b border-slate-100">
-               <h3 className="font-serif text-xl text-forge-navy mb-2">Contact Information</h3>
-               <p className="text-slate-500 text-sm">These details are displayed in the website footer and contact page.</p>
-            </div>
-
+          <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
+            
+            {/* Contact Info Section */}
             <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100">
+                 <h3 className="font-serif text-xl text-forge-navy mb-1">Contact Information</h3>
+                 <p className="text-slate-500 text-sm">Update your public contact details.</p>
+              </div>
+
               <div>
                 <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                   <Mail size={14} /> Official Email Address
@@ -80,12 +107,88 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
+            {/* Leadership Team Section */}
+            <div className="space-y-8">
+              <div className="pb-4 border-b border-slate-100">
+                 <h3 className="font-serif text-xl text-forge-navy mb-1">Leadership Team</h3>
+                 <p className="text-slate-500 text-sm">Manage profiles and photos for the 'About Us' page.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-8">
+                {formData.teamMembers && formData.teamMembers.map((member, index) => (
+                  <div key={index} className="bg-slate-50 p-6 border border-slate-200 rounded-lg flex flex-col md:flex-row gap-6">
+                    {/* Image Area */}
+                    <div className="w-full md:w-32 flex-shrink-0">
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Photo</label>
+                       <div className="relative w-32 h-40 bg-slate-200 mx-auto overflow-hidden rounded border border-slate-300">
+                          {member.image ? (
+                            <>
+                              <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeMemberImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                                title="Remove Image"
+                              >
+                                <X size={12} />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                               <User size={32} />
+                            </div>
+                          )}
+                       </div>
+                       
+                       <input 
+                          type="file" 
+                          ref={(el) => { fileInputRefs.current[index] = el; }}
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(index, e)} 
+                        />
+                       
+                       <button
+                         type="button"
+                         onClick={() => fileInputRefs.current[index]?.click()}
+                         className="w-full mt-2 bg-white border border-slate-300 text-slate-600 py-2 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-100 hover:text-forge-gold transition-colors flex items-center justify-center gap-1"
+                       >
+                         <Upload size={12} /> Upload
+                       </button>
+                    </div>
+
+                    {/* Details Area */}
+                    <div className="flex-grow space-y-4">
+                       <div>
+                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Name</label>
+                         <input
+                           type="text"
+                           value={member.name}
+                           onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+                           className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                         />
+                       </div>
+                       <div>
+                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Role / Title</label>
+                         <input
+                           type="text"
+                           value={member.role}
+                           onChange={(e) => handleMemberChange(index, 'role', e.target.value)}
+                           className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                         />
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <button
                 type="submit"
                 className="bg-forge-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-lg transition-all rounded-sm flex items-center gap-2"
               >
-                <Save size={16} /> Save Changes
+                <Save size={16} /> Save All Changes
               </button>
             </div>
           </form>
