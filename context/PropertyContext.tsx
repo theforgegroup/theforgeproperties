@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Property, Lead, SiteSettings } from '../types';
+import { MOCK_LEADS } from '../services/mockData';
 
 interface PropertyContextType {
   properties: Property[];
@@ -37,15 +38,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (storedProps) {
       setProperties(JSON.parse(storedProps));
     } else {
-      // Start Empty - No Mocks
+      // Initialize with empty array for a clean state
       localStorage.setItem('theforge_properties', JSON.stringify([]));
+      setProperties([]);
     }
 
     if (storedLeads) {
       setLeads(JSON.parse(storedLeads));
     } else {
-      // Start Empty - No Mocks
-      localStorage.setItem('theforge_leads', JSON.stringify([]));
+      // Seed with Mock Leads if empty (optional, keeping for CRM demo purposes)
+      localStorage.setItem('theforge_leads', JSON.stringify(MOCK_LEADS));
+      setLeads(MOCK_LEADS);
     }
 
     if (storedSettings) {
@@ -74,6 +77,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     localStorage.setItem('theforge_properties', JSON.stringify(newProperties));
     setProperties(newProperties);
+    // Dispatch custom event for same-tab updates if needed elsewhere, 
+    // although setState above handles the main re-render.
     window.dispatchEvent(new Event('local-storage'));
   };
 

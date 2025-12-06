@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
@@ -27,21 +27,6 @@ const ScrollToTop = () => {
   }, [pathname]);
 
   return null;
-};
-
-// Robust Helper to handle ANY hosting environment (Preview, Vercel, Localhost)
-const getBasename = () => {
-  const { pathname, hostname } = window.location;
-  
-  // 1. Production (Vercel) or Localhost -> Root
-  if (hostname.includes('vercel.app') || hostname.includes('localhost')) {
-    return '/';
-  }
-
-  // 2. Preview Environment Check
-  // If usage involves subpaths (like AI Studio previews), handle it here.
-  // For Vercel, we return '/'
-  return '/';
 };
 
 // Layout wrapper to conditionally render public UI
@@ -129,12 +114,10 @@ const AppLayout: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const basename = getBasename();
-
   return (
     <PropertyProvider>
       <AuthProvider>
-        <Router basename={basename}>
+        <Router>
           <ScrollToTop />
           <AppLayout />
         </Router>

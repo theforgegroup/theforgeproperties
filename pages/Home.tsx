@@ -6,8 +6,15 @@ import { useProperties } from '../context/PropertyContext';
 
 export const Home: React.FC = () => {
   const { properties } = useProperties();
-  // Increased slice to 4 to show one more property card
-  const featuredProperties = properties.filter(p => p.featured).slice(0, 4);
+  
+  // Smart Display Logic:
+  // 1. Prioritize specifically "Featured" properties.
+  // 2. If no featured properties exist, fallback to the 4 most recent properties.
+  // This ensures the homepage is never empty as soon as a listing is added.
+  const featuredOnly = properties.filter(p => p.featured);
+  const displayProperties = featuredOnly.length > 0 
+    ? featuredOnly.slice(0, 4) 
+    : properties.slice(0, 4);
 
   return (
     <div className="min-h-screen">
@@ -65,7 +72,9 @@ export const Home: React.FC = () => {
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-end mb-12">
             <div>
-              <h2 className="text-3xl md:text-4xl font-serif text-forge-navy mb-2">Featured Collection</h2>
+              <h2 className="text-3xl md:text-4xl font-serif text-forge-navy mb-2">
+                {featuredOnly.length > 0 ? 'Featured Collection' : 'Latest Additions'}
+              </h2>
               <p className="text-slate-500">Handpicked properties for the discerning buyer.</p>
             </div>
             <Link to="/listings" className="hidden md:flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors">
@@ -73,12 +82,19 @@ export const Home: React.FC = () => {
             </Link>
           </div>
           
-          {/* Updated grid to support 4 columns for large screens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProperties.map(property => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          {/* Grid */}
+          {displayProperties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {displayProperties.map(property => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white border border-dashed border-slate-300 rounded-sm">
+              <h3 className="text-xl font-serif text-slate-400 mb-2">Portfolio Update in Progress</h3>
+              <p className="text-slate-500 text-sm">Our exclusive listings are currently being curated. Check back shortly.</p>
+            </div>
+          )}
           
           <div className="mt-12 text-center md:hidden">
             <Link to="/listings" className="inline-block border-b-2 border-forge-gold pb-1 text-forge-navy font-bold uppercase tracking-widest text-xs">
