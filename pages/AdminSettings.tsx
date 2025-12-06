@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Mail, Phone, MapPin, Upload, X, User } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, X, User, Loader2, AlertCircle } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -8,31 +8,89 @@ export const AdminSettings: React.FC = () => {
   const { settings, updateSettings } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   
   // Refs for file inputs array
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Sync if settings change externally (e.g. initial load from LocalStorage)
   useEffect(() => {
-    // Only update if we don't have a message showing (avoid overwriting while user is working if background sync happens)
-    if (!message) {
+    // Only update if we don't have a message showing (avoid overwriting while user is working)
+    if (!message && !isSaving) {
       setFormData(settings);
     }
-  }, [settings, message]);
+  }, [settings, message, isSaving]);
+
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_WIDTH = 600; // Resize to max 600px width to save space
+          const MAX_HEIGHT = 600;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG at 0.7 quality
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = reject;
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings(formData);
-    
-    // Scroll to top to show success message
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    setMessage('Settings updated successfully!');
-    setTimeout(() => setMessage(''), 3000);
+    setIsSaving(true);
+    setError('');
+    setMessage('');
+
+    try {
+      updateSettings(formData);
+      
+      // Scroll to top to show success message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      setMessage('Settings updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      console.error("Failed to save settings:", err);
+      // Check for quota exceeded error
+      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+        setError('Storage full! The images are too large. Please remove some images or use smaller files.');
+      } else {
+        setError('Failed to save settings. Please try again.');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
-    // Safety check if teamMembers is undefined
     const currentMembers = formData.teamMembers || [];
     const updatedMembers = [...currentMembers];
     
@@ -42,15 +100,17 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
-  const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      try {
+        // Compress image before setting state
+        const base64String = await resizeImage(file);
         handleMemberChange(index, 'image', base64String);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("Error processing image:", err);
+        setError('Failed to process image. Please try a valid image file.');
+      }
     }
   };
 
@@ -64,8 +124,14 @@ export const AdminSettings: React.FC = () => {
         <h1 className="text-3xl font-serif text-forge-navy mb-8">Site Configuration</h1>
 
         {message && (
-          <div className="bg-green-50 text-green-700 p-4 rounded mb-6 text-sm font-bold border border-green-200 shadow-sm animate-fade-in">
-            {message}
+          <div className="bg-green-50 text-green-700 p-4 rounded mb-6 text-sm font-bold border border-green-200 shadow-sm animate-fade-in flex items-center gap-2">
+            <User size={16} /> {message}
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm font-bold border border-red-200 shadow-sm animate-fade-in flex items-center gap-2">
+            <AlertCircle size={16} /> {error}
           </div>
         )}
 
@@ -198,9 +264,11 @@ export const AdminSettings: React.FC = () => {
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <button
                 type="submit"
-                className="bg-forge-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-lg transition-all rounded-sm flex items-center gap-2"
+                disabled={isSaving}
+                className={`bg-forge-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-lg transition-all rounded-sm flex items-center gap-2 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <Save size={16} /> Save All Changes
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} 
+                {isSaving ? 'Saving...' : 'Save All Changes'}
               </button>
             </div>
           </form>
