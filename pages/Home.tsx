@@ -30,7 +30,7 @@ export const Home: React.FC = () => {
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center">
-          <span className="text-forge-gold text-sm md:text-base uppercase tracking-[0.4em] mb-4 block animate-fade-in-up font-bold">
+          <span className="text-forge-gold text-xs md:text-base uppercase tracking-[0.4em] mb-4 block animate-fade-in-up font-bold">
             Defined by Excellence
           </span>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif text-white font-bold leading-tight mb-8 drop-shadow-2xl">
@@ -39,13 +39,13 @@ export const Home: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <Link 
               to="/listings" 
-              className="bg-forge-gold text-forge-navy text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white transition-colors duration-300 w-64 md:w-auto shadow-lg"
+              className="bg-forge-gold text-forge-navy text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full md:w-auto shadow-lg"
             >
               View Listings
             </Link>
             <Link 
               to="/contact" 
-              className="border-2 border-white text-white text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white hover:text-forge-navy transition-colors duration-300 w-64 md:w-auto backdrop-blur-sm"
+              className="border-2 border-white text-white text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white hover:text-forge-navy transition-colors duration-300 w-full md:w-auto backdrop-blur-sm"
             >
               Request Consultation
             </Link>
@@ -54,7 +54,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6 text-center max-w-4xl">
           <h2 className="text-3xl md:text-4xl font-serif text-forge-navy mb-6">A Legacy of Distinction</h2>
           <div className="w-24 h-1 bg-forge-gold mx-auto mb-8"></div>
@@ -68,7 +68,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Featured Listings */}
-      <section className="py-24 bg-slate-50 border-t border-slate-200">
+      <section className="py-16 md:py-24 bg-slate-50 border-t border-slate-200">
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-end mb-12">
             <div>
@@ -105,9 +105,9 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-24 bg-forge-navy text-white">
+      <section className="py-16 md:py-24 bg-forge-navy text-white">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
             <div className="p-8 border border-slate-700/50 hover:border-forge-gold transition-all duration-500 bg-gradient-to-br from-forge-dark to-transparent hover:bg-slate-800">
               <Shield className="w-12 h-12 text-forge-gold mx-auto mb-6" />
               <h3 className="text-xl font-serif mb-4">Unwavering Integrity</h3>

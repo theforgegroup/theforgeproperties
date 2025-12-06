@@ -28,7 +28,7 @@ export const Services: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
-      <div className="relative pt-40 pb-32 bg-slate-900 overflow-hidden">
+      <div className="relative pt-32 pb-24 md:pt-40 md:pb-32 bg-slate-900 overflow-hidden">
         <img 
           src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" 
           className="absolute inset-0 w-full h-full object-cover opacity-20"
@@ -36,7 +36,7 @@ export const Services: React.FC = () => {
         />
         <div className="relative z-10 container mx-auto px-6 text-center">
            <span className="text-forge-gold text-xs uppercase tracking-[0.4em] font-bold mb-4 block animate-fade-in-up">What We Do</span>
-           <h1 className="text-5xl md:text-6xl font-serif text-white font-bold mb-6">The Art of Service</h1>
+           <h1 className="text-4xl md:text-6xl font-serif text-white font-bold mb-6">The Art of Service</h1>
            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Comprehensive real estate solutions tailored to your unique needs.</p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export const Services: React.FC = () => {
         {services.map((service, index) => (
           <div key={index} className={`flex flex-col md:flex-row ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
             {/* Image Side */}
-            <div className="md:w-1/2 h-80 md:h-auto overflow-hidden group">
+            <div className="md:w-1/2 h-64 md:h-auto overflow-hidden group">
               <img 
                 src={service.image} 
                 alt={service.title} 
@@ -54,9 +54,9 @@ export const Services: React.FC = () => {
             </div>
             
             {/* Content Side */}
-            <div className="md:w-1/2 p-12 md:p-20 flex flex-col justify-center bg-white">
-              <span className="text-forge-gold text-6xl font-serif opacity-20 mb-4 -ml-4">0{index + 1}</span>
-              <h3 className="text-3xl font-serif text-forge-navy mb-6">{service.title}</h3>
+            <div className="md:w-1/2 p-8 md:p-20 flex flex-col justify-center bg-white">
+              <span className="text-forge-gold text-5xl md:text-6xl font-serif opacity-20 mb-4 -ml-4">0{index + 1}</span>
+              <h3 className="text-2xl md:text-3xl font-serif text-forge-navy mb-6">{service.title}</h3>
               <p className="text-slate-600 leading-relaxed text-lg mb-8">{service.desc}</p>
               <button className="flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors self-start group">
                 Learn More <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />

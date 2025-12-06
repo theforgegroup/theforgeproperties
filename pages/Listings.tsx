@@ -2,12 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../context/PropertyContext';
 import { FilterCriteria, PropertyType, Property } from '../types';
-import { FilterX } from 'lucide-react';
+import { FilterX, Filter } from 'lucide-react';
 
 export const Listings: React.FC = () => {
   const { properties } = useProperties();
   const [filters, setFilters] = useState<FilterCriteria>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Determine if active filters exist
   const hasFilters = Object.keys(filters).length > 0 || searchTerm.length > 0;
@@ -41,19 +42,29 @@ export const Listings: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
       {/* Header */}
-      <div className="bg-forge-navy text-white py-16">
-        <div className="container mx-auto px-6 text-center">
+      <div className="bg-forge-navy text-white py-12 md:py-16 px-4">
+        <div className="container mx-auto px-4 md:px-6 text-center">
            <span className="text-forge-gold text-xs uppercase tracking-[0.3em] mb-2 block">Our Portfolio</span>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold">Exclusive Listings</h1>
+          <h1 className="text-3xl md:text-5xl font-serif font-bold">Exclusive Listings</h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-12 md:py-24">
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
           
           {/* Sidebar Filters */}
           <div className="lg:w-1/4">
-            <div className="bg-white p-6 shadow-sm border border-slate-200 sticky top-24">
+            {/* Mobile Filter Toggle */}
+            <div className="lg:hidden mb-4">
+              <button 
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full py-3 bg-white border border-slate-300 flex items-center justify-center gap-2 text-forge-navy font-bold uppercase tracking-wider text-xs shadow-sm"
+              >
+                <Filter size={16} /> {showFilters ? 'Hide Filters' : 'Show Filters / Search'}
+              </button>
+            </div>
+
+            <div className={`${showFilters ? 'block' : 'hidden'} lg:block bg-white p-6 shadow-sm border border-slate-200 sticky top-24 transition-all duration-300`}>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-serif text-lg text-forge-navy">Refine Search</h3>
                 {hasFilters && (
@@ -118,9 +129,9 @@ export const Listings: React.FC = () => {
 
           {/* Grid */}
           <div className="lg:w-3/4">
-             <div className="mb-6 flex justify-between items-center text-slate-500 text-sm">
+             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center text-slate-500 text-sm gap-2 sm:gap-0">
                 <span>Showing {filteredProperties.length} properties</span>
-                <select className="bg-transparent border-none focus:ring-0 cursor-pointer hover:text-forge-navy">
+                <select className="bg-transparent border-none focus:ring-0 cursor-pointer hover:text-forge-navy p-0">
                   <option>Sort by: Featured</option>
                   <option>Price: High to Low</option>
                   <option>Price: Low to High</option>

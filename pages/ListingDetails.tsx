@@ -64,19 +64,19 @@ export const ListingDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
-      {/* Gallery Header */}
-      <div className="h-[60vh] bg-slate-900 relative">
+      {/* Gallery Header - Responsive Height */}
+      <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img 
           src={property.images[activeImage]} 
           alt={property.title} 
           className="w-full h-full object-cover opacity-90"
         />
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent overflow-x-auto">
           {property.images.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setActiveImage(idx)}
-              className={`w-20 h-14 border-2 transition-all ${activeImage === idx ? 'border-forge-gold opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'}`}
+              className={`w-16 h-12 md:w-20 md:h-14 border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-forge-gold opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'}`}
             >
               <img src={img} className="w-full h-full object-cover" alt="thumbnail" />
             </button>
@@ -84,21 +84,21 @@ export const ListingDetails: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12">
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Main Content */}
           <div className="lg:w-2/3">
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
               <div>
                 <span className="text-forge-gold text-xs font-bold uppercase tracking-widest mb-2 block">{property.type}</span>
-                <h1 className="text-3xl md:text-4xl font-serif text-forge-navy font-bold mb-2">{property.title}</h1>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-forge-navy font-bold mb-2 leading-tight">{property.title}</h1>
                 <div className="flex items-center text-slate-500">
-                  <MapPin size={18} className="mr-2 text-forge-gold" />
+                  <MapPin size={18} className="mr-2 text-forge-gold shrink-0" />
                   {property.location}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-3xl text-forge-navy font-light">
+              <div className="text-left md:text-right">
+                <div className="text-2xl md:text-3xl text-forge-navy font-light">
                   ₦{property.price.toLocaleString()}
                 </div>
                 <div className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 mt-2 uppercase tracking-wide font-bold rounded">
@@ -107,32 +107,32 @@ export const ListingDetails: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600">
-               <div className="flex items-center gap-2">
-                 <Bed className="text-forge-gold" />
-                 <span className="font-bold text-forge-navy">{property.bedrooms}</span> Bedrooms
+            <div className="flex gap-4 md:gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600 overflow-x-auto">
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Bed className="text-forge-gold" size={20} />
+                 <span className="font-bold text-forge-navy">{property.bedrooms}</span> Beds
                </div>
-               <div className="flex items-center gap-2">
-                 <Bath className="text-forge-gold" />
-                 <span className="font-bold text-forge-navy">{property.bathrooms}</span> Bathrooms
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Bath className="text-forge-gold" size={20} />
+                 <span className="font-bold text-forge-navy">{property.bathrooms}</span> Baths
                </div>
-               <div className="flex items-center gap-2">
-                 <Move className="text-forge-gold" />
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Move className="text-forge-gold" size={20} />
                  <span className="font-bold text-forge-navy">{property.areaSqFt.toLocaleString()}</span> Sq Ft
                </div>
             </div>
 
             <div className="mb-12">
               <h3 className="text-xl font-serif text-forge-navy mb-4">Description</h3>
-              <p className="text-slate-600 leading-relaxed text-lg">{property.description}</p>
+              <p className="text-slate-600 leading-relaxed text-base md:text-lg">{property.description}</p>
             </div>
 
             <div className="mb-12">
               <h3 className="text-xl font-serif text-forge-navy mb-6">Key Features</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {property.features.map(feature => (
                   <div key={feature} className="flex items-center gap-3 text-slate-600">
-                    <CheckCircle size={16} className="text-forge-gold" />
+                    <CheckCircle size={16} className="text-forge-gold shrink-0" />
                     <span>{feature}</span>
                   </div>
                 ))}
@@ -152,7 +152,7 @@ export const ListingDetails: React.FC = () => {
 
           {/* Sidebar Form */}
           <div className="lg:w-1/3">
-             <div className="bg-white p-8 shadow-xl border-t-4 border-forge-gold sticky top-24">
+             <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
                <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
                  {agentImage ? (
                    <img src={agentImage} alt={agentName} className="w-16 h-16 rounded-full object-cover border border-slate-200" />
@@ -163,7 +163,7 @@ export const ListingDetails: React.FC = () => {
                  )}
                  <div>
                    <p className="text-slate-400 text-xs uppercase tracking-wider">Listing Agent</p>
-                   <h4 className="font-serif text-lg text-forge-navy">{agentName}</h4>
+                   <h4 className="font-serif text-lg text-forge-navy leading-tight mb-1">{agentName}</h4>
                    <p className="text-forge-gold text-sm font-bold">{agentPhone}</p>
                  </div>
                </div>
@@ -171,13 +171,13 @@ export const ListingDetails: React.FC = () => {
                <div className="flex gap-2 mb-6">
                  <button 
                   onClick={() => setFormMode('viewing')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
+                  className={`flex-1 py-3 md:py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
                  >
                    Viewing
                  </button>
                  <button 
                   onClick={() => setFormMode('offer')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
+                  className={`flex-1 py-3 md:py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
                  >
                    Make Offer
                  </button>
