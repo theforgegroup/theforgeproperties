@@ -139,14 +139,27 @@ export const ListingDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Map Placeholder */}
+            {/* Google Maps Integration */}
             <div className="mb-12">
               <h3 className="text-xl font-serif text-forge-navy mb-4">Location</h3>
-              <div className="bg-slate-200 h-64 w-full flex items-center justify-center text-slate-400">
-                <span className="flex items-center gap-2">
-                  <MapPin /> Map Integration Placeholder
-                </span>
+              <div className="bg-slate-200 h-96 w-full rounded-sm overflow-hidden border border-slate-200 shadow-inner relative group">
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  frameBorder="0" 
+                  scrolling="no" 
+                  marginHeight={0} 
+                  marginWidth={0} 
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                  className="filter grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
+                  title={property.title}
+                ></iframe>
+                {/* Overlay to improve scroll UX on mobile (prevents getting stuck in map while scrolling page) */}
+                <div className="absolute inset-0 bg-transparent pointer-events-none border-4 border-slate-100/50"></div>
               </div>
+              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                <MapPin size={12} /> {property.location}
+              </p>
             </div>
           </div>
 
