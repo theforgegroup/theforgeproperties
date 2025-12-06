@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, CheckCircle, FolderOpen 
+  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, CheckCircle, FolderOpen, AlertCircle
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Property, PropertyType, ListingStatus } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
+import { resizeImage } from '../utils/imageUtils';
 
 export const AdminPropertyForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ export const AdminPropertyForm: React.FC = () => {
   const isEditing = !!id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   // Ref for hidden file input
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,19 +89,20 @@ export const AdminPropertyForm: React.FC = () => {
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file upload with Compression
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      try {
+        const base64String = await resizeImage(file);
         setFormData(prev => ({
           ...prev,
           images: [...prev.images, base64String]
         }));
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("Image processing error", err);
+        setError("Failed to process image. Try a smaller file.");
+      }
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -111,20 +114,27 @@ export const AdminPropertyForm: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
 
-    if (isEditing) {
-      updateProperty(formData);
-    } else {
-      addProperty(formData);
+    try {
+      if (isEditing) {
+        await updateProperty(formData);
+      } else {
+        await addProperty(formData);
+      }
+      setIsSuccess(true);
+      setTimeout(() => {
+        navigate('/admin');
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save property. Please check your connection.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSuccess(true);
-    setTimeout(() => {
-      navigate('/admin');
-    }, 1000);
   };
 
   return (
@@ -142,6 +152,12 @@ export const AdminPropertyForm: React.FC = () => {
           </div>
           <h1 className="text-3xl font-serif text-forge-navy">{isEditing ? 'Edit Property' : 'Add New Property'}</h1>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm font-bold border border-red-200 shadow-sm animate-fade-in flex items-center gap-2">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
 
         {/* Form Card */}
         <div className="bg-white rounded shadow-xl border-t-4 border-forge-gold overflow-hidden">

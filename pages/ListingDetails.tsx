@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign, Loader2 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 
@@ -10,7 +10,7 @@ export const ListingDetails: React.FC = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [formMode, setFormMode] = useState<'viewing' | 'offer'>('viewing');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   
   const property = id ? getProperty(id) : undefined;
 
@@ -29,8 +29,10 @@ export const ListingDetails: React.FC = () => {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitStatus('submitting');
+    
     const newLead: Lead = {
       id: Date.now().toString(),
       name: formData.name,
@@ -44,10 +46,15 @@ export const ListingDetails: React.FC = () => {
       type: formMode === 'offer' ? 'Offer' : 'Viewing Request'
     };
     
-    addLead(newLead);
-    setSubmitStatus('success');
-    setFormData({ name: '', email: '', phone: '', message: '' });
-    setTimeout(() => setSubmitStatus('idle'), 3000);
+    try {
+      await addLead(newLead);
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', phone: '', message: '' });
+      setTimeout(() => setSubmitStatus('idle'), 3000);
+    } catch (error) {
+      console.error("Submission failed", error);
+      setSubmitStatus('idle'); // In a real app we'd show an error state
+    }
   };
 
   return (
@@ -217,9 +224,12 @@ export const ListingDetails: React.FC = () => {
                      ></textarea>
                    </div>
                    
-                   <button className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-colors flex items-center justify-center gap-2">
-                     {formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />}
-                     {formMode === 'viewing' ? 'Request Date' : 'Submit Offer'}
+                   <button 
+                     disabled={submitStatus === 'submitting'}
+                     className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                   >
+                     {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
+                     {submitStatus === 'submitting' ? 'Sending...' : (formMode === 'viewing' ? 'Request Date' : 'Submit Offer')}
                    </button>
                  </form>
                )}

@@ -1,20 +1,21 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Property, Lead, SiteSettings, Subscriber } from '../types';
-import { MOCK_LEADS } from '../services/mockData';
+import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
   properties: Property[];
   leads: Lead[];
   subscribers: Subscriber[];
   settings: SiteSettings;
-  addProperty: (property: Property) => void;
-  updateProperty: (property: Property) => void;
-  deleteProperty: (id: string) => void;
+  isLoading: boolean;
+  addProperty: (property: Property) => Promise<void>;
+  updateProperty: (property: Property) => Promise<void>;
+  deleteProperty: (id: string) => Promise<void>;
   getProperty: (id: string) => Property | undefined;
-  addLead: (lead: Lead) => void;
-  updateLeadStatus: (id: string, status: Lead['status']) => void;
-  addSubscriber: (email: string) => void;
-  updateSettings: (settings: SiteSettings) => void;
+  addLead: (lead: Lead) => Promise<void>;
+  updateLeadStatus: (id: string, status: Lead['status']) => Promise<void>;
+  addSubscriber: (email: string) => Promise<void>;
+  updateSettings: (settings: SiteSettings) => Promise<void>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -27,7 +28,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     { 
       name: "Daniel Paul", 
       role: "Co-Founder", 
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop" 
+      image: "" 
     },
     { 
       name: "Paul Bolaji", 
@@ -43,131 +44,87 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with empty arrays to ensure we rely on Storage or User Input
   const [properties, setProperties] = useState<Property[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from LocalStorage
+  // Fetch Initial Data from Supabase
   useEffect(() => {
-    const storedProps = localStorage.getItem('theforge_properties');
-    const storedLeads = localStorage.getItem('theforge_leads');
-    const storedSubs = localStorage.getItem('theforge_subscribers');
-    const storedSettings = localStorage.getItem('theforge_settings');
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [propsRes, leadsRes, subsRes, settingsRes] = await Promise.all([
+          supabase.from('properties').select('*'),
+          supabase.from('leads').select('*'),
+          supabase.from('subscribers').select('*'),
+          supabase.from('site_settings').select('*').single()
+        ]);
 
-    if (storedProps) {
-      setProperties(JSON.parse(storedProps));
-    } else {
-      localStorage.setItem('theforge_properties', JSON.stringify([]));
-      setProperties([]);
-    }
+        if (propsRes.data) setProperties(propsRes.data);
+        if (leadsRes.data) setLeads(leadsRes.data);
+        if (subsRes.data) setSubscribers(subsRes.data);
+        
+        if (settingsRes.data) {
+          setSettings(settingsRes.data);
+        } else {
+            // Use defaults if table is empty (though SQL script handles this)
+            setSettings(DEFAULT_SETTINGS); 
+        }
 
-    if (storedLeads) {
-      setLeads(JSON.parse(storedLeads));
-    } else {
-      localStorage.setItem('theforge_leads', JSON.stringify(MOCK_LEADS));
-      setLeads(MOCK_LEADS);
-    }
-    
-    if (storedSubs) {
-      setSubscribers(JSON.parse(storedSubs));
-    } else {
-      localStorage.setItem('theforge_subscribers', JSON.stringify([]));
-    }
-
-    if (storedSettings) {
-      const parsedSettings = JSON.parse(storedSettings);
-      if (!parsedSettings.teamMembers) {
-        const mergedSettings = { ...parsedSettings, teamMembers: DEFAULT_SETTINGS.teamMembers };
-        setSettings(mergedSettings);
-        localStorage.setItem('theforge_settings', JSON.stringify(mergedSettings));
-      } else {
-        setSettings(parsedSettings);
+      } catch (error) {
+        console.error('Error fetching data from Supabase:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      localStorage.setItem('theforge_settings', JSON.stringify(DEFAULT_SETTINGS));
-    }
-    
-    // Cross-tab synchronization
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'theforge_properties' && e.newValue) setProperties(JSON.parse(e.newValue));
-      if (e.key === 'theforge_leads' && e.newValue) setLeads(JSON.parse(e.newValue));
-      if (e.key === 'theforge_subscribers' && e.newValue) setSubscribers(JSON.parse(e.newValue));
-      if (e.key === 'theforge_settings' && e.newValue) setSettings(JSON.parse(e.newValue));
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    fetchData();
   }, []);
 
-  // CRUD Operations - DIRECT TO STORAGE (Read-Modify-Write Pattern)
-  
-  const addProperty = (property: Property) => {
-    const stored = localStorage.getItem('theforge_properties');
-    const currentList = stored ? JSON.parse(stored) : properties;
-    const newProperties = [property, ...currentList];
-    
-    localStorage.setItem('theforge_properties', JSON.stringify(newProperties));
-    setProperties(newProperties);
-    window.dispatchEvent(new Event('local-storage'));
+  // CRUD Operations - Supabase
+
+  const addProperty = async (property: Property) => {
+    const { error } = await supabase.from('properties').insert([property]);
+    if (error) throw error;
+    setProperties(prev => [property, ...prev]);
   };
 
-  const updateProperty = (updatedProperty: Property) => {
-    const stored = localStorage.getItem('theforge_properties');
-    const currentList = stored ? JSON.parse(stored) : properties;
-    
-    const newProperties = currentList.map((p: Property) => 
-      p.id === updatedProperty.id ? updatedProperty : p
-    );
-    
-    localStorage.setItem('theforge_properties', JSON.stringify(newProperties));
-    setProperties(newProperties);
-    window.dispatchEvent(new Event('local-storage'));
+  const updateProperty = async (updatedProperty: Property) => {
+    const { error } = await supabase
+      .from('properties')
+      .update(updatedProperty)
+      .eq('id', updatedProperty.id);
+      
+    if (error) throw error;
+    setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
   };
 
-  const deleteProperty = (id: string) => {
-    const stored = localStorage.getItem('theforge_properties');
-    const currentList = stored ? JSON.parse(stored) : properties;
-    
-    const newProperties = currentList.filter((p: Property) => p.id !== id);
-    
-    localStorage.setItem('theforge_properties', JSON.stringify(newProperties));
-    setProperties(newProperties);
-    window.dispatchEvent(new Event('local-storage'));
+  const deleteProperty = async (id: string) => {
+    const { error } = await supabase.from('properties').delete().eq('id', id);
+    if (error) throw error;
+    setProperties(prev => prev.filter(p => p.id !== id));
   };
 
   const getProperty = (id: string) => {
     return properties.find(p => p.id === id);
   };
 
-  const addLead = (lead: Lead) => {
-    const stored = localStorage.getItem('theforge_leads');
-    const currentList = stored ? JSON.parse(stored) : leads;
-    const newLeads = [lead, ...currentList];
-    
-    localStorage.setItem('theforge_leads', JSON.stringify(newLeads));
-    setLeads(newLeads);
-    window.dispatchEvent(new Event('local-storage'));
+  const addLead = async (lead: Lead) => {
+    const { error } = await supabase.from('leads').insert([lead]);
+    if (error) throw error;
+    setLeads(prev => [lead, ...prev]);
   };
 
-  const updateLeadStatus = (id: string, status: Lead['status']) => {
-    const stored = localStorage.getItem('theforge_leads');
-    const currentList = stored ? JSON.parse(stored) : leads;
-    
-    const newLeads = currentList.map((l: Lead) => l.id === id ? { ...l, status } : l);
-    
-    localStorage.setItem('theforge_leads', JSON.stringify(newLeads));
-    setLeads(newLeads);
-    window.dispatchEvent(new Event('local-storage'));
+  const updateLeadStatus = async (id: string, status: Lead['status']) => {
+    const { error } = await supabase.from('leads').update({ status }).eq('id', id);
+    if (error) throw error;
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
 
-  const addSubscriber = (email: string) => {
-    const stored = localStorage.getItem('theforge_subscribers');
-    const currentList = stored ? JSON.parse(stored) : subscribers;
-    
-    // Prevent duplicates
-    if (currentList.some((s: Subscriber) => s.email === email)) return;
+  const addSubscriber = async (email: string) => {
+    if (subscribers.some(s => s.email === email)) return;
 
     const newSubscriber: Subscriber = {
       id: Date.now().toString(),
@@ -175,21 +132,25 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       date: new Date().toISOString()
     };
     
-    const newList = [newSubscriber, ...currentList];
-    localStorage.setItem('theforge_subscribers', JSON.stringify(newList));
-    setSubscribers(newList);
-    window.dispatchEvent(new Event('local-storage'));
+    const { error } = await supabase.from('subscribers').insert([newSubscriber]);
+    if (error) throw error;
+    setSubscribers(prev => [newSubscriber, ...prev]);
   };
 
-  const updateSettings = (newSettings: SiteSettings) => {
-    localStorage.setItem('theforge_settings', JSON.stringify(newSettings));
+  const updateSettings = async (newSettings: SiteSettings) => {
+    // We assume ID 1 for single row settings
+    const { error } = await supabase
+      .from('site_settings')
+      .update(newSettings)
+      .eq('id', 1);
+
+    if (error) throw error;
     setSettings(newSettings);
-    window.dispatchEvent(new Event('local-storage'));
   };
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, settings,
+      properties, leads, subscribers, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty,
       addLead, updateLeadStatus, addSubscriber, updateSettings
     }}>

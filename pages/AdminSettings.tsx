@@ -3,6 +3,7 @@ import { Save, Mail, Phone, MapPin, Upload, X, User, Loader2, AlertCircle } from
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
+import { resizeImage } from '../utils/imageUtils';
 
 export const AdminSettings: React.FC = () => {
   const { settings, updateSettings } = useProperties();
@@ -14,62 +15,21 @@ export const AdminSettings: React.FC = () => {
   // Refs for file inputs array
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Sync if settings change externally (e.g. initial load from LocalStorage)
+  // Sync if settings change externally
   useEffect(() => {
-    // Only update if we don't have a message showing (avoid overwriting while user is working)
-    if (!message && !isSaving) {
+    if (!message && !isSaving && settings) {
       setFormData(settings);
     }
   }, [settings, message, isSaving]);
 
-  const resizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_WIDTH = 600; // Resize to max 600px width to save space
-          const MAX_HEIGHT = 600;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to JPEG at 0.7 quality
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
-        };
-        img.onerror = reject;
-        img.src = event.target?.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setError('');
     setMessage('');
 
     try {
-      updateSettings(formData);
+      await updateSettings(formData);
       
       // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -78,12 +38,7 @@ export const AdminSettings: React.FC = () => {
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       console.error("Failed to save settings:", err);
-      // Check for quota exceeded error
-      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-        setError('Storage full! The images are too large. Please remove some images or use smaller files.');
-      } else {
-        setError('Failed to save settings. Please try again.');
-      }
+      setError('Failed to save settings. Please try again.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -135,6 +90,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         )}
 
+        {/* SETTINGS FORM */}
         <div className="bg-white rounded shadow-xl border-t-4 border-forge-gold overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
             
