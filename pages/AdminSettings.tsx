@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Mail, Phone, MapPin, Upload, X, User } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, X, User, Plus, Trash2 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -25,7 +25,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
-    const updatedMembers = [...formData.teamMembers];
+    const updatedMembers = [...(formData.teamMembers || [])];
     updatedMembers[index] = { ...updatedMembers[index], [field]: value };
     setFormData({ ...formData, teamMembers: updatedMembers });
   };
@@ -46,13 +46,29 @@ export const AdminSettings: React.FC = () => {
     handleMemberChange(index, 'image', '');
   };
 
+  const addTeamMember = () => {
+    setFormData(prev => ({
+      ...prev,
+      teamMembers: [...(prev.teamMembers || []), { name: '', role: '', image: '' }]
+    }));
+  };
+
+  const removeTeamMember = (index: number) => {
+    if (window.confirm('Are you sure you want to remove this team member?')) {
+      const updatedMembers = [...(formData.teamMembers || [])];
+      updatedMembers.splice(index, 1);
+      setFormData(prev => ({ ...prev, teamMembers: updatedMembers }));
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-4xl">
         <h1 className="text-3xl font-serif text-forge-navy mb-8">Site Configuration</h1>
 
         {message && (
-          <div className="bg-green-50 text-green-700 p-4 rounded mb-6 text-sm font-bold border border-green-200">
+          <div className="bg-green-50 text-green-700 p-4 rounded mb-6 text-sm font-bold border border-green-200 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             {message}
           </div>
         )}
@@ -109,14 +125,27 @@ export const AdminSettings: React.FC = () => {
 
             {/* Leadership Team Section */}
             <div className="space-y-8">
-              <div className="pb-4 border-b border-slate-100">
-                 <h3 className="font-serif text-xl text-forge-navy mb-1">Leadership Team</h3>
-                 <p className="text-slate-500 text-sm">Manage profiles and photos for the 'About Us' page.</p>
+              <div className="pb-4 border-b border-slate-100 flex justify-between items-end">
+                 <div>
+                   <h3 className="font-serif text-xl text-forge-navy mb-1">Leadership Team</h3>
+                   <p className="text-slate-500 text-sm">Manage profiles and photos for the 'About Us' page.</p>
+                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-8">
                 {formData.teamMembers && formData.teamMembers.map((member, index) => (
-                  <div key={index} className="bg-slate-50 p-6 border border-slate-200 rounded-lg flex flex-col md:flex-row gap-6">
+                  <div key={index} className="bg-slate-50 p-6 border border-slate-200 rounded-lg flex flex-col md:flex-row gap-6 relative group">
+                    
+                    {/* Remove Member Button */}
+                    <button
+                      type="button"
+                      onClick={() => removeTeamMember(index)}
+                      className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors p-2"
+                      title="Remove Member"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+
                     {/* Image Area */}
                     <div className="w-full md:w-32 flex-shrink-0">
                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Photo</label>
@@ -158,7 +187,7 @@ export const AdminSettings: React.FC = () => {
                     </div>
 
                     {/* Details Area */}
-                    <div className="flex-grow space-y-4">
+                    <div className="flex-grow space-y-4 pr-8">
                        <div>
                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Name</label>
                          <input
@@ -166,6 +195,7 @@ export const AdminSettings: React.FC = () => {
                            value={member.name}
                            onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
                            className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                           placeholder="Full Name"
                          />
                        </div>
                        <div>
@@ -175,15 +205,28 @@ export const AdminSettings: React.FC = () => {
                            value={member.role}
                            onChange={(e) => handleMemberChange(index, 'role', e.target.value)}
                            className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                           placeholder="e.g. Managing Partner"
                          />
                        </div>
                     </div>
                   </div>
                 ))}
+
+                {/* Add New Member Button */}
+                <button
+                  type="button"
+                  onClick={addTeamMember}
+                  className="w-full py-6 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 hover:text-forge-gold hover:border-forge-gold hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 group"
+                >
+                  <div className="p-3 bg-slate-100 rounded-full group-hover:bg-forge-gold group-hover:text-forge-navy transition-colors">
+                    <Plus size={24} />
+                  </div>
+                  <span className="font-bold uppercase tracking-widest text-xs">Add Leadership Team Member</span>
+                </button>
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-slate-100">
+            <div className="flex justify-end pt-6 border-t border-slate-100 sticky bottom-0 bg-white pb-4 z-10">
               <button
                 type="submit"
                 className="bg-forge-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-lg transition-all rounded-sm flex items-center gap-2"
