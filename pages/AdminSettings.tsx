@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Mail, Phone, MapPin, Upload, X, User, Loader2, AlertCircle } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, X, User, Loader2, AlertCircle, BadgeCheck } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -14,6 +14,7 @@ export const AdminSettings: React.FC = () => {
   
   // Refs for file inputs array
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const agentImageRef = useRef<HTMLInputElement>(null);
 
   // Sync if settings change externally
   useEffect(() => {
@@ -69,6 +70,21 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  const handleAgentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const base64String = await resizeImage(file);
+        setFormData(prev => ({
+          ...prev,
+          listingAgent: { ...prev.listingAgent, image: base64String }
+        }));
+      } catch (err) {
+        setError('Failed to process agent image.');
+      }
+    }
+  };
+
   const removeMemberImage = (index: number) => {
     handleMemberChange(index, 'image', '');
   };
@@ -94,11 +110,89 @@ export const AdminSettings: React.FC = () => {
         <div className="bg-white rounded shadow-xl border-t-4 border-forge-gold overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
             
+            {/* Global Listing Agent Profile */}
+            <div className="space-y-6">
+               <div className="pb-4 border-b border-slate-100">
+                 <h3 className="font-serif text-xl text-forge-navy mb-1">Default Listing Agent</h3>
+                 <p className="text-slate-500 text-sm">This profile will appear on ALL property listings.</p>
+              </div>
+
+              <div className="bg-slate-50 p-6 border border-slate-200 rounded-lg flex flex-col md:flex-row gap-6">
+                  {/* Agent Image */}
+                  <div className="w-full md:w-32 flex-shrink-0">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Profile Photo</label>
+                      <div className="relative w-32 h-32 bg-slate-200 mx-auto overflow-hidden rounded-full border-2 border-slate-300">
+                        {formData.listingAgent?.image ? (
+                          <>
+                            <img src={formData.listingAgent.image} alt="Agent" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, listingAgent: { ...prev.listingAgent, image: '' } }))}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                              title="Remove Image"
+                            >
+                              <X size={12} />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                              <User size={32} />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <input 
+                        type="file" 
+                        ref={agentImageRef}
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleAgentImageUpload} 
+                      />
+                      
+                      <button
+                        type="button"
+                        onClick={() => agentImageRef.current?.click()}
+                        className="w-full mt-3 bg-white border border-slate-300 text-slate-600 py-2 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-100 hover:text-forge-gold transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Upload size={12} /> Upload
+                      </button>
+                  </div>
+
+                  {/* Agent Details */}
+                  <div className="flex-grow space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Display Name</label>
+                        <input
+                          type="text"
+                          value={formData.listingAgent?.name || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, listingAgent: { ...prev.listingAgent, name: e.target.value } }))}
+                          className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                          placeholder="e.g. The Forge Properties"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Contact Phone</label>
+                        <input
+                          type="text"
+                          value={formData.listingAgent?.phone || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, listingAgent: { ...prev.listingAgent, phone: e.target.value } }))}
+                          className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                          placeholder="+234..."
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded border border-green-100">
+                        <BadgeCheck size={16} />
+                        Active on all listings
+                      </div>
+                  </div>
+              </div>
+            </div>
+
             {/* Contact Info Section */}
             <div className="space-y-6">
               <div className="pb-4 border-b border-slate-100">
-                 <h3 className="font-serif text-xl text-forge-navy mb-1">Contact Information</h3>
-                 <p className="text-slate-500 text-sm">Update your public contact details.</p>
+                 <h3 className="font-serif text-xl text-forge-navy mb-1">Company Contact Information</h3>
+                 <p className="text-slate-500 text-sm">Update your public footer details.</p>
               </div>
 
               <div>

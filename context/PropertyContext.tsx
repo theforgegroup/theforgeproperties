@@ -40,7 +40,12 @@ const DEFAULT_SETTINGS: SiteSettings = {
       role: "Co-Founder", 
       image: "" 
     }
-  ]
+  ],
+  listingAgent: {
+    name: "The Forge Properties",
+    phone: "+234 800 FORGE 00",
+    image: ""
+  }
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -67,9 +72,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (subsRes.data) setSubscribers(subsRes.data);
         
         if (settingsRes.data) {
-          setSettings(settingsRes.data);
+          // Merge with default to ensure new fields (like listingAgent) exist if not in DB yet
+          setSettings({ ...DEFAULT_SETTINGS, ...settingsRes.data });
         } else {
-            // Use defaults if table is empty (though SQL script handles this)
+            // Use defaults if table is empty
             setSettings(DEFAULT_SETTINGS); 
         }
 

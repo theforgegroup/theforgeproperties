@@ -59,11 +59,18 @@ export interface TeamMember {
   image: string;
 }
 
+export interface ListingAgent {
+  name: string;
+  phone: string;
+  image: string;
+}
+
 export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
   teamMembers: TeamMember[];
+  listingAgent: ListingAgent;
 }
 
 export interface FilterCriteria {

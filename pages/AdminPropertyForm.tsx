@@ -34,9 +34,9 @@ export const AdminPropertyForm: React.FC = () => {
     images: [],
     features: [],
     agent: {
-      name: 'Victoria Sterling',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop',
-      phone: '+234 800 FORGE 01'
+      name: 'The Forge Properties',
+      image: '',
+      phone: '+234 800 FORGE 00'
     },
     featured: false
   });

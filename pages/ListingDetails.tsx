@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign, Loader2 } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign, Loader2, Headset } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 
 export const ListingDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getProperty, addLead } = useProperties();
+  const { getProperty, addLead, settings } = useProperties();
   const [activeImage, setActiveImage] = useState(0);
   const [formMode, setFormMode] = useState<'viewing' | 'offer'>('viewing');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   
   const property = id ? getProperty(id) : undefined;
+
+  // Use the Global Listing Agent settings if available, otherwise fallback to property agent or defaults
+  const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
+  const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
+  const agentImage = settings.listingAgent?.image || property?.agent?.image;
 
   useEffect(() => {
     window.scrollTo(0,0);
@@ -149,11 +154,17 @@ export const ListingDetails: React.FC = () => {
           <div className="lg:w-1/3">
              <div className="bg-white p-8 shadow-xl border-t-4 border-forge-gold sticky top-24">
                <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
-                 <img src={property.agent.image} alt={property.agent.name} className="w-16 h-16 rounded-full object-cover" />
+                 {agentImage ? (
+                   <img src={agentImage} alt={agentName} className="w-16 h-16 rounded-full object-cover border border-slate-200" />
+                 ) : (
+                   <div className="w-16 h-16 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0">
+                     <Headset size={28} />
+                   </div>
+                 )}
                  <div>
                    <p className="text-slate-400 text-xs uppercase tracking-wider">Listing Agent</p>
-                   <h4 className="font-serif text-lg text-forge-navy">{property.agent.name}</h4>
-                   <p className="text-forge-gold text-sm">{property.agent.phone}</p>
+                   <h4 className="font-serif text-lg text-forge-navy">{agentName}</h4>
+                   <p className="text-forge-gold text-sm font-bold">{agentPhone}</p>
                  </div>
                </div>
 
