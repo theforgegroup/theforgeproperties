@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminLayoutProps {
@@ -20,6 +20,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const navItems = [
     { path: '/admin', label: 'Listings', icon: LayoutDashboard },
+    { path: '/admin/posts', label: 'Blog / News', icon: FileText },
     { path: '/admin/crm', label: 'CRM / Leads', icon: Users },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/admin/settings', label: 'Settings', icon: Settings },
@@ -65,9 +66,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {/* Navigation */}
           <nav className="space-y-3 lg:space-y-4 flex-grow">
             {navItems.map((item) => {
-              // Check if active. Special handling for Listings to include sub-routes like edit/add
+              // Check if active. Special handling for sub-routes
               const isActive = location.pathname === item.path || 
-                               (item.path === '/admin' && location.pathname.startsWith('/admin/properties'));
+                               (item.path !== '/admin' && location.pathname.startsWith(item.path)) ||
+                               (item.path === '/admin' && location.pathname === '/admin' && !location.pathname.includes('posts')); // Exact match for home to avoid highlighting on other pages
               
               return (
                 <div 

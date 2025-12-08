@@ -34,6 +34,19 @@ export interface Property {
   featured?: boolean;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string; // Meta Description
+  content: string; // HTML
+  image: string; // Featured Image
+  author: string;
+  date: string;
+  status: 'Published' | 'Draft';
+  categories: string[];
+  seoKeyphrase: string;
+}
+
 export interface Lead {
   id: string;
   name: string;

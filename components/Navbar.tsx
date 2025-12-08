@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Search, Building2, Phone, User } from 'lucide-react';
+import { Menu, X, Home, Search, Building2, Phone, User, Newspaper } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/', icon: <Home size={18} /> },
     { name: 'Listings', path: '/listings', icon: <Search size={18} /> },
-    { name: 'Services', path: '/services', icon: <Building2 size={18} /> },
+    { name: 'Blog', path: '/blog', icon: <Newspaper size={18} /> },
     { name: 'About', path: '/about', icon: <User size={18} /> },
     { name: 'Contact', path: '/contact', icon: <Phone size={18} /> },
   ];
