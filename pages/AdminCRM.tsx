@@ -241,8 +241,8 @@ export const AdminCRM: React.FC = () => {
               </button>
             </div>
 
-            <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-slate-200">
-              <table className="w-full text-left">
+            <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-slate-200">
+              <table className="w-full text-left min-w-[500px]">
                 <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
                   <tr>
                     <th className="p-5">Email Address</th>

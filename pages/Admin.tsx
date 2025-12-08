@@ -119,8 +119,8 @@ export const Admin: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-slate-200">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-slate-200">
+        <table className="w-full text-left border-collapse min-w-[600px]">
           <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
             <tr>
               <th className="p-5">Property</th>
