@@ -20,6 +20,9 @@ interface PropertyContextType {
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
+// MailerLite Configuration
+const MAILERLITE_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMGZmMmJmODZiM2FkY2NiM2UyNzc0ODBiZmYxMGRiNWQxMDQ3NWFhODAzZWVkMWYwNDg5NjkzN2YwYTJlMTc4NjI1YTk4ZmJhZTMyMzU5YTkiLCJpYXQiOjE3NjUyMzAyMTAuMzM3NjY3LCJuYmYiOjE3NjUyMzAyMTAuMzM3NjY5LCJleHAiOjQ5MjA5MDM4MTAuMzMzNjMyLCJzdWIiOiIxOTg4MjIyIiwic2NvcGVzIjpbXX0.DdRJpwHf2kCfAUUza8Os_rgWJ9SdfXSk3oajGljbKkHwX-3IV1z4udpbj9YJtI2a4KpHoG9NZCHXHENRpaP7NVbNdHT9m4yjSiVlLjuXWQjry4lUBgu5WaIsXeoipJ9HSX0x4bBDeUtPCLJSOss-MjTPJ-AuvoQ1Ntow4Udb8JUbxosZ2Fs3FppjjtTFhSQZ0P9qZk6LVuJFq2RHKtCTUdL2dWQBoPVKjsPvOaAefJ-kBSCwryiP2Wr6U5lnzROx2LrTAPqVRAWkQHt-5DZTsc9vwSaWCnZ1Twg87NXsVUSSRb3hvG2cnmfOuJYqI82TGoP6OuIN_6e0jzl03odlxkiiygUPgzMHAdHmrTE1RP9c_53QgxPza_iVVC4HvFDj_YZErWKPYVFUjjRjFzUAwpJzdSaDMNkkOh5bryWm5dx9qGcFxb-2UT4WVccL0W-hOFHbZEXoMoHmzKNMeqnEiJFWhk8HcJE0iGwcKU3RQbYkJBHcS_lWcOFqbflc6wiHjiisWXRwnJK_Jmi7JKlIkTOTYtM4dDM7bht3WOMHSCQTCwa4ntaF4KfR9oET5PMxTmcNbXZF22u8zN8TMZCf4ItUjAwQv2d9Om1rR-G4jrPTYzQG39zneATO3-Uqhq8oAks1q8IzvIWyXmmx4nk__aqzRWJLTEYHhxezhSbFaPA";
+
 const DEFAULT_SETTINGS: SiteSettings = {
   contactEmail: 'theforgeproperties@gmail.com',
   contactPhone: '+234 800 FORGE 00',
@@ -138,9 +141,29 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       date: new Date().toISOString()
     };
     
+    // 1. Add to Supabase
     const { error } = await supabase.from('subscribers').insert([newSubscriber]);
     if (error) throw error;
     setSubscribers(prev => [newSubscriber, ...prev]);
+
+    // 2. Sync with MailerLite
+    try {
+      await fetch('https://connect.mailerlite.com/api/subscribers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MAILERLITE_API_KEY}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+        })
+      });
+    } catch (err) {
+      // We log the error but do not throw it, so the user still sees a "Success" message
+      // as the data was successfully saved to Supabase.
+      console.warn("MailerLite sync issue:", err);
+    }
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
