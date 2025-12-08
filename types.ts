@@ -37,14 +37,14 @@ export interface Property {
 export interface BlogPost {
   id: string;
   title: string;
-  excerpt: string; // Meta Description
-  content: string; // HTML
-  image: string; // Featured Image
+  excerpt: string; // Used as Meta Description
+  content: string;
+  image: string;
   author: string;
   date: string;
   status: 'Published' | 'Draft';
   categories: string[];
-  seoKeyphrase: string;
+  seoKeyphrase?: string;
 }
 
 export interface Lead {

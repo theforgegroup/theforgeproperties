@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Calendar, User, Clock, Share2 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { Calendar, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin } from 'lucide-react';
 
 export const BlogPost: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,89 +14,73 @@ export const BlogPost: React.FC = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-20">
         <div className="text-center">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Article Not Found</h2>
-          <Link to="/blog" className="text-forge-gold underline">Return to Blog</Link>
+          <Link to="/blog" className="text-forge-gold underline flex items-center justify-center gap-2">
+            <ArrowLeft size={16} /> Return to Journal
+          </Link>
         </div>
       </div>
     );
   }
 
+  // Calculate read time roughly
+  const readTime = Math.ceil(post.content.split(' ').length / 200);
+
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
-      {/* Hero Header */}
-      <div className="relative h-[50vh] min-h-[400px]">
-        {post.image ? (
-            <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-        ) : (
-            <div className="w-full h-full bg-slate-900"></div>
+      {/* Article Header */}
+      <div className="relative h-[50vh] bg-slate-900">
+        {post.image && (
+          <img 
+            src={post.image} 
+            alt={post.title} 
+            className="w-full h-full object-cover opacity-40"
+          />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
         
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-12">
-            <div className="container mx-auto">
-                <Link to="/blog" className="inline-flex items-center text-slate-300 hover:text-white mb-6 text-xs uppercase tracking-widest font-bold transition-colors">
-                  <ArrowLeft size={14} className="mr-2" /> Back to Journal
-                </Link>
-                
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.categories && post.categories.map(cat => (
-                    <span key={cat} className="bg-forge-gold text-forge-navy text-xs font-bold px-3 py-1 uppercase tracking-widest">
-                      {cat}
-                    </span>
-                  ))}
-                </div>
-                
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif text-white font-bold leading-tight mb-6 max-w-4xl">
-                  {post.title}
-                </h1>
-                
-                <div className="flex items-center text-slate-300 text-sm gap-6">
-                    <span className="flex items-center gap-2"><Calendar size={16} /> {new Date(post.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    <span className="flex items-center gap-2"><User size={16} /> By {post.author || 'The Forge'}</span>
-                </div>
-            </div>
+          <div className="container mx-auto max-w-4xl">
+             <Link to="/blog" className="inline-flex items-center gap-2 text-white/70 hover:text-forge-gold transition-colors mb-6 text-xs uppercase tracking-widest font-bold">
+               <ArrowLeft size={14} /> Back to Journal
+             </Link>
+             <h1 className="text-3xl md:text-5xl font-serif text-white font-bold leading-tight mb-6">
+               {post.title}
+             </h1>
+             <div className="flex flex-wrap items-center gap-6 text-sm text-slate-300 font-medium">
+               <span className="flex items-center gap-2"><Calendar size={16} className="text-forge-gold" /> {new Date(post.date).toLocaleDateString()}</span>
+               <span className="flex items-center gap-2"><User size={16} className="text-forge-gold" /> {post.author}</span>
+               <span className="flex items-center gap-2"><Clock size={16} className="text-forge-gold" /> {readTime} min read</span>
+             </div>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-12 md:py-20 flex flex-col lg:flex-row gap-12">
-        {/* Main Content */}
-        <div className="lg:w-3/4">
+      <div className="container mx-auto px-6 py-12 md:py-20">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white p-8 md:p-16 shadow-sm border border-slate-100 rounded-sm">
+            {/* Content Render */}
             <div 
-              className="prose prose-lg prose-slate max-w-none font-serif prose-headings:font-serif prose-headings:text-forge-navy prose-a:text-forge-gold hover:prose-a:text-forge-navy"
+              className="prose prose-slate prose-lg max-w-none prose-headings:font-serif prose-headings:text-forge-navy prose-a:text-forge-gold hover:prose-a:text-forge-navy prose-img:rounded-sm"
               dangerouslySetInnerHTML={{ __html: post.content }}
-            ></div>
-        </div>
-
-        {/* Sidebar / Share */}
-        <div className="lg:w-1/4">
-            <div className="sticky top-24 space-y-8">
-                <div className="bg-white p-6 shadow-sm border border-slate-200">
-                    <h3 className="font-serif text-lg text-forge-navy mb-4 flex items-center gap-2">
-                        <Share2 size={18} /> Share this article
-                    </h3>
-                    <div className="flex gap-2">
-                        <button className="flex-1 bg-blue-600 text-white py-2 rounded flex items-center justify-center hover:bg-blue-700 transition-colors">
-                            <Facebook size={18} />
-                        </button>
-                        <button className="flex-1 bg-sky-500 text-white py-2 rounded flex items-center justify-center hover:bg-sky-600 transition-colors">
-                            <Twitter size={18} />
-                        </button>
-                        <button className="flex-1 bg-blue-700 text-white py-2 rounded flex items-center justify-center hover:bg-blue-800 transition-colors">
-                            <Linkedin size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="bg-forge-navy text-white p-8 text-center">
-                    <h3 className="font-serif text-xl mb-4">Looking for your dream home?</h3>
-                    <p className="text-slate-400 text-sm mb-6">Explore our exclusive portfolio of luxury properties.</p>
-                    <Link to="/listings" className="inline-block w-full bg-forge-gold text-forge-navy font-bold uppercase text-xs tracking-widest py-3 hover:bg-white transition-colors">
-                        View Listings
-                    </Link>
-                </div>
+            />
+            
+            {/* Share Footer */}
+            <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center">
+               <div>
+                 <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Share this article</p>
+                 <div className="flex gap-4">
+                   <button className="text-slate-600 hover:text-forge-gold transition-colors"><Share2 size={20} /></button>
+                 </div>
+               </div>
+               <div className="text-right">
+                  <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Author</p>
+                  <p className="font-serif text-forge-navy text-lg">{post.author}</p>
+               </div>
             </div>
+          </div>
         </div>
       </div>
     </div>

@@ -64,6 +64,7 @@ const AppLayout: React.FC = () => {
               </ProtectedRoute>
             } 
           />
+          {/* Admin Blog Routes */}
           <Route 
             path="/admin/posts" 
             element={
@@ -88,6 +89,7 @@ const AppLayout: React.FC = () => {
               </ProtectedRoute>
             } 
           />
+
           <Route 
             path="/admin/crm" 
             element={
