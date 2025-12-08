@@ -84,9 +84,13 @@ export const AdminPostForm: React.FC = () => {
       setTimeout(() => {
         navigate('/admin/posts');
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to save post.");
+      if (err.message && err.message.includes('relation "posts" does not exist')) {
+        setError("Database Error: The 'posts' table is missing. Please run the SQL script in Supabase.");
+      } else {
+        setError("Failed to save post. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -1,13 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, User, Clock } from 'lucide-react';
+import { ArrowRight, Calendar, User, Clock, Loader2 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 
 export const Blog: React.FC = () => {
-  const { posts } = useProperties();
+  const { posts, isLoading } = useProperties();
 
   // Sort posts by date descending
   const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-forge-gold" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -73,7 +81,7 @@ export const Blog: React.FC = () => {
         ) : (
           <div className="text-center py-24 bg-white border border-dashed border-slate-300 rounded-sm">
             <h3 className="text-xl font-serif text-slate-400 mb-2">No Articles Published Yet</h3>
-            <p className="text-slate-500 text-sm">Check back soon for market updates.</p>
+            <p className="text-slate-500 text-sm">Our journal is being curated. Please check back shortly.</p>
           </div>
         )}
       </div>
