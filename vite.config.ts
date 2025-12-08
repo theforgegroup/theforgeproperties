@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: './', // Ensures assets are linked relatively for hash routing
+  define: {
+    // Polyfill process.env for libraries that expect it
+    'process.env': {}
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
