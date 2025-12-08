@@ -34,16 +34,6 @@ export interface Property {
   featured?: boolean;
 }
 
-export interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  image: string;
-  date: string;
-  author: string;
-}
-
 export interface Lead {
   id: string;
   name: string;
