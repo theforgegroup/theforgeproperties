@@ -75,7 +75,7 @@ export const Footer: React.FC = () => {
             <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Explore</h3>
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link to="/listings" className="hover:text-white transition-colors">Exclusive Listings</Link></li>
-              <li><Link to="/services" className="hover:text-white transition-colors">Our Services</Link></li>
+              <li><Link to="/blog" className="hover:text-white transition-colors">Journal & News</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">The Team</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
