@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, Image as ImageIcon, Loader2, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Image as ImageIcon, Loader2, CheckCircle, X, AlertCircle, Plus, FileText } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -12,30 +12,38 @@ import { resizeImage } from '../utils/imageUtils';
 export const AdminPostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPost, addPost, updatePost } = useProperties();
+  const { getPost, addPost, updatePost, availableCategories, addCategory } = useProperties();
   const isEditing = !!id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [newCategory, setNewCategory] = useState('');
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<BlogPost>({
     id: '',
     title: '',
-    excerpt: '',
+    excerpt: '', // Used as Meta Description
     content: '',
     image: '',
     author: 'The Forge Team',
     date: new Date().toISOString(),
-    status: 'Draft'
+    status: 'Draft',
+    categories: [],
+    seoKeyphrase: ''
   });
 
   useEffect(() => {
     if (isEditing && id) {
       const post = getPost(id);
       if (post) {
-        setFormData(post);
+        setFormData({
+            ...post,
+            categories: post.categories || [], // ensure array
+            seoKeyphrase: post.seoKeyphrase || ''
+        });
       }
     } else if (!isEditing) {
       setFormData(prev => prev.id ? prev : ({ ...prev, id: Date.now().toString() }));
@@ -64,16 +72,39 @@ export const AdminPostForm: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCategoryToggle = (category: string) => {
+    setFormData(prev => {
+        const currentCats = prev.categories || [];
+        if (currentCats.includes(category)) {
+            return { ...prev, categories: currentCats.filter(c => c !== category) };
+        } else {
+            return { ...prev, categories: [...currentCats, category] };
+        }
+    });
+  };
+
+  const handleAddCategory = () => {
+      if(newCategory.trim()) {
+          addCategory(newCategory.trim());
+          handleCategoryToggle(newCategory.trim()); // auto select
+          setNewCategory('');
+          setIsAddingCategory(false);
+      }
+  };
+
+  const handleSubmit = async (e: React.FormEvent, forceStatus?: 'Published' | 'Draft') => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
 
+    const statusToSave = forceStatus || formData.status;
+    const dataToSave = { ...formData, status: statusToSave };
+
     try {
       if (isEditing) {
-        await updatePost(formData);
+        await updatePost(dataToSave);
       } else {
-        await addPost(formData);
+        await addPost(dataToSave);
       }
       setIsSuccess(true);
       setTimeout(() => {
@@ -105,7 +136,7 @@ export const AdminPostForm: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <button 
             onClick={() => navigate('/admin/posts')}
@@ -113,16 +144,13 @@ export const AdminPostForm: React.FC = () => {
           >
             <ArrowLeft size={16} /> Back to Posts
           </button>
-          <div className="flex gap-3">
-             <button
-                type="button"
-                onClick={() => setFormData(prev => ({...prev, status: prev.status === 'Draft' ? 'Published' : 'Draft'}))}
-                className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors ${
-                    formData.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'
-                }`}
-             >
-                 {formData.status}
-             </button>
+          
+          <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    formData.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                }`}>
+                 Current: {formData.status}
+              </span>
           </div>
         </div>
 
@@ -134,7 +162,7 @@ export const AdminPostForm: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Editor Column */}
             <div className="lg:col-span-2 space-y-6">
                 <div>
@@ -156,9 +184,46 @@ export const AdminPostForm: React.FC = () => {
                         onChange={handleEditorChange}
                         modules={modules}
                         formats={formats}
-                        className="h-96 mb-12" // mb-12 to make room for quill toolbar/statusbar
+                        className="h-96 mb-12"
                     />
                 </div>
+
+                {/* SEO Section */}
+                <div className="bg-white p-6 rounded shadow-sm border border-slate-200 mt-6">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2">SEO Configuration</h3>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Focus Keyphrase</label>
+                            <input
+                                type="text"
+                                name="seoKeyphrase"
+                                value={formData.seoKeyphrase}
+                                onChange={handleChange}
+                                className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm"
+                                placeholder="e.g. Luxury Real Estate Lagos"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">The main phrase you want this post to rank for.</p>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Meta Description (Excerpt)</label>
+                            <textarea
+                                name="excerpt"
+                                value={formData.excerpt}
+                                onChange={handleChange}
+                                rows={3}
+                                className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm resize-none"
+                                placeholder="A concise summary of the article for search engines (approx 160 characters)..."
+                            />
+                            <div className="flex justify-between mt-1">
+                                <p className="text-[10px] text-slate-400">Appears in search results and post previews.</p>
+                                <span className={`text-[10px] font-bold ${formData.excerpt.length > 160 ? 'text-red-500' : 'text-slate-400'}`}>
+                                    {formData.excerpt.length} / 160
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
             </div>
 
             {/* Sidebar Column */}
@@ -189,27 +254,86 @@ export const AdminPostForm: React.FC = () => {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting || isSuccess}
-                        className={`w-full py-4 font-bold uppercase tracking-widest text-xs shadow-lg transition-all rounded-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
-                        isSuccess 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-forge-navy text-white hover:bg-forge-dark'
-                        }`}
-                    >
-                        {isSubmitting ? (
-                        <Loader2 size={16} className="animate-spin" />
-                        ) : isSuccess ? (
-                        <>
-                            <CheckCircle size={16} /> Saved!
-                        </>
-                        ) : (
-                        <>
-                            <Save size={16} /> {isEditing ? 'Update' : 'Publish'}
-                        </>
-                        )}
-                    </button>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            type="button"
+                            onClick={(e) => handleSubmit(e, 'Draft')}
+                            disabled={isSubmitting || isSuccess}
+                            className="w-full py-3 bg-slate-100 text-slate-600 font-bold uppercase tracking-widest text-xs hover:bg-slate-200 transition-colors rounded-sm flex items-center justify-center gap-2"
+                        >
+                            <FileText size={14} /> Save as Draft
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={(e) => handleSubmit(e, 'Published')}
+                            disabled={isSubmitting || isSuccess}
+                            className={`w-full py-3 font-bold uppercase tracking-widest text-xs shadow-lg transition-all rounded-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
+                            isSuccess 
+                                ? 'bg-green-600 text-white' 
+                                : 'bg-forge-navy text-white hover:bg-forge-dark'
+                            }`}
+                        >
+                            {isSubmitting ? (
+                            <Loader2 size={16} className="animate-spin" />
+                            ) : isSuccess ? (
+                            <>
+                                <CheckCircle size={16} /> Saved!
+                            </>
+                            ) : (
+                            <>
+                                <Save size={16} /> Publish
+                            </>
+                            )}
+                        </button>
+                    </div>
+                 </div>
+
+                 {/* Categories */}
+                 <div className="bg-white p-6 rounded shadow-sm border border-slate-200">
+                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Categories</h3>
+                     
+                     <div className="max-h-40 overflow-y-auto mb-4 space-y-2 border border-slate-100 p-3 rounded-sm bg-slate-50">
+                         {availableCategories.map(cat => (
+                             <label key={cat} className="flex items-center gap-2 cursor-pointer group">
+                                 <input 
+                                    type="checkbox" 
+                                    checked={formData.categories?.includes(cat)}
+                                    onChange={() => handleCategoryToggle(cat)}
+                                    className="accent-forge-gold w-4 h-4"
+                                 />
+                                 <span className="text-sm text-slate-600 group-hover:text-forge-navy">{cat}</span>
+                             </label>
+                         ))}
+                     </div>
+
+                     {isAddingCategory ? (
+                         <div className="flex gap-2">
+                             <input 
+                                type="text"
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                className="flex-1 border border-slate-300 px-2 py-1 text-xs focus:border-forge-gold outline-none"
+                                placeholder="New Category Name"
+                                autoFocus
+                             />
+                             <button 
+                                type="button"
+                                onClick={handleAddCategory}
+                                className="bg-forge-navy text-white px-2 py-1 text-xs rounded-sm hover:bg-forge-gold hover:text-forge-navy"
+                             >
+                                 Add
+                             </button>
+                         </div>
+                     ) : (
+                        <button 
+                            type="button" 
+                            onClick={() => setIsAddingCategory(true)}
+                            className="text-xs text-forge-gold font-bold uppercase tracking-wider hover:text-forge-navy flex items-center gap-1"
+                        >
+                            <Plus size={12} /> Add New Category
+                        </button>
+                     )}
                  </div>
 
                  {/* Featured Image */}
@@ -251,19 +375,6 @@ export const AdminPostForm: React.FC = () => {
                      >
                         <Upload size={14} /> Upload Image
                      </button>
-                 </div>
-
-                 {/* Excerpt */}
-                 <div className="bg-white p-6 rounded shadow-sm border border-slate-200">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Excerpt</h3>
-                    <textarea
-                        name="excerpt"
-                        value={formData.excerpt}
-                        onChange={handleChange}
-                        rows={4}
-                        className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm resize-none"
-                        placeholder="Short summary for the blog list..."
-                    />
                  </div>
             </div>
         </form>
