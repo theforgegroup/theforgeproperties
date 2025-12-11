@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
@@ -19,7 +19,7 @@ import { AdminSettings } from './pages/AdminSettings';
 import { AdminBlog } from './pages/AdminBlog';
 import { AdminPostForm } from './pages/AdminPostForm';
 import { AIConcierge } from './components/AIConcierge';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { PropertyProvider } from './context/PropertyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -31,6 +31,12 @@ const ScrollToTop = () => {
   }, [pathname]);
 
   return null;
+};
+
+// Wrapper for /admin route to conditionally show Login or Dashboard
+const AdminEntry: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Admin /> : <AdminLogin />;
 };
 
 // Layout wrapper to conditionally render public UI
@@ -56,15 +62,9 @@ const AppLayout: React.FC = () => {
           <Route path="/contact" element={<Contact />} />
           
           {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Main Admin Entry Point: Handles Login vs Dashboard */}
+          <Route path="/admin" element={<AdminEntry />} />
+          
           <Route 
             path="/admin/crm" 
             element={

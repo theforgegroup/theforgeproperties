@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 
@@ -9,7 +9,6 @@ export const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,11 +16,10 @@ export const AdminLogin: React.FC = () => {
     
     const success = login(email, password);
     
-    if (success) {
-      navigate('/admin');
-    } else {
+    if (!success) {
       setError('Invalid credentials. Access denied.');
     }
+    // No need to navigate; state update will trigger App to switch to Admin Dashboard view automatically.
   };
 
   return (
