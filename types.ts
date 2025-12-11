@@ -64,6 +64,8 @@ export interface BlogPost {
   date: string; // ISO Date string
   category: string;
   status: 'Published' | 'Draft';
+  metaDescription?: string;
+  keyphrase?: string;
 }
 
 export interface TeamMember {
