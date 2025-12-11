@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Instagram, MapPin, Phone, Mail, Check } from 'lucide-react';
@@ -75,7 +76,7 @@ export const Footer: React.FC = () => {
             <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Explore</h3>
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link to="/listings" className="hover:text-white transition-colors">Exclusive Listings</Link></li>
-              <li><Link to="/services" className="hover:text-white transition-colors">Our Services</Link></li>
+              <li><Link to="/blog" className="hover:text-white transition-colors">Journal & Insights</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">The Team</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
@@ -95,7 +96,6 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Mail size={18} className="text-forge-gold shrink-0 mt-1" />
-                {/* Added break-all to ensure long emails wrap correctly */}
                 <span className="break-all">{settings.contactEmail}</span>
               </li>
             </ul>

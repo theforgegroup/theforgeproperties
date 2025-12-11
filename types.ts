@@ -1,3 +1,4 @@
+
 export enum PropertyType {
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
@@ -51,6 +52,18 @@ export interface Subscriber {
   id: string;
   email: string;
   date: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string; // HTML content
+  coverImage: string;
+  author: string;
+  date: string; // ISO Date string
+  category: string;
+  status: 'Published' | 'Draft';
 }
 
 export interface TeamMember {

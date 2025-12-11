@@ -1,11 +1,13 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Property, Lead, SiteSettings, Subscriber } from '../types';
+import { Property, Lead, SiteSettings, Subscriber, BlogPost } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
   properties: Property[];
   leads: Lead[];
   subscribers: Subscriber[];
+  posts: BlogPost[];
   settings: SiteSettings;
   isLoading: boolean;
   addProperty: (property: Property) => Promise<void>;
@@ -16,6 +18,11 @@ interface PropertyContextType {
   updateLeadStatus: (id: string, status: Lead['status']) => Promise<void>;
   addSubscriber: (email: string) => Promise<void>;
   updateSettings: (settings: SiteSettings) => Promise<void>;
+  // Blog Actions
+  addPost: (post: BlogPost) => Promise<void>;
+  updatePost: (post: BlogPost) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
+  getPost: (id: string) => BlogPost | undefined;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -55,6 +62,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [properties, setProperties] = useState<Property[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,16 +71,18 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [propsRes, leadsRes, subsRes, settingsRes] = await Promise.all([
+        const [propsRes, leadsRes, subsRes, postsRes, settingsRes] = await Promise.all([
           supabase.from('properties').select('*'),
           supabase.from('leads').select('*'),
           supabase.from('subscribers').select('*'),
+          supabase.from('posts').select('*'),
           supabase.from('site_settings').select('*').single()
         ]);
 
         if (propsRes.data) setProperties(propsRes.data);
         if (leadsRes.data) setLeads(leadsRes.data);
         if (subsRes.data) setSubscribers(subsRes.data);
+        if (postsRes.data) setPosts(postsRes.data);
         
         if (settingsRes.data) {
           // Merge with default to ensure new fields (like listingAgent) exist if not in DB yet
@@ -92,7 +102,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchData();
   }, []);
 
-  // CRUD Operations - Supabase
+  // CRUD Operations - Properties
 
   const addProperty = async (property: Property) => {
     const { error } = await supabase.from('properties').insert([property]);
@@ -120,6 +130,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     return properties.find(p => p.id === id);
   };
 
+  // CRUD Operations - Leads
+
   const addLead = async (lead: Lead) => {
     const { error } = await supabase.from('leads').insert([lead]);
     if (error) throw error;
@@ -131,6 +143,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) throw error;
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
+
+  // CRUD Operations - Subscribers
 
   const addSubscriber = async (email: string) => {
     if (subscribers.some(s => s.email === email)) return;
@@ -160,11 +174,39 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         })
       });
     } catch (err) {
-      // We log the error but do not throw it, so the user still sees a "Success" message
-      // as the data was successfully saved to Supabase.
       console.warn("MailerLite sync issue:", err);
     }
   };
+
+  // CRUD Operations - Blog Posts
+
+  const addPost = async (post: BlogPost) => {
+    const { error } = await supabase.from('posts').insert([post]);
+    if (error) throw error;
+    setPosts(prev => [post, ...prev]);
+  };
+
+  const updatePost = async (updatedPost: BlogPost) => {
+    const { error } = await supabase
+      .from('posts')
+      .update(updatedPost)
+      .eq('id', updatedPost.id);
+      
+    if (error) throw error;
+    setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+  };
+
+  const deletePost = async (id: string) => {
+    const { error } = await supabase.from('posts').delete().eq('id', id);
+    if (error) throw error;
+    setPosts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const getPost = (id: string) => {
+    return posts.find(p => p.id === id);
+  };
+
+  // Settings
 
   const updateSettings = async (newSettings: SiteSettings) => {
     // We assume ID 1 for single row settings
@@ -179,9 +221,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, settings, isLoading,
+      properties, leads, subscribers, posts, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty,
-      addLead, updateLeadStatus, addSubscriber, updateSettings
+      addLead, updateLeadStatus, addSubscriber, updateSettings,
+      addPost, updatePost, deletePost, getPost
     }}>
       {children}
     </PropertyContext.Provider>

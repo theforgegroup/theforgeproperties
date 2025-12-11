@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminLayoutProps {
@@ -21,6 +22,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/admin', label: 'Listings', icon: LayoutDashboard },
     { path: '/admin/crm', label: 'CRM / Leads', icon: Users },
+    { path: '/admin/blog', label: 'Blog', icon: BookOpen },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/admin/settings', label: 'Settings', icon: Settings },
   ];
@@ -65,9 +67,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {/* Navigation */}
           <nav className="space-y-3 lg:space-y-4 flex-grow">
             {navItems.map((item) => {
-              // Check if active. Special handling for Listings to include sub-routes like edit/add
+              // Check if active. Handle nested routes
               const isActive = location.pathname === item.path || 
-                               (item.path === '/admin' && location.pathname.startsWith('/admin/properties'));
+                               (item.path === '/admin' && location.pathname === '/admin') ||
+                               (item.path !== '/admin' && location.pathname.startsWith(item.path));
+              
+              // Specific fix for admin root vs other admin paths sharing prefix
+              const isExactRoot = item.path === '/admin' && (location.pathname === '/admin' || location.pathname.startsWith('/admin/properties'));
+              const isOther = item.path !== '/admin' && location.pathname.startsWith(item.path);
+
+              const activeClass = (isExactRoot || isOther) 
+                ? 'bg-slate-800 text-white shadow-lg border-l-4 border-forge-gold' 
+                : 'text-slate-400 hover:text-white hover:bg-white/5';
               
               return (
                 <div 
@@ -76,11 +87,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     navigate(item.path);
                     setIsSidebarOpen(false);
                   }}
-                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-colors ${
-                    isActive 
-                      ? 'bg-slate-800 text-white shadow-lg border-l-4 border-forge-gold' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-colors ${activeClass}`}
                 >
                   <item.icon size={20} className="lg:w-6 lg:h-6" />
                   <span className="font-medium text-base lg:text-lg">{item.label}</span>
