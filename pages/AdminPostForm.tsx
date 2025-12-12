@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, Upload, Image as ImageIcon, Loader2, CheckCircle, Plus, Search, Globe, FileText, X
+  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Globe, FileText, X, Plus
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -13,7 +13,7 @@ import { resizeImage } from '../utils/imageUtils';
 export const AdminPostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPost, addPost, updatePost, settings } = useProperties();
+  const { getPost, addPost, updatePost } = useProperties();
   const isEditing = !!id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -33,7 +33,7 @@ export const AdminPostForm: React.FC = () => {
     excerpt: '',
     content: '',
     coverImage: '',
-    author: settings.teamMembers[0]?.name || 'Admin',
+    author: 'The Forge Properties', // Static Author
     date: new Date().toISOString(),
     category: 'Market Insights',
     status: 'Draft',
@@ -45,7 +45,10 @@ export const AdminPostForm: React.FC = () => {
     if (isEditing && id) {
       const post = getPost(id);
       if (post) {
-        setFormData(post);
+        setFormData(prev => ({
+          ...post,
+          author: 'The Forge Properties' // Ensure existing posts also use static author on edit
+        }));
         // If post has a category not in our default list, add it
         if (!categories.includes(post.category)) {
           setCategories(prev => [...prev, post.category]);
@@ -92,7 +95,7 @@ export const AdminPostForm: React.FC = () => {
     setError('');
 
     const finalStatus = statusOverride || formData.status;
-    const submissionData = { ...formData, status: finalStatus };
+    const submissionData = { ...formData, status: finalStatus, author: 'The Forge Properties' };
 
     try {
       if (isEditing) {
@@ -298,16 +301,12 @@ export const AdminPostForm: React.FC = () => {
                  )}
               </div>
 
-              {/* Author */}
+              {/* Author (Static) */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Author</h3>
-                 <input
-                    type="text"
-                    name="author"
-                    value={formData.author}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 p-2 text-sm rounded bg-slate-50"
-                  />
+                 <div className="w-full bg-slate-100 border border-slate-200 p-3 text-sm rounded text-slate-600 font-medium cursor-not-allowed">
+                    The Forge Properties
+                 </div>
               </div>
 
               {/* Featured Image */}

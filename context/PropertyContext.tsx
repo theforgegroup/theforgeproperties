@@ -58,6 +58,20 @@ const DEFAULT_SETTINGS: SiteSettings = {
   }
 };
 
+const SAMPLE_POST: BlogPost = {
+  id: 'sample-1',
+  title: 'The Future of Luxury Real Estate in Lagos',
+  excerpt: 'An in-depth look at how the Lekki-Epe corridor is transforming into the new gold standard for high-net-worth investments.',
+  content: '<p>As the skyline of Lagos continues to evolve, a new definition of luxury is emerging...</p>',
+  coverImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1000&auto=format&fit=crop',
+  author: 'The Forge Properties',
+  date: new Date().toISOString(),
+  category: 'Market Insights',
+  status: 'Published',
+  metaDescription: 'Discover the emerging trends in Lagos luxury real estate market.',
+  keyphrase: 'Lagos Luxury Real Estate'
+};
+
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -82,7 +96,13 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (propsRes.data) setProperties(propsRes.data);
         if (leadsRes.data) setLeads(leadsRes.data);
         if (subsRes.data) setSubscribers(subsRes.data);
-        if (postsRes.data) setPosts(postsRes.data);
+        
+        // Add sample post if list is empty for testing purposes
+        if (postsRes.data && postsRes.data.length > 0) {
+          setPosts(postsRes.data);
+        } else {
+          setPosts([SAMPLE_POST]);
+        }
         
         if (settingsRes.data) {
           // Merge with default to ensure new fields (like listingAgent) exist if not in DB yet
@@ -94,6 +114,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       } catch (error) {
         console.error('Error fetching data from Supabase:', error);
+        // On error, still load sample post for testing
+        setPosts([SAMPLE_POST]);
       } finally {
         setIsLoading(false);
       }
@@ -187,6 +209,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
+    // If it's the sample post, just update local state to simulate success for testing
+    if (updatedPost.id === 'sample-1') {
+        setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+        return;
+    }
+
     const { error } = await supabase
       .from('posts')
       .update(updatedPost)
@@ -197,6 +225,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const deletePost = async (id: string) => {
+    // If it's the sample post, just update local state
+    if (id === 'sample-1') {
+        setPosts(prev => prev.filter(p => p.id !== id));
+        return;
+    }
+
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (error) throw error;
     setPosts(prev => prev.filter(p => p.id !== id));
