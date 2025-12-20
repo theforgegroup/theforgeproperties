@@ -1,29 +1,81 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Award, Clock } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../context/PropertyContext';
+import { SEO } from '../components/SEO';
 
 export const Home: React.FC = () => {
   const { properties } = useProperties();
   
-  // Smart Display Logic:
-  // 1. Prioritize specifically "Featured" properties.
-  // 2. If no featured properties exist, fallback to the 4 most recent properties.
-  // This ensures the homepage is never empty as soon as a listing is added.
   const featuredOnly = properties.filter(p => p.featured);
   const displayProperties = featuredOnly.length > 0 
     ? featuredOnly.slice(0, 4) 
     : properties.slice(0, 4);
 
+  const homeSchema = {
+    "@type": "RealEstateAgent",
+    "name": "The Forge Properties",
+    "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2600",
+    "url": "https://theforgeproperties.com",
+    "telephone": "+2348003674300",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Silverland Estate, Sangotedo, Ajah",
+      "addressLocality": "Lagos",
+      "addressRegion": "Lagos State",
+      "postalCode": "101245",
+      "addressCountry": "NG"
+    },
+    "sameAs": [
+      "https://www.instagram.com/theforgeproperties_",
+      "https://www.tiktok.com/@theforgegroup"
+    ]
+  };
+
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Where does The Forge Properties operate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The Forge Properties specializes in high-end luxury real estate in Nigeria, primarily focusing on Lagos (Ikoyi, Victoria Island, Banana Island, Lekki) and Abuja (Maitama, Asokoro, Guzape)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does The Forge Properties offer off-market listings?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, we maintain an exclusive collection of off-market properties for our high-net-worth clients who prioritize discretion. Contact our concierge team for private viewings."
+        }
+      }
+    ]
+  };
+
+  // Combine schemas
+  const combinedSchema = {
+    "@graph": [homeSchema, faqSchema]
+  };
+
   return (
     <div className="min-h-screen">
+      <SEO 
+        title="Luxury Real Estate Nigeria" 
+        description="The Forge Properties offers an exclusive portfolio of luxury homes, villas, and apartments in Lagos and Abuja. Defined by excellence, built for distinction."
+        keywords="luxury real estate lagos, mansions for sale lagos, banana island houses, real estate nigeria, the forge group"
+        schema={combinedSchema}
+      />
+      
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2600&auto=format&fit=crop" 
-            alt="Luxury Modern Mansion" 
+            alt="Luxury Modern Mansion with Pool - The Forge Properties Portfolio" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-slate-900/80" />
@@ -95,12 +147,6 @@ export const Home: React.FC = () => {
               <p className="text-slate-500 text-sm">Our exclusive listings are currently being curated. Check back shortly.</p>
             </div>
           )}
-          
-          <div className="mt-12 text-center md:hidden">
-            <Link to="/listings" className="inline-block border-b-2 border-forge-gold pb-1 text-forge-navy font-bold uppercase tracking-widest text-xs">
-              View All Listings
-            </Link>
-          </div>
         </div>
       </section>
 

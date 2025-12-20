@@ -5,13 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Forge Properties | Luxury Real Estate</title>
     
-    <!-- CRITICAL FIX: Polyfill 'process' for browser environments (Vercel) -->
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Discover the most exclusive luxury real estate portfolio in Nigeria with The Forge Properties. Exceptional residences for discerning clients." />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="The Forge Properties" />
+    <meta name="theme-color" content="#0F172A" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=32&h=32" />
+
+    <!-- Polyfill 'process' for browser environments -->
     <script>
-      window.process = {
-        env: {
-          NODE_ENV: 'production'
-        }
-      };
+      window.process = { env: { NODE_ENV: 'production' } };
       window.global = window;
     </script>
 
@@ -22,12 +33,12 @@
           extend: {
             colors: {
               forge: {
-                navy: '#0F172A', // Slate 900
-                dark: '#020617', // Slate 950
-                gold: '#D4AF37', // Metallic Gold
-                goldLight: '#FCD34D', // Amber 300
-                charcoal: '#334155', // Slate 700
-                light: '#F8FAFC', // Slate 50
+                navy: '#0F172A',
+                dark: '#020617',
+                gold: '#D4AF37',
+                goldLight: '#FCD34D',
+                charcoal: '#334155',
+                light: '#F8FAFC',
               }
             },
             fontFamily: {
@@ -39,19 +50,15 @@
       }
     </script>
     <style>
-      /* Custom scrollbar for a premium feel */
-      ::-webkit-scrollbar {
-        width: 8px;
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; }
+      ::-webkit-scrollbar-thumb { background: #334155; }
+      ::-webkit-scrollbar-thumb:hover { background: #0F172A; }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-      ::-webkit-scrollbar-track {
-        background: #f1f1f1; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #334155; 
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #0F172A; 
-      }
+      .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
     </style>
   
   <script type="importmap">

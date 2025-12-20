@@ -1,8 +1,10 @@
+
 import React, { useState, useMemo } from 'react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../context/PropertyContext';
 import { FilterCriteria, PropertyType, Property } from '../types';
 import { FilterX, Filter } from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 export const Listings: React.FC = () => {
   const { properties } = useProperties();
@@ -10,22 +12,18 @@ export const Listings: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Determine if active filters exist
   const hasFilters = Object.keys(filters).length > 0 || searchTerm.length > 0;
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property: Property) => {
-      // 1. Text Search (Local state)
       if (searchTerm && !property.title.toLowerCase().includes(searchTerm.toLowerCase()) && !property.location.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-      // 2. Manual Filters
       if (filters.minPrice && property.price < filters.minPrice) return false;
       if (filters.maxPrice && property.price > filters.maxPrice) return false;
       if (filters.minBeds && property.bedrooms < filters.minBeds) return false;
       if (filters.type && property.type !== filters.type) return false;
       if (filters.location && !property.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
-
       return true;
     });
   }, [filters, searchTerm, properties]);
@@ -41,6 +39,13 @@ export const Listings: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
+      <SEO 
+        title="Exclusive Property Listings" 
+        description="Browse our curated collection of luxury apartments, villas, and mansions in Lagos and Abuja. Filter by price, location, and type."
+        keywords="lagos houses for sale, ikoyi apartments, banana island mansions, rental properties lagos, luxury estates nigeria"
+        url="/listings"
+      />
+
       {/* Header */}
       <div className="bg-forge-navy text-white py-12 md:py-16 px-4">
         <div className="container mx-auto px-4 md:px-6 text-center">
@@ -54,7 +59,6 @@ export const Listings: React.FC = () => {
           
           {/* Sidebar Filters */}
           <div className="lg:w-1/4">
-            {/* Mobile Filter Toggle */}
             <div className="lg:hidden mb-4">
               <button 
                 onClick={() => setShowFilters(!showFilters)}

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
 import { Calendar, User, ArrowLeft, Facebook, Twitter, Linkedin, Share2 } from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 export const BlogPostDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +25,39 @@ export const BlogPostDetails: React.FC = () => {
     );
   }
 
+  // Schema for Blog Post
+  const blogSchema = {
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.excerpt,
+    "image": post.coverImage,
+    "author": {
+      "@type": "Organization",
+      "name": "The Forge Properties"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "The Forge Properties"
+    },
+    "datePublished": post.date,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": window.location.href
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white pt-20">
+      <SEO 
+        title={post.title}
+        description={post.metaDescription || post.excerpt}
+        keywords={post.keyphrase}
+        image={post.coverImage}
+        type="article"
+        url={`/blog/${post.id}`}
+        schema={blogSchema}
+      />
+
       {/* Article Header */}
       <div className="container mx-auto px-6 py-12 max-w-4xl text-center">
          <div className="flex items-center justify-center gap-2 text-forge-gold text-xs font-bold uppercase tracking-widest mb-4">
@@ -44,7 +76,7 @@ export const BlogPostDetails: React.FC = () => {
       {/* Featured Image */}
       {post.coverImage && (
         <div className="w-full h-[40vh] md:h-[60vh] overflow-hidden">
-          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
+          <img src={post.coverImage} alt={`Featured image for: ${post.title}`} className="w-full h-full object-cover" />
         </div>
       )}
 
@@ -54,10 +86,10 @@ export const BlogPostDetails: React.FC = () => {
          <div className="lg:w-1/6 order-2 lg:order-1">
             <div className="sticky top-32 flex flex-row lg:flex-col gap-6 justify-center lg:justify-start">
                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 hidden lg:block">Share</span>
-               <button className="text-slate-400 hover:text-[#1877F2] transition-colors"><Facebook size={20} /></button>
-               <button className="text-slate-400 hover:text-[#1DA1F2] transition-colors"><Twitter size={20} /></button>
-               <button className="text-slate-400 hover:text-[#0A66C2] transition-colors"><Linkedin size={20} /></button>
-               <button className="text-slate-400 hover:text-forge-navy transition-colors"><Share2 size={20} /></button>
+               <button className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Share on Facebook"><Facebook size={20} /></button>
+               <button className="text-slate-400 hover:text-[#1DA1F2] transition-colors" aria-label="Share on Twitter"><Twitter size={20} /></button>
+               <button className="text-slate-400 hover:text-[#0A66C2] transition-colors" aria-label="Share on LinkedIn"><Linkedin size={20} /></button>
+               <button className="text-slate-400 hover:text-forge-navy transition-colors" aria-label="Share via Link"><Share2 size={20} /></button>
             </div>
          </div>
 

@@ -1,0 +1,11 @@
+
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Block Admin sections from appearing in search results
+Disallow: /admin
+Disallow: /admin/*
+
+# Sitemap location
+Sitemap: https://theforgeproperties.com/sitemap.xml

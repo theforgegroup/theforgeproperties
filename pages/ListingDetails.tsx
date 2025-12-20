@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign, Loader2, Headset } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
+import { SEO } from '../components/SEO';
 
 export const ListingDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +16,6 @@ export const ListingDetails: React.FC = () => {
   
   const property = id ? getProperty(id) : undefined;
 
-  // Use the Global Listing Agent settings if available, otherwise fallback to property agent or defaults
   const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
   const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
   const agentImage = settings.listingAgent?.image || property?.agent?.image;
@@ -33,6 +34,54 @@ export const ListingDetails: React.FC = () => {
       </div>
     );
   }
+
+  // Schema for Real Estate Listing
+  const propertySchema = {
+    "@type": "RealEstateListing",
+    "name": property.title,
+    "description": property.description,
+    "image": property.images,
+    "url": window.location.href,
+    "datePosted": new Date().toISOString(),
+    "offers": {
+      "@type": "Offer",
+      "price": property.price,
+      "priceCurrency": "NGN",
+      "availability": "https://schema.org/InStock",
+      "offeredBy": {
+        "@type": "Organization",
+        "name": "The Forge Properties"
+      }
+    }
+  };
+
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://theforgeproperties.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Listings",
+        "item": "https://theforgeproperties.com/listings"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": property.title,
+        "item": window.location.href
+      }
+    ]
+  };
+
+  const combinedSchema = {
+    "@graph": [propertySchema, breadcrumbSchema]
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,17 +107,26 @@ export const ListingDetails: React.FC = () => {
       setTimeout(() => setSubmitStatus('idle'), 3000);
     } catch (error) {
       console.error("Submission failed", error);
-      setSubmitStatus('idle'); // In a real app we'd show an error state
+      setSubmitStatus('idle');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
-      {/* Gallery Header - Responsive Height */}
+      <SEO 
+        title={property.title}
+        description={property.description.substring(0, 160)}
+        image={property.images[0]}
+        type="realestate"
+        url={`/listings/${property.id}`}
+        schema={combinedSchema}
+      />
+
+      {/* Gallery Header */}
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img 
           src={property.images[activeImage]} 
-          alt={property.title} 
+          alt={`${property.title} - Main View`} 
           className="w-full h-full object-cover opacity-90"
         />
         <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent overflow-x-auto">
@@ -78,7 +136,7 @@ export const ListingDetails: React.FC = () => {
               onClick={() => setActiveImage(idx)}
               className={`w-16 h-12 md:w-20 md:h-14 border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-forge-gold opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'}`}
             >
-              <img src={img} className="w-full h-full object-cover" alt="thumbnail" />
+              <img src={img} className="w-full h-full object-cover" alt={`${property.title} - View ${idx + 1}`} />
             </button>
           ))}
         </div>
@@ -152,14 +210,10 @@ export const ListingDetails: React.FC = () => {
                   marginWidth={0} 
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                   className="filter grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
-                  title={property.title}
+                  title={`Google Maps Location for ${property.title}`}
                 ></iframe>
-                {/* Overlay to improve scroll UX on mobile (prevents getting stuck in map while scrolling page) */}
                 <div className="absolute inset-0 bg-transparent pointer-events-none border-4 border-slate-100/50"></div>
               </div>
-              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-                <MapPin size={12} /> {property.location}
-              </p>
             </div>
           </div>
 
@@ -215,7 +269,7 @@ export const ListingDetails: React.FC = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" 
+                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
                      />
                    </div>
                    <div>
@@ -225,7 +279,7 @@ export const ListingDetails: React.FC = () => {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" 
+                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
                      />
                    </div>
                    <div>
@@ -235,17 +289,8 @@ export const ListingDetails: React.FC = () => {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" 
+                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
                      />
-                   </div>
-                   <div>
-                     <label className="block text-xs uppercase font-bold text-slate-500 mb-1">Message (Optional)</label>
-                     <textarea 
-                      rows={3}
-                      value={formData.message}
-                      onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none resize-none"
-                     ></textarea>
                    </div>
                    
                    <button 

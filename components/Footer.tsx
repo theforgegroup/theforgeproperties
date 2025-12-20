@@ -132,7 +132,7 @@ export const Footer: React.FC = () => {
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-white">Privacy Policy</a>
             <a href="#" className="hover:text-white">Terms of Service</a>
-            <a href="#" className="hover:text-white">Sitemap</a>
+            <a href="/sitemap.xml" className="hover:text-white">Sitemap</a>
           </div>
         </div>
       </div>
