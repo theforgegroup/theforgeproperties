@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -20,7 +20,7 @@ import { AdminBlog } from './pages/AdminBlog';
 import { AdminPostForm } from './pages/AdminPostForm';
 import { AIConcierge } from './components/AIConcierge';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { PropertyProvider } from './context/PropertyContext';
+import { PropertyProvider, useProperties } from './context/PropertyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const ScrollToTop = () => {
@@ -41,9 +41,25 @@ const AdminEntry: React.FC = () => {
 
 // Layout wrapper to conditionally render public UI
 const AppLayout: React.FC = () => {
+  const { settings } = useProperties();
   const location = useLocation();
   // Check if the current route is an admin route
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Dynamic Site Icon (Favicon) Logic
+  useEffect(() => {
+    if (settings?.listingAgent?.image) {
+      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = settings.listingAgent.image;
+      } else {
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.href = settings.listingAgent.image;
+        document.head.appendChild(newLink);
+      }
+    }
+  }, [settings?.listingAgent?.image]);
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900 selection:bg-forge-gold selection:text-forge-navy">
@@ -62,7 +78,6 @@ const AppLayout: React.FC = () => {
           <Route path="/contact" element={<Contact />} />
           
           {/* Admin Routes */}
-          {/* Main Admin Entry Point: Handles Login vs Dashboard */}
           <Route path="/admin" element={<AdminEntry />} />
           
           <Route 
