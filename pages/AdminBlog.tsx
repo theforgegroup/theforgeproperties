@@ -36,7 +36,6 @@ export const AdminBlog: React.FC = () => {
         </button>
       </div>
 
-      {/* Search Bar */}
       <div className="relative mb-8">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="text-slate-400" size={20} />
@@ -50,7 +49,6 @@ export const AdminBlog: React.FC = () => {
         />
       </div>
 
-      {/* Table */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-slate-200">
         <table className="w-full text-left border-collapse">
           <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
@@ -70,60 +68,27 @@ export const AdminBlog: React.FC = () => {
                     {post.coverImage ? (
                       <img src={post.coverImage} alt="" className="w-12 h-12 rounded object-cover shadow-sm" />
                     ) : (
-                      <div className="w-12 h-12 bg-slate-100 flex items-center justify-center rounded text-slate-300">
-                        <FileText size={20} />
-                      </div>
+                      <div className="w-12 h-12 bg-slate-100 flex items-center justify-center rounded text-slate-300"><FileText size={20} /></div>
                     )}
                     <div>
                       <div className="font-bold text-forge-navy line-clamp-1">{post.title}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {post.category}
-                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">{post.category}</div>
                     </div>
                   </div>
                 </td>
-                <td className="p-5">
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${
-                    post.status === 'Published' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
-                  }`}>
-                    {post.status}
-                  </span>
-                </td>
-                <td className="p-5 font-medium text-slate-700">
-                  {post.author}
-                </td>
-                <td className="p-5 text-slate-500 text-xs">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    {new Date(post.date).toLocaleDateString()}
-                  </div>
-                </td>
+                <td className="p-5"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${post.status === 'Published' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{post.status}</span></td>
+                <td className="p-5 font-medium text-slate-700">{post.author}</td>
+                <td className="p-5 text-slate-500 text-xs"><div className="flex items-center gap-1"><Calendar size={12} />{new Date(post.date).toLocaleDateString()}</div></td>
                 <td className="p-5">
                   <div className="flex gap-3 justify-end text-slate-400">
-                    <button 
-                      onClick={() => window.open(`#/blog/${post.id}`, '_blank')}
-                      className="hover:text-blue-500 transition-colors"
-                      title="View Live"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button 
-                      onClick={() => navigate(`/admin/blog/edit/${post.id}`)}
-                      className="hover:text-forge-gold transition-colors"
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </button>
+                    <button onClick={() => window.open(`#/blog/${post.slug}`, '_blank')} className="hover:text-blue-500 transition-colors" title="View Live"><Eye size={18} /></button>
+                    <button onClick={() => navigate(`/admin/blog/edit/${post.id}`)} className="hover:text-forge-gold transition-colors" title="Edit"><Edit size={18} /></button>
                     <button onClick={() => handleDelete(post.id)} className="hover:text-red-500 transition-colors" title="Delete"><Trash2 size={18} /></button>
                   </div>
                 </td>
               </tr>
             )) : (
-              <tr>
-                <td colSpan={5} className="p-12 text-center text-slate-400">
-                  No articles found.
-                </td>
-              </tr>
+              <tr><td colSpan={5} className="p-12 text-center text-slate-400">No articles found.</td></tr>
             )}
           </tbody>
         </table>

@@ -23,6 +23,7 @@ interface PropertyContextType {
   updatePost: (post: BlogPost) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
+  getPostBySlug: (slug: string) => BlogPost | undefined;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -35,21 +36,9 @@ const DEFAULT_SETTINGS: SiteSettings = {
   contactPhone: '+234 800 FORGE 00',
   address: 'Silverland Estate, Sangotedo, Ajah, Lagos, Nigeria',
   teamMembers: [
-    { 
-      name: "Daniel Paul", 
-      role: "Co-Founder", 
-      image: "" 
-    },
-    { 
-      name: "Paul Bolaji", 
-      role: "Co-Founder", 
-      image: "" 
-    },
-    { 
-      name: "Samuel Oshin", 
-      role: "Co-Founder", 
-      image: "" 
-    }
+    { name: "Daniel Paul", role: "Co-Founder", image: "" },
+    { name: "Paul Bolaji", role: "Co-Founder", image: "" },
+    { name: "Samuel Oshin", role: "Co-Founder", image: "" }
   ],
   listingAgent: {
     name: "The Forge Properties",
@@ -60,6 +49,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
 
 const SAMPLE_POST: BlogPost = {
   id: 'sample-1',
+  slug: 'the-future-of-luxury-real-estate-in-lagos',
   title: 'The Future of Luxury Real Estate in Lagos',
   excerpt: 'An in-depth look at how the Lekki-Epe corridor is transforming into the new gold standard for high-net-worth investments.',
   content: '<p>As the skyline of Lagos continues to evolve, a new definition of luxury is emerging...</p>',
@@ -80,7 +70,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch Initial Data from Supabase
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -97,7 +86,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (leadsRes.data) setLeads(leadsRes.data);
         if (subsRes.data) setSubscribers(subsRes.data);
         
-        // Add sample post if list is empty for testing purposes
         if (postsRes.data && postsRes.data.length > 0) {
           setPosts(postsRes.data);
         } else {
@@ -105,16 +93,13 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
         
         if (settingsRes.data) {
-          // Merge with default to ensure new fields (like listingAgent) exist if not in DB yet
           setSettings({ ...DEFAULT_SETTINGS, ...settingsRes.data });
         } else {
-            // Use defaults if table is empty
             setSettings(DEFAULT_SETTINGS); 
         }
 
       } catch (error) {
         console.error('Error fetching data from Supabase:', error);
-        // On error, still load sample post for testing
         setPosts([SAMPLE_POST]);
       } finally {
         setIsLoading(false);
@@ -124,8 +109,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchData();
   }, []);
 
-  // CRUD Operations - Properties
-
   const addProperty = async (property: Property) => {
     const { error } = await supabase.from('properties').insert([property]);
     if (error) throw error;
@@ -133,11 +116,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updateProperty = async (updatedProperty: Property) => {
-    const { error } = await supabase
-      .from('properties')
-      .update(updatedProperty)
-      .eq('id', updatedProperty.id);
-      
+    const { error } = await supabase.from('properties').update(updatedProperty).eq('id', updatedProperty.id);
     if (error) throw error;
     setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
   };
@@ -148,11 +127,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setProperties(prev => prev.filter(p => p.id !== id));
   };
 
-  const getProperty = (id: string) => {
-    return properties.find(p => p.id === id);
-  };
-
-  // CRUD Operations - Leads
+  const getProperty = (id: string) => properties.find(p => p.id === id);
 
   const addLead = async (lead: Lead) => {
     const { error } = await supabase.from('leads').insert([lead]);
@@ -166,23 +141,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
 
-  // CRUD Operations - Subscribers
-
   const addSubscriber = async (email: string) => {
     if (subscribers.some(s => s.email === email)) return;
-
     const newSubscriber: Subscriber = {
       id: Date.now().toString(),
       email,
       date: new Date().toISOString()
     };
-    
-    // 1. Add to Supabase
     const { error } = await supabase.from('subscribers').insert([newSubscriber]);
     if (error) throw error;
     setSubscribers(prev => [newSubscriber, ...prev]);
 
-    // 2. Sync with MailerLite
     try {
       await fetch('https://connect.mailerlite.com/api/subscribers', {
         method: 'POST',
@@ -191,16 +160,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
           'Authorization': `Bearer ${MAILERLITE_API_KEY}`,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          email: email,
-        })
+        body: JSON.stringify({ email: email })
       });
     } catch (err) {
       console.warn("MailerLite sync issue:", err);
     }
   };
-
-  // CRUD Operations - Blog Posts
 
   const addPost = async (post: BlogPost) => {
     const { error } = await supabase.from('posts').insert([post]);
@@ -209,46 +174,30 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
-    // If it's the sample post, just update local state to simulate success for testing
     if (updatedPost.id === 'sample-1') {
         setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
         return;
     }
-
-    const { error } = await supabase
-      .from('posts')
-      .update(updatedPost)
-      .eq('id', updatedPost.id);
-      
+    const { error } = await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
     if (error) throw error;
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
   };
 
   const deletePost = async (id: string) => {
-    // If it's the sample post, just update local state
     if (id === 'sample-1') {
         setPosts(prev => prev.filter(p => p.id !== id));
         return;
     }
-
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (error) throw error;
     setPosts(prev => prev.filter(p => p.id !== id));
   };
 
-  const getPost = (id: string) => {
-    return posts.find(p => p.id === id);
-  };
-
-  // Settings
+  const getPost = (id: string) => posts.find(p => p.id === id);
+  const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
 
   const updateSettings = async (newSettings: SiteSettings) => {
-    // We assume ID 1 for single row settings
-    const { error } = await supabase
-      .from('site_settings')
-      .update(newSettings)
-      .eq('id', 1);
-
+    const { error } = await supabase.from('site_settings').update(newSettings).eq('id', 1);
     if (error) throw error;
     setSettings(newSettings);
   };
@@ -258,7 +207,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       properties, leads, subscribers, posts, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty,
       addLead, updateLeadStatus, addSubscriber, updateSettings,
-      addPost, updatePost, deletePost, getPost
+      addPost, updatePost, deletePost, getPost, getPostBySlug
     }}>
       {children}
     </PropertyContext.Provider>
@@ -267,8 +216,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useProperties = () => {
   const context = useContext(PropertyContext);
-  if (!context) {
-    throw new Error('useProperties must be used within a PropertyProvider');
-  }
+  if (!context) throw new Error('useProperties must be used within a PropertyProvider');
   return context;
 };

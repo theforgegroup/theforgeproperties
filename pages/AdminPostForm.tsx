@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Globe, FileText, X, Plus
+  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Globe, FileText, X, Plus, Link as LinkIcon
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -19,21 +19,20 @@ export const AdminPostForm: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   
-  // Ref for hidden file input
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Category State
   const [categories, setCategories] = useState(['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment']);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
   const [formData, setFormData] = useState<BlogPost>({
     id: '',
+    slug: '',
     title: '',
     excerpt: '',
     content: '',
     coverImage: '',
-    author: 'The Forge Properties', // Static Author
+    author: 'The Forge Properties',
     date: new Date().toISOString(),
     category: 'Market Insights',
     status: 'Draft',
@@ -41,15 +40,21 @@ export const AdminPostForm: React.FC = () => {
     keyphrase: ''
   });
 
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')     // Replace spaces with -
+      .replace(/[^\w-]+/g, '')  // Remove all non-word chars
+      .replace(/--+/g, '-');    // Replace multiple - with single -
+  };
+
   useEffect(() => {
     if (isEditing && id) {
       const post = getPost(id);
       if (post) {
-        setFormData(prev => ({
-          ...post,
-          author: 'The Forge Properties' // Ensure existing posts also use static author on edit
-        }));
-        // If post has a category not in our default list, add it
+        setFormData(post);
         if (!categories.includes(post.category)) {
           setCategories(prev => [...prev, post.category]);
         }
@@ -61,7 +66,17 @@ export const AdminPostForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      
+      // Auto-generate slug if title changes and slug hasn't been manually edited or is empty
+      if (name === 'title' && (!prev.slug || prev.slug === slugify(prev.title))) {
+        updated.slug = slugify(value);
+      }
+      
+      return updated;
+    });
   };
 
   const handleContentChange = (content: string) => {
@@ -128,9 +143,7 @@ export const AdminPostForm: React.FC = () => {
         </div>
 
         <form className="flex flex-col lg:flex-row gap-8">
-           {/* Main Content Area */}
            <div className="flex-1 space-y-8">
-              {/* Title */}
               <div>
                 <input
                   type="text"
@@ -141,14 +154,26 @@ export const AdminPostForm: React.FC = () => {
                   placeholder="Enter Title Here"
                   required
                 />
+                
+                {/* Slug Editor */}
+                <div className="flex items-center gap-2 mt-4 text-sm text-slate-500 bg-slate-50 p-3 rounded border border-slate-100">
+                  <LinkIcon size={14} className="text-forge-gold" />
+                  <span className="font-mono text-xs">theforgeproperties.com/blog/</span>
+                  <input 
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({...formData, slug: slugify(e.target.value)})}
+                    placeholder="post-permalink"
+                    className="flex-grow bg-white border border-slate-200 px-2 py-1 rounded font-mono text-xs focus:border-forge-gold focus:outline-none"
+                  />
+                </div>
               </div>
 
-              {/* Editor */}
               <div>
                 <RichTextEditor value={formData.content} onChange={handleContentChange} />
               </div>
 
-              {/* Excerpt */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                    <FileText size={14} /> Short Excerpt
@@ -163,7 +188,6 @@ export const AdminPostForm: React.FC = () => {
                 />
               </div>
 
-              {/* SEO Configuration */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
                  <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                    <Globe size={16} className="text-forge-gold" />
@@ -201,20 +225,13 @@ export const AdminPostForm: React.FC = () => {
               </div>
            </div>
 
-           {/* Sidebar Options */}
            <div className="w-full lg:w-80 space-y-6">
-              
-              {/* Publish Actions */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm sticky top-6 z-10">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Publish</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm text-slate-600 border-b border-slate-100 pb-2">
                     <span>Status:</span>
                     <span className="font-bold">{formData.status}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-slate-600 border-b border-slate-100 pb-2">
-                    <span>Visibility:</span>
-                    <span className="font-bold">Public</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 mt-4">
@@ -246,7 +263,6 @@ export const AdminPostForm: React.FC = () => {
                 </div>
               </div>
 
-              {/* Category */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Category</h3>
                  
@@ -261,18 +277,8 @@ export const AdminPostForm: React.FC = () => {
                        autoFocus
                      />
                      <div className="flex gap-2">
-                       <button 
-                         type="button"
-                         onClick={handleAddCategory}
-                         className="flex-1 bg-forge-navy text-white text-xs font-bold py-2 rounded-sm"
-                       >
-                         Add
-                       </button>
-                       <button 
-                         type="button"
-                         onClick={() => setIsAddingCategory(false)}
-                         className="px-2 border border-slate-300 text-slate-500 rounded-sm hover:bg-slate-100"
-                       >
+                       <button type="button" onClick={handleAddCategory} className="flex-1 bg-forge-navy text-white text-xs font-bold py-2 rounded-sm">Add</button>
+                       <button type="button" onClick={() => setIsAddingCategory(false)} className="px-2 border border-slate-300 text-slate-500 rounded-sm hover:bg-slate-100">
                          <X size={14} />
                        </button>
                      </div>
@@ -289,60 +295,28 @@ export const AdminPostForm: React.FC = () => {
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
-                      
-                      <button 
-                        type="button"
-                        onClick={() => setIsAddingCategory(true)}
-                        className="text-forge-gold text-xs font-bold hover:underline flex items-center gap-1"
-                      >
+                      <button type="button" onClick={() => setIsAddingCategory(true)} className="text-forge-gold text-xs font-bold hover:underline flex items-center gap-1">
                         <Plus size={12} /> Add New Category
                       </button>
                    </div>
                  )}
               </div>
 
-              {/* Author (Static) */}
-              <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
-                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Author</h3>
-                 <div className="w-full bg-slate-100 border border-slate-200 p-3 text-sm rounded text-slate-600 font-medium cursor-not-allowed">
-                    The Forge Properties
-                 </div>
-              </div>
-
-              {/* Featured Image */}
               <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Featured Image</h3>
-                 <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-video bg-slate-100 border-2 border-dashed border-slate-300 rounded flex flex-col items-center justify-center cursor-pointer hover:border-forge-gold overflow-hidden relative"
-                 >
-                    {formData.coverImage ? (
-                      <img src={formData.coverImage} alt="Cover" className="w-full h-full object-cover" />
-                    ) : (
+                 <div onClick={() => fileInputRef.current?.click()} className="aspect-video bg-slate-100 border-2 border-dashed border-slate-300 rounded flex flex-col items-center justify-center cursor-pointer hover:border-forge-gold overflow-hidden relative">
+                    {formData.coverImage ? <img src={formData.coverImage} alt="Cover" className="w-full h-full object-cover" /> : (
                       <>
                         <ImageIcon size={24} className="text-slate-400 mb-2" />
                         <span className="text-xs text-slate-400">Click to Upload</span>
                       </>
                     )}
                  </div>
-                 <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleFileUpload} 
-                  />
-                  {formData.coverImage && (
-                    <button 
-                      type="button"
-                      onClick={() => setFormData(prev => ({...prev, coverImage: ''}))}
-                      className="text-red-500 text-xs mt-2 underline"
-                    >
-                      Remove Image
-                    </button>
+                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                 {formData.coverImage && (
+                    <button type="button" onClick={() => setFormData(prev => ({...prev, coverImage: ''}))} className="text-red-500 text-xs mt-2 underline">Remove Image</button>
                   )}
               </div>
-
            </div>
         </form>
       </div>
