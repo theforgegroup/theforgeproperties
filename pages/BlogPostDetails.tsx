@@ -7,8 +7,10 @@ import { SEO } from '../components/SEO';
 
 export const BlogPostDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getPostBySlug } = useProperties();
-  const post = slug ? getPostBySlug(slug) : undefined;
+  const { getPostBySlug, getPost } = useProperties();
+  
+  // Try finding by slug first, then fallback to ID
+  const post = slug ? (getPostBySlug(slug) || getPost(slug)) : undefined;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -17,9 +19,12 @@ export const BlogPostDetails: React.FC = () => {
   if (!post) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
+        <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Article Not Found</h2>
-          <Link to="/blog" className="text-forge-gold underline">Return to Journal</Link>
+          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the journal entry you're looking for.</p>
+          <Link to="/blog" className="inline-block bg-forge-gold text-forge-navy px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-forge-navy hover:text-white transition-all">
+            Return to Journal
+          </Link>
         </div>
       </div>
     );
@@ -44,7 +49,7 @@ export const BlogPostDetails: React.FC = () => {
         keywords={post.keyphrase}
         image={post.coverImage}
         type="article"
-        url={`/blog/${post.slug}`}
+        url={`/blog/${post.slug || post.id}`}
         schema={blogSchema}
       />
 

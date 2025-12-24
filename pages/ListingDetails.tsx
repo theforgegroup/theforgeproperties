@@ -1,20 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, MessageSquare, DollarSign, Loader2, Headset } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 import { SEO } from '../components/SEO';
 
 export const ListingDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getPropertyBySlug, addLead, settings } = useProperties();
+  const { getPropertyBySlug, getProperty, addLead, settings } = useProperties();
   const [activeImage, setActiveImage] = useState(0);
   const [formMode, setFormMode] = useState<'viewing' | 'offer'>('viewing');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   
-  const property = slug ? getPropertyBySlug(slug) : undefined;
+  // Try finding by slug first, then fallback to ID
+  const property = slug ? (getPropertyBySlug(slug) || getProperty(slug)) : undefined;
 
   const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
   const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
@@ -27,9 +28,12 @@ export const ListingDetails: React.FC = () => {
   if (!property) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
+        <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Property Not Found</h2>
-          <Link to="/listings" className="text-forge-gold underline">Return to listings</Link>
+          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the residence you're looking for. It may have been sold or moved.</p>
+          <Link to="/listings" className="inline-block bg-forge-gold text-forge-navy px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-forge-navy hover:text-white transition-all">
+            Return to listings
+          </Link>
         </div>
       </div>
     );
@@ -88,7 +92,7 @@ export const ListingDetails: React.FC = () => {
         description={property.description.substring(0, 160)}
         image={property.images[0]}
         type="realestate"
-        url={`/listings/${property.slug}`}
+        url={`/listings/${property.slug || property.id}`}
         schema={propertySchema}
       />
 
