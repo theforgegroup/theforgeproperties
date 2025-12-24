@@ -40,31 +40,28 @@ export const Listings: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
       <SEO 
-        title="Exclusive Property Listings" 
-        description="Browse our curated collection of luxury apartments, villas, and mansions in Lagos and Abuja. Filter by price, location, and type."
-        keywords="lagos houses for sale, ikoyi apartments, banana island mansions, rental properties lagos, luxury estates nigeria"
+        title="Exclusive Luxury Listings" 
+        description="Discover our collection of premium villas, apartments, and estates in Lagos and Abuja. Exceptional homes for discerning clients."
+        keywords="lagos houses for sale, ikoyi apartments, banana island mansions"
         url="/listings"
       />
 
-      {/* Header */}
       <div className="bg-forge-navy text-white py-12 md:py-16 px-4">
         <div className="container mx-auto px-4 md:px-6 text-center">
            <span className="text-forge-gold text-xs uppercase tracking-[0.3em] mb-2 block">Our Portfolio</span>
-          <h1 className="text-3xl md:text-5xl font-serif font-bold">Exclusive Listings</h1>
+          <h1 className="text-3xl md:text-5xl font-serif font-bold text-white">Curated Collections</h1>
         </div>
       </div>
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Sidebar Filters */}
           <div className="lg:w-1/4">
             <div className="lg:hidden mb-4">
               <button 
                 onClick={() => setShowFilters(!showFilters)}
                 className="w-full py-3 bg-white border border-slate-300 flex items-center justify-center gap-2 text-forge-navy font-bold uppercase tracking-wider text-xs shadow-sm"
               >
-                <Filter size={16} /> {showFilters ? 'Hide Filters' : 'Show Filters / Search'}
+                <Filter size={16} /> {showFilters ? 'Hide Filters' : 'Filter & Search'}
               </button>
             </div>
 
@@ -80,18 +77,18 @@ export const Listings: React.FC = () => {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Location / Keyword</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Location / Keyword</label>
                   <input 
                     type="text" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search..."
+                    placeholder="Search area..."
                     className="w-full border border-slate-300 px-3 py-2 text-sm focus:border-forge-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Property Type</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Property Type</label>
                   <select 
                     className="w-full border border-slate-300 px-3 py-2 text-sm focus:border-forge-gold focus:outline-none"
                     value={filters.type || ''}
@@ -105,41 +102,24 @@ export const Listings: React.FC = () => {
                 </div>
 
                 <div>
-                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bedrooms (Min)</label>
+                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Max Price (₦)</label>
                    <input 
                     type="number"
                     min="0"
-                    value={filters.minBeds || ''}
-                    onChange={(e) => handleManualFilterChange('minBeds', e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="w-full border border-slate-300 px-3 py-2 text-sm focus:border-forge-gold focus:outline-none"
-                   />
-                </div>
-
-                <div>
-                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Max Price</label>
-                   <input 
-                    type="number"
-                    min="0"
-                    step="10000"
+                    step="1000000"
                     value={filters.maxPrice || ''}
                     onChange={(e) => handleManualFilterChange('maxPrice', e.target.value ? parseInt(e.target.value) : undefined)}
                     className="w-full border border-slate-300 px-3 py-2 text-sm focus:border-forge-gold focus:outline-none"
-                    placeholder="Any"
+                    placeholder="Unlimited"
                    />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Grid */}
           <div className="lg:w-3/4">
-             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center text-slate-500 text-sm gap-2 sm:gap-0">
-                <span>Showing {filteredProperties.length} properties</span>
-                <select className="bg-transparent border-none focus:ring-0 cursor-pointer hover:text-forge-navy p-0">
-                  <option>Sort by: Featured</option>
-                  <option>Price: High to Low</option>
-                  <option>Price: Low to High</option>
-                </select>
+             <div className="mb-6 flex justify-between items-center text-slate-500 text-sm">
+                <span>Showing {filteredProperties.length} distinguished properties</span>
              </div>
 
              {filteredProperties.length > 0 ? (
@@ -150,8 +130,8 @@ export const Listings: React.FC = () => {
                 </div>
              ) : (
                <div className="text-center py-24 bg-white border border-dashed border-slate-300">
-                 <h3 className="text-xl text-slate-400 font-serif mb-2">No properties found.</h3>
-                 <p className="text-slate-500">Try adjusting your filters.</p>
+                 <p className="text-slate-400 font-serif mb-2">No properties matched your criteria.</p>
+                 <button onClick={clearFilters} className="text-forge-gold font-bold text-xs uppercase underline">Clear All Filters</button>
                </div>
              )}
           </div>

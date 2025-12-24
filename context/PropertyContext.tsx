@@ -14,6 +14,7 @@ interface PropertyContextType {
   updateProperty: (property: Property) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
   getProperty: (id: string) => Property | undefined;
+  getPropertyBySlug: (slug: string) => Property | undefined;
   addLead: (lead: Lead) => Promise<void>;
   updateLeadStatus: (id: string, status: Lead['status']) => Promise<void>;
   addSubscriber: (email: string) => Promise<void>;
@@ -128,6 +129,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const getProperty = (id: string) => properties.find(p => p.id === id);
+  const getPropertyBySlug = (slug: string) => properties.find(p => p.slug === slug);
 
   const addLead = async (lead: Lead) => {
     const { error } = await supabase.from('leads').insert([lead]);
@@ -205,7 +207,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <PropertyContext.Provider value={{ 
       properties, leads, subscribers, posts, settings, isLoading,
-      addProperty, updateProperty, deleteProperty, getProperty,
+      addProperty, updateProperty, deleteProperty, getProperty, getPropertyBySlug,
       addLead, updateLeadStatus, addSubscriber, updateSettings,
       addPost, updatePost, deletePost, getPost, getPostBySlug
     }}>

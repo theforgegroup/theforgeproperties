@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bed, Bath, Move, MapPin } from 'lucide-react';
@@ -8,11 +9,12 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+  const listingUrl = `/listings/${property.slug || property.id}`;
+  
   return (
     <div className="group bg-white shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-100 flex flex-col h-full">
-      {/* Image Container */}
       <div className="relative h-64 overflow-hidden">
-        <Link to={`/listings/${property.id}`}>
+        <Link to={listingUrl}>
           <img 
             src={property.images[0]} 
             alt={property.title} 
@@ -31,14 +33,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex items-center text-slate-500 text-xs mb-3 font-medium uppercase tracking-wide">
           <MapPin size={14} className="mr-1 text-forge-gold" />
           {property.location}
         </div>
         
-        <Link to={`/listings/${property.id}`} className="block mb-2">
+        <Link to={listingUrl} className="block mb-2">
           <h3 className="text-xl font-serif text-slate-900 group-hover:text-forge-gold transition-colors line-clamp-1">
             {property.title}
           </h3>

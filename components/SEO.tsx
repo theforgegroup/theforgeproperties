@@ -28,9 +28,10 @@ export const SEO: React.FC<SEOProps> = ({
   const canonicalUrl = url ? `https://theforgeproperties.com${url}` : window.location.href;
 
   useEffect(() => {
-    // Basic Meta
+    // 1. Browser Title
     document.title = fullTitle;
     
+    // 2. Head Meta Tags Helper
     const updateMeta = (name: string, content: string, attr: 'name' | 'property' = 'name') => {
       let element = document.querySelector(`meta[${attr}="${name}"]`);
       if (!element) {
@@ -41,24 +42,32 @@ export const SEO: React.FC<SEOProps> = ({
       element.setAttribute('content', content);
     };
 
+    // 3. Standard SEO
     updateMeta('description', description || defaultDesc);
     updateMeta('keywords', keywords || defaultKeywords);
 
-    // Open Graph / Social
-    updateMeta('og:title', fullTitle, 'property');
+    // 4. Open Graph (Facebook / WhatsApp / LinkedIn)
+    // IMPORTANT: Social platforms prefer the RAW title for the card
+    updateMeta('og:title', title, 'property'); 
     updateMeta('og:description', description || defaultDesc, 'property');
-    updateMeta('og:image', image || defaultImage, 'property');
+    
+    // Ensure image is absolute for social scrapers
+    let socialImage = image || defaultImage;
+    if (socialImage.startsWith('/') && !socialImage.startsWith('//')) {
+      socialImage = `https://theforgeproperties.com${socialImage}`;
+    }
+    updateMeta('og:image', socialImage, 'property');
     updateMeta('og:url', canonicalUrl, 'property');
     updateMeta('og:type', type === 'article' ? 'article' : 'website', 'property');
     updateMeta('og:site_name', siteName, 'property');
 
-    // Twitter
+    // 5. Twitter Card
     updateMeta('twitter:card', 'summary_large_image');
-    updateMeta('twitter:title', fullTitle);
+    updateMeta('twitter:title', title);
     updateMeta('twitter:description', description || defaultDesc);
-    updateMeta('twitter:image', image || defaultImage);
+    updateMeta('twitter:image', socialImage);
 
-    // Canonical
+    // 6. Canonical Link
     let link: HTMLLinkElement | null = document.querySelector('link[rel="canonical"]');
     if (!link) {
       link = document.createElement('link');
@@ -67,7 +76,7 @@ export const SEO: React.FC<SEOProps> = ({
     }
     link.setAttribute('href', canonicalUrl);
 
-    // JSON-LD Schema
+    // 7. Structured Data (JSON-LD)
     const existingScript = document.getElementById('json-ld-schema');
     if (existingScript) existingScript.remove();
 
@@ -81,11 +90,7 @@ export const SEO: React.FC<SEOProps> = ({
       });
       document.head.appendChild(script);
     }
+  }, [fullTitle, title, description, keywords, image, canonicalUrl, type, schema]);
 
-    return () => {
-      // Cleanup if needed when unmounting
-    };
-  }, [fullTitle, description, keywords, image, canonicalUrl, type, schema]);
-
-  return null; // This component doesn't render anything visible
+  return null;
 };

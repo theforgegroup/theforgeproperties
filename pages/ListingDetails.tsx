@@ -7,14 +7,14 @@ import { Lead } from '../types';
 import { SEO } from '../components/SEO';
 
 export const ListingDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { getProperty, addLead, settings } = useProperties();
+  const { slug } = useParams<{ slug: string }>();
+  const { getPropertyBySlug, addLead, settings } = useProperties();
   const [activeImage, setActiveImage] = useState(0);
   const [formMode, setFormMode] = useState<'viewing' | 'offer'>('viewing');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   
-  const property = id ? getProperty(id) : undefined;
+  const property = slug ? getPropertyBySlug(slug) : undefined;
 
   const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
   const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
@@ -22,7 +22,7 @@ export const ListingDetails: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo(0,0);
-  }, [id]);
+  }, [slug]);
 
   if (!property) {
     return (
@@ -35,7 +35,6 @@ export const ListingDetails: React.FC = () => {
     );
   }
 
-  // Schema for Real Estate Listing
   const propertySchema = {
     "@type": "RealEstateListing",
     "name": property.title,
@@ -53,34 +52,6 @@ export const ListingDetails: React.FC = () => {
         "name": "The Forge Properties"
       }
     }
-  };
-
-  const breadcrumbSchema = {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://theforgeproperties.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Listings",
-        "item": "https://theforgeproperties.com/listings"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": property.title,
-        "item": window.location.href
-      }
-    ]
-  };
-
-  const combinedSchema = {
-    "@graph": [propertySchema, breadcrumbSchema]
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +77,6 @@ export const ListingDetails: React.FC = () => {
       setFormData({ name: '', email: '', phone: '', message: '' });
       setTimeout(() => setSubmitStatus('idle'), 3000);
     } catch (error) {
-      console.error("Submission failed", error);
       setSubmitStatus('idle');
     }
   };
@@ -118,11 +88,10 @@ export const ListingDetails: React.FC = () => {
         description={property.description.substring(0, 160)}
         image={property.images[0]}
         type="realestate"
-        url={`/listings/${property.id}`}
-        schema={combinedSchema}
+        url={`/listings/${property.slug}`}
+        schema={propertySchema}
       />
 
-      {/* Gallery Header */}
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img 
           src={property.images[activeImage]} 
@@ -144,7 +113,6 @@ export const ListingDetails: React.FC = () => {
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-          {/* Main Content */}
           <div className="lg:w-2/3">
             <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
               <div>
@@ -197,27 +165,22 @@ export const ListingDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Google Maps Integration */}
             <div className="mb-12">
               <h3 className="text-xl font-serif text-forge-navy mb-4">Location</h3>
-              <div className="bg-slate-200 h-96 w-full rounded-sm overflow-hidden border border-slate-200 shadow-inner relative group">
+              <div className="bg-slate-200 h-96 w-full rounded-sm overflow-hidden relative group">
                 <iframe 
                   width="100%" 
                   height="100%" 
                   frameBorder="0" 
                   scrolling="no" 
-                  marginHeight={0} 
-                  marginWidth={0} 
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                   className="filter grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
-                  title={`Google Maps Location for ${property.title}`}
+                  title={`Location for ${property.title}`}
                 ></iframe>
-                <div className="absolute inset-0 bg-transparent pointer-events-none border-4 border-slate-100/50"></div>
               </div>
             </div>
           </div>
 
-          {/* Sidebar Form */}
           <div className="lg:w-1/3">
              <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
                <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
@@ -236,67 +199,23 @@ export const ListingDetails: React.FC = () => {
                </div>
 
                <div className="flex gap-2 mb-6">
-                 <button 
-                  onClick={() => setFormMode('viewing')}
-                  className={`flex-1 py-3 md:py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
-                 >
-                   Viewing
-                 </button>
-                 <button 
-                  onClick={() => setFormMode('offer')}
-                  className={`flex-1 py-3 md:py-2 text-xs font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}
-                 >
-                   Make Offer
-                 </button>
+                 <button onClick={() => setFormMode('viewing')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Viewing</button>
+                 <button onClick={() => setFormMode('offer')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Make Offer</button>
                </div>
 
-               <h3 className="text-lg font-serif text-forge-navy mb-4">
-                 {formMode === 'viewing' ? 'Schedule a Viewing' : 'Submit an Offer'}
-               </h3>
+               <h3 className="text-lg font-serif text-forge-navy mb-4">{formMode === 'viewing' ? 'Schedule a Viewing' : 'Submit an Offer'}</h3>
                
                {submitStatus === 'success' ? (
                  <div className="bg-green-50 text-green-700 p-4 text-center rounded border border-green-200">
                    <CheckCircle className="mx-auto mb-2 text-green-600" size={24} />
                    <p className="font-bold">Request Sent!</p>
-                   <p className="text-xs mt-1">Our agent will contact you shortly.</p>
                  </div>
                ) : (
                  <form className="space-y-4" onSubmit={handleSubmit}>
-                   <div>
-                     <label className="block text-xs uppercase font-bold text-slate-500 mb-1">Name</label>
-                     <input 
-                      type="text" 
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-xs uppercase font-bold text-slate-500 mb-1">Email</label>
-                     <input 
-                      type="email" 
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-xs uppercase font-bold text-slate-500 mb-1">Phone</label>
-                     <input 
-                      type="tel" 
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none transition-colors rounded-sm" 
-                     />
-                   </div>
-                   
-                   <button 
-                     disabled={submitStatus === 'submitting'}
-                     className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                   >
+                   <input type="text" placeholder="Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <input type="email" placeholder="Email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <input type="tel" placeholder="Phone" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-[10px] hover:bg-forge-dark transition-colors flex items-center justify-center gap-2">
                      {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
                      {submitStatus === 'submitting' ? 'Sending...' : (formMode === 'viewing' ? 'Request Date' : 'Submit Offer')}
                    </button>

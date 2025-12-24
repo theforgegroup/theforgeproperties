@@ -64,7 +64,7 @@ const AppLayout: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/listings" element={<Listings />} />
-          <Route path="/listings/:id" element={<ListingDetails />} />
+          <Route path="/listings/:slug" element={<ListingDetails />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPostDetails />} />
           <Route path="/contact" element={<Contact />} />
