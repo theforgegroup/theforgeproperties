@@ -61,7 +61,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
           <div className="flex items-center gap-1">
             <Move size={16} />
-            <span>{property.areaSqFt.toLocaleString()} <span className="hidden sm:inline">sq ft</span></span>
+            {/* Standardized to area_sq_ft */}
+            <span>{property.area_sq_ft.toLocaleString()} <span className="hidden sm:inline">sq ft</span></span>
           </div>
         </div>
       </div>

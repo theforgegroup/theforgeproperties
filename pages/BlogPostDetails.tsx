@@ -9,7 +9,6 @@ export const BlogPostDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { getPostBySlug, getPost } = useProperties();
   
-  // Try finding by slug first, then fallback to ID
   const post = slug ? (getPostBySlug(slug) || getPost(slug)) : undefined;
 
   useEffect(() => {
@@ -30,27 +29,15 @@ export const BlogPostDetails: React.FC = () => {
     );
   }
 
-  const blogSchema = {
-    "@type": "BlogPosting",
-    "headline": post.title,
-    "description": post.excerpt,
-    "image": post.coverImage,
-    "author": { "@type": "Organization", "name": "The Forge Properties" },
-    "publisher": { "@type": "Organization", "name": "The Forge Properties" },
-    "datePublished": post.date,
-    "mainEntityOfPage": { "@type": "WebPage", "@id": window.location.href }
-  };
-
   return (
     <div className="min-h-screen bg-white pt-20">
       <SEO 
         title={post.title}
-        description={post.metaDescription || post.excerpt}
+        description={post.meta_description || post.excerpt}
         keywords={post.keyphrase}
-        image={post.coverImage}
+        image={post.cover_image}
         type="article"
         url={`/blog/${post.slug || post.id}`}
-        schema={blogSchema}
       />
 
       <div className="container mx-auto px-6 py-12 max-w-4xl text-center">
@@ -67,9 +54,9 @@ export const BlogPostDetails: React.FC = () => {
          </div>
       </div>
 
-      {post.coverImage && (
+      {post.cover_image && (
         <div className="w-full h-[40vh] md:h-[60vh] overflow-hidden">
-          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
+          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
         </div>
       )}
 
@@ -77,18 +64,15 @@ export const BlogPostDetails: React.FC = () => {
          <div className="lg:w-1/6 order-2 lg:order-1">
             <div className="sticky top-32 flex flex-row lg:flex-col gap-6 justify-center lg:justify-start">
                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 hidden lg:block">Share</span>
-               <button className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Share on Facebook"><Facebook size={20} /></button>
-               <button className="text-slate-400 hover:text-[#1DA1F2] transition-colors" aria-label="Share on Twitter"><Twitter size={20} /></button>
-               <button className="text-slate-400 hover:text-[#0A66C2] transition-colors" aria-label="Share on LinkedIn"><Linkedin size={20} /></button>
                <button className="text-slate-400 hover:text-forge-navy transition-colors" aria-label="Share via Link" onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert("Link copied to clipboard");
+                  alert("Link copied");
                }}><Share2 size={20} /></button>
             </div>
          </div>
 
          <div className="lg:w-2/3 order-1 lg:order-2">
-            <div className="prose prose-lg max-w-none font-serif text-slate-700 leading-relaxed prose-headings:font-serif prose-headings:text-forge-navy prose-headings:font-bold prose-a:text-forge-gold prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-forge-gold prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:italic prose-img:rounded-sm prose-img:shadow-lg"
+            <div className="prose prose-lg max-w-none font-serif text-slate-700 leading-relaxed prose-headings:font-serif prose-headings:text-forge-navy prose-headings:font-bold prose-a:text-forge-gold prose-blockquote:border-forge-gold"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
             <hr className="my-12 border-slate-200" />

@@ -23,7 +23,7 @@ export interface Property {
   location: string;
   bedrooms: number;
   bathrooms: number;
-  areaSqFt: number;
+  area_sq_ft: number;
   type: PropertyType;
   status: ListingStatus;
   images: string[];
@@ -42,8 +42,8 @@ export interface Lead {
   email: string;
   phone: string;
   message: string;
-  propertyId?: string;
-  propertyTitle?: string;
+  property_id?: string;
+  property_title?: string;
   date: string;
   status: 'New' | 'Contacted' | 'Qualified' | 'Closed';
   type: 'General Inquiry' | 'Viewing Request' | 'Offer';
@@ -60,13 +60,13 @@ export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  content: string; // HTML content
-  coverImage: string;
+  content: string; 
+  cover_image: string;
   author: string;
-  date: string; // ISO Date string
+  date: string; 
   category: string;
   status: 'Published' | 'Draft';
-  metaDescription?: string;
+  meta_description?: string;
   keyphrase?: string;
 }
 
@@ -83,11 +83,11 @@ export interface ListingAgent {
 }
 
 export interface SiteSettings {
-  contactEmail: string;
-  contactPhone: string;
+  contact_email: string; // Updated to snake_case
+  contact_phone: string; // Updated to snake_case
   address: string;
-  teamMembers: TeamMember[];
-  listingAgent: ListingAgent;
+  team_members: TeamMember[]; // Updated to snake_case
+  listing_agent: ListingAgent; // Updated to snake_case
 }
 
 export interface FilterCriteria {
@@ -97,11 +97,6 @@ export interface FilterCriteria {
   type?: PropertyType;
   location?: string;
   searchQuery?: string;
-}
-
-export interface AIResponse {
-  analysis: string;
-  suggestedFilters: FilterCriteria;
 }
 
 export interface ChatMessage {

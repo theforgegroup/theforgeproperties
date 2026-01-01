@@ -14,7 +14,6 @@ export const ListingDetails: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   
-  // Try finding by slug first, then fallback to ID
   const property = slug ? (getPropertyBySlug(slug) || getProperty(slug)) : undefined;
 
   useEffect(() => {
@@ -37,7 +36,7 @@ export const ListingDetails: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-20">
         <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md mx-4">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Residence Not Found</h2>
-          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the specific residence you're looking for. It may have been acquired or moved to our off-market collection.</p>
+          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the specific residence you're looking for.</p>
           <Link to="/listings" className="inline-block bg-forge-navy text-white px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-forge-gold hover:text-forge-navy transition-all shadow-lg">
             Explore Portfolio
           </Link>
@@ -46,28 +45,10 @@ export const ListingDetails: React.FC = () => {
     );
   }
 
-  const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
-  const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
-  const agentImage = settings.listingAgent?.image || property?.agent?.image;
-
-  const propertySchema = {
-    "@type": "RealEstateListing",
-    "name": property.title,
-    "description": property.description,
-    "image": property.images,
-    "url": window.location.href,
-    "datePosted": new Date().toISOString(),
-    "offers": {
-      "@type": "Offer",
-      "price": property.price,
-      "priceCurrency": "NGN",
-      "availability": "https://schema.org/InStock",
-      "offeredBy": {
-        "@type": "Organization",
-        "name": "The Forge Properties"
-      }
-    }
-  };
+  // Use Global Listing Agent if available, else property-specific, else fallback
+  const agentName = settings.listing_agent?.name || property?.agent?.name || 'The Forge Properties';
+  const agentPhone = settings.listing_agent?.phone || property?.agent?.phone || settings.contact_phone;
+  const agentImage = settings.listing_agent?.image || property?.agent?.image;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,9 +60,9 @@ export const ListingDetails: React.FC = () => {
       email: formData.email,
       phone: formData.phone,
       message: formData.message || (formMode === 'offer' ? `I am interested in making an offer on ${property.title}` : `I would like to view ${property.title}`),
-      propertyId: property.id,
-      propertyTitle: property.title,
-      date: new Date().toISOString().split('T')[0],
+      property_id: property.id,
+      property_title: property.title,
+      date: new Date().toISOString(),
       status: 'New',
       type: formMode === 'offer' ? 'Offer' : 'Viewing Request'
     };
@@ -104,10 +85,8 @@ export const ListingDetails: React.FC = () => {
         image={property.images[0]}
         type="realestate"
         url={`/listings/${property.slug || property.id}`}
-        schema={propertySchema}
       />
 
-      {/* Back button for UX */}
       <div className="container mx-auto px-4 md:px-6 py-4">
         <Link to="/listings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-forge-navy transition-colors">
           <ArrowLeft size={14} /> Back to Portfolio
@@ -115,22 +94,7 @@ export const ListingDetails: React.FC = () => {
       </div>
 
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
-        <img 
-          src={property.images[activeImage]} 
-          alt={property.title} 
-          className="w-full h-full object-cover opacity-90"
-        />
-        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent overflow-x-auto">
-          {property.images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActiveImage(idx)}
-              className={`w-16 h-12 md:w-20 md:h-14 border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-forge-gold opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'}`}
-            >
-              <img src={img} className="w-full h-full object-cover" alt={`${property.title} View ${idx + 1}`} />
-            </button>
-          ))}
-        </div>
+        <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
       </div>
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
@@ -146,12 +110,7 @@ export const ListingDetails: React.FC = () => {
                 </div>
               </div>
               <div className="text-left md:text-right">
-                <div className="text-2xl md:text-3xl text-forge-navy font-light">
-                  ₦{property.price.toLocaleString()}
-                </div>
-                <div className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-1 mt-2 uppercase tracking-wide font-bold rounded">
-                  {property.status}
-                </div>
+                <div className="text-2xl md:text-3xl text-forge-navy font-light">₦{property.price.toLocaleString()}</div>
               </div>
             </div>
 
@@ -166,7 +125,7 @@ export const ListingDetails: React.FC = () => {
                </div>
                <div className="flex items-center gap-2 whitespace-nowrap">
                  <Move className="text-forge-gold" size={20} />
-                 <span className="font-bold text-forge-navy">{property.areaSqFt.toLocaleString()}</span> Sq Ft
+                 <span className="font-bold text-forge-navy">{property.area_sq_ft.toLocaleString()}</span> Sq Ft
                </div>
             </div>
 
@@ -186,21 +145,6 @@ export const ListingDetails: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            <div className="mb-12">
-              <h3 className="text-xl font-serif text-forge-navy mb-4">Location</h3>
-              <div className="bg-slate-200 h-96 w-full rounded-sm overflow-hidden relative group">
-                <iframe 
-                  width="100%" 
-                  height="100%" 
-                  frameBorder="0" 
-                  scrolling="no" 
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                  className="filter grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
-                  title={`Map for ${property.title}`}
-                ></iframe>
-              </div>
-            </div>
           </div>
 
           <div className="lg:w-1/3">
@@ -209,9 +153,7 @@ export const ListingDetails: React.FC = () => {
                  {agentImage ? (
                    <img src={agentImage} alt={agentName} className="w-16 h-16 rounded-full object-cover border border-slate-200" />
                  ) : (
-                   <div className="w-16 h-16 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0">
-                     <Headset size={28} />
-                   </div>
+                   <div className="w-16 h-16 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0"><Headset size={28} /></div>
                  )}
                  <div>
                    <p className="text-slate-400 text-xs uppercase tracking-wider">Listing Agent</p>
@@ -231,14 +173,13 @@ export const ListingDetails: React.FC = () => {
                  <div className="bg-green-50 text-green-700 p-4 text-center rounded border border-green-200">
                    <CheckCircle className="mx-auto mb-2 text-green-600" size={24} />
                    <p className="font-bold">Request Sent!</p>
-                   <p className="text-xs mt-1">Our team will contact you shortly.</p>
                  </div>
                ) : (
                  <form className="space-y-4" onSubmit={handleSubmit}>
                    <input type="text" placeholder="Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
                    <input type="email" placeholder="Email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
                    <input type="tel" placeholder="Phone" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
-                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-[10px] hover:bg-forge-dark transition-all flex items-center justify-center gap-2 shadow-lg">
+                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-all flex items-center justify-center gap-2 shadow-lg">
                      {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
                      {submitStatus === 'submitting' ? 'Processing...' : (formMode === 'viewing' ? 'Request Viewing' : 'Submit Offer')}
                    </button>
