@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Globe, FileText, X, Plus, Link as LinkIcon
+  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Globe, FileText, X, Plus, Link as LinkIcon, AlertCircle
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -13,11 +13,15 @@ import { resizeImage } from '../utils/imageUtils';
 export const AdminPostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPost, addPost, updatePost } = useProperties();
+  const { getPost, addPost, updatePost, isLoading } = useProperties();
   const isEditing = !!id;
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Track the status being submitted to show the correct loader
+  const [pendingStatus, setPendingStatus] = useState<'Published' | 'Draft' | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,36 +49,52 @@ export const AdminPostForm: React.FC = () => {
       .toString()
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, '-')     // Replace spaces with -
-      .replace(/[^\w-]+/g, '')  // Remove all non-word chars
-      .replace(/--+/g, '-');    // Replace multiple - with single -
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-');
   };
 
   useEffect(() => {
-    if (isEditing && id) {
-      const post = getPost(id);
-      if (post) {
-        setFormData(post);
-        if (!categories.includes(post.category)) {
-          setCategories(prev => [...prev, post.category]);
+    if (!isLoading) {
+      if (isEditing && id) {
+        const post = getPost(id);
+        if (post) {
+          setFormData(post);
+          if (!categories.includes(post.category)) {
+            setCategories(prev => [...prev, post.category]);
+          }
+          setDataLoaded(true);
+        } else if (id !== 'new') {
+          setError("Post not found. It may have been deleted.");
         }
+      } else {
+        setFormData({
+          id: Date.now().toString(),
+          slug: '',
+          title: '',
+          excerpt: '',
+          content: '',
+          coverImage: '',
+          author: 'The Forge Properties',
+          date: new Date().toISOString(),
+          category: 'Market Insights',
+          status: 'Draft',
+          metaDescription: '',
+          keyphrase: ''
+        });
+        setDataLoaded(true);
       }
-    } else if (!isEditing) {
-      setFormData(prev => prev.id ? prev : ({ ...prev, id: Date.now().toString() }));
     }
-  }, [id, isEditing, getPost, categories]);
+  }, [id, isEditing, getPost, isLoading, categories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
-      
-      // Auto-generate slug if title changes and slug hasn't been manually edited or is empty
       if (name === 'title' && (!prev.slug || prev.slug === slugify(prev.title))) {
         updated.slug = slugify(value);
       }
-      
       return updated;
     });
   };
@@ -104,13 +124,26 @@ export const AdminPostForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent, statusOverride?: 'Published' | 'Draft') => {
+  const handleSubmit = async (e: React.MouseEvent | React.FormEvent, statusOverride: 'Published' | 'Draft') => {
     e.preventDefault();
+    if (!formData.title.trim()) {
+      setError("Please enter a title for the article.");
+      return;
+    }
+
     setIsSubmitting(true);
+    // Fix scope issue by tracking pending status in state
+    setPendingStatus(statusOverride);
     setError('');
 
-    const finalStatus = statusOverride || formData.status;
-    const submissionData = { ...formData, status: finalStatus, author: 'The Forge Properties' };
+    // Ensure slug is generated if missing
+    const finalSlug = formData.slug || slugify(formData.title);
+    const submissionData = { 
+      ...formData, 
+      slug: finalSlug,
+      status: statusOverride, 
+      author: 'The Forge Properties' 
+    };
 
     try {
       if (isEditing) {
@@ -121,18 +154,29 @@ export const AdminPostForm: React.FC = () => {
       setIsSuccess(true);
       setTimeout(() => {
         navigate('/admin/blog');
-      }, 1000);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to save post.");
+      }, 1500);
+    } catch (err: any) {
+      console.error("Submission Error:", err);
+      setError(err.message || "Failed to save post to database.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isLoading || (isEditing && !dataLoaded)) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-400">
+          <Loader2 size={40} className="animate-spin mb-4" />
+          <p className="font-serif italic">Accessing The Forge Journal Archives...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto pb-20">
         <div className="flex items-center gap-4 mb-6">
             <button 
               onClick={() => navigate('/admin/blog')}
@@ -141,6 +185,12 @@ export const AdminPostForm: React.FC = () => {
               <ArrowLeft size={16} /> Back to Blog
             </button>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm font-bold border border-red-200 flex items-center gap-2 animate-fade-in-up">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
 
         <form className="flex flex-col lg:flex-row gap-8">
            <div className="flex-1 space-y-8">
@@ -155,10 +205,9 @@ export const AdminPostForm: React.FC = () => {
                   required
                 />
                 
-                {/* Slug Editor */}
                 <div className="flex items-center gap-2 mt-4 text-sm text-slate-500 bg-slate-50 p-3 rounded border border-slate-100">
                   <LinkIcon size={14} className="text-forge-gold" />
-                  <span className="font-mono text-xs">theforgeproperties.com/blog/</span>
+                  <span className="font-mono text-[10px] md:text-xs">theforgeproperties.com/blog/</span>
                   <input 
                     type="text"
                     name="slug"
@@ -226,40 +275,42 @@ export const AdminPostForm: React.FC = () => {
            </div>
 
            <div className="w-full lg:w-80 space-y-6">
-              <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm sticky top-6 z-10">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Publish</h3>
+              <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm sticky top-24 z-10">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Publishing Actions</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm text-slate-600 border-b border-slate-100 pb-2">
                     <span>Status:</span>
-                    <span className="font-bold">{formData.status}</span>
+                    <span className="font-bold text-forge-gold">{formData.status}</span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="flex flex-col gap-3">
                     <button
                       type="button"
                       onClick={(e) => handleSubmit(e, 'Draft')}
                       disabled={isSubmitting || isSuccess}
-                      className="py-3 px-2 border border-slate-300 text-slate-600 font-bold uppercase tracking-widest text-[10px] rounded-sm hover:bg-slate-50 transition-colors"
+                      className="w-full py-4 px-2 border border-slate-300 text-slate-600 font-bold uppercase tracking-widest text-[10px] rounded-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                     >
-                       Save Draft
+                       {/* Fixed loader logic to use pendingStatus instead of potentially stale formData.status */}
+                       {isSubmitting && pendingStatus === 'Draft' && <Loader2 size={12} className="animate-spin" />}
+                       Save as Draft
                     </button>
                     <button
                       type="button"
                       onClick={(e) => handleSubmit(e, 'Published')}
                       disabled={isSubmitting || isSuccess}
-                      className="py-3 px-2 bg-forge-navy text-white font-bold uppercase tracking-widest text-[10px] rounded-sm hover:bg-forge-dark transition-colors"
+                      className="w-full py-4 px-2 bg-forge-navy text-white font-bold uppercase tracking-widest text-[10px] rounded-sm hover:bg-forge-dark transition-all shadow-md flex items-center justify-center gap-2"
                     >
-                       Publish
+                       {/* Fixed scope error by using pendingStatus state */}
+                       {isSubmitting && pendingStatus === 'Published' && <Loader2 size={12} className="animate-spin" />}
+                       {isEditing ? 'Update & Publish' : 'Publish Article'}
                     </button>
                   </div>
                   
-                  {(isSubmitting || isSuccess) && (
-                    <div className="flex items-center justify-center gap-2 text-xs font-bold text-forge-gold mt-2">
-                        {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                        {isSubmitting ? 'Saving...' : 'Saved!'}
+                  {isSuccess && (
+                    <div className="flex items-center justify-center gap-2 text-xs font-bold text-green-600 mt-2 bg-green-50 p-2 rounded">
+                        <CheckCircle size={14} /> Journal Updated
                     </div>
                   )}
-                  {error && <p className="text-red-500 text-xs text-center">{error}</p>}
                 </div>
               </div>
 
@@ -314,7 +365,7 @@ export const AdminPostForm: React.FC = () => {
                  </div>
                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                  {formData.coverImage && (
-                    <button type="button" onClick={() => setFormData(prev => ({...prev, coverImage: ''}))} className="text-red-500 text-xs mt-2 underline">Remove Image</button>
+                    <button type="button" onClick={() => setFormData(prev => ({...prev, coverImage: ''}))} className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-3 hover:underline">Remove Image</button>
                   )}
               </div>
            </div>

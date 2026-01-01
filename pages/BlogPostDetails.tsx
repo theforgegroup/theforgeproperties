@@ -69,7 +69,7 @@ export const BlogPostDetails: React.FC = () => {
 
       {post.coverImage && (
         <div className="w-full h-[40vh] md:h-[60vh] overflow-hidden">
-          <img src={post.coverImage} alt={`Featured image for: ${post.title}`} className="w-full h-full object-cover" />
+          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
         </div>
       )}
 
@@ -80,7 +80,10 @@ export const BlogPostDetails: React.FC = () => {
                <button className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Share on Facebook"><Facebook size={20} /></button>
                <button className="text-slate-400 hover:text-[#1DA1F2] transition-colors" aria-label="Share on Twitter"><Twitter size={20} /></button>
                <button className="text-slate-400 hover:text-[#0A66C2] transition-colors" aria-label="Share on LinkedIn"><Linkedin size={20} /></button>
-               <button className="text-slate-400 hover:text-forge-navy transition-colors" aria-label="Share via Link"><Share2 size={20} /></button>
+               <button className="text-slate-400 hover:text-forge-navy transition-colors" aria-label="Share via Link" onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Link copied to clipboard");
+               }}><Share2 size={20} /></button>
             </div>
          </div>
 
@@ -89,7 +92,11 @@ export const BlogPostDetails: React.FC = () => {
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
             <hr className="my-12 border-slate-200" />
-            <div className="flex justify-between items-center"><Link to="/blog" className="flex items-center gap-2 text-slate-500 hover:text-forge-navy transition-colors font-bold uppercase text-xs tracking-widest"><ArrowLeft size={16} /> Back to Journal</Link></div>
+            <div className="flex justify-between items-center">
+              <Link to="/blog" className="flex items-center gap-2 text-slate-500 hover:text-forge-navy transition-colors font-bold uppercase text-xs tracking-widest">
+                <ArrowLeft size={16} /> Back to Journal
+              </Link>
+            </div>
          </div>
       </div>
     </div>

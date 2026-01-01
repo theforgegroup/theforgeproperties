@@ -1,38 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { Property } from "../types";
 
-// Helper to determine if we have an API key safely
-const getApiKey = () => {
-  // Check standard process.env (polyfilled in index.html for Node-like envs)
-  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    return process.env.API_KEY;
-  }
-  // Check Vite environment variables (Standard for Vercel/Vite)
-  try {
-    // @ts-ignore
-    if (import.meta && import.meta.env && import.meta.env.VITE_API_KEY) {
-      // @ts-ignore
-      return import.meta.env.VITE_API_KEY;
-    }
-  } catch (e) {
-    // Ignore error if import.meta is not supported in the current env
-  }
-  return null;
-};
-
-const apiKey = getApiKey();
-const hasApiKey = !!apiKey;
-
 /**
  * The Brain: RAG Implementation for The Forge AI Concierge
  * Accepts current inventory dynamically from the context.
  */
 export const getChatResponse = async (userMessage: string, inventory: Property[]): Promise<string> => {
-  if (!hasApiKey) {
-    return "I apologize, but I am currently offline. Please contact our support team at +234 800 FORGE 00.";
-  }
-
-  const ai = new GoogleGenAI({ apiKey: apiKey! });
+  // Always use the mandatory initialization pattern with process.env.API_KEY
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // 1. Context Injection: Prepare the property inventory for the AI
   // We simplify the data to save tokens and focus on key details
@@ -66,8 +41,9 @@ export const getChatResponse = async (userMessage: string, inventory: Property[]
   `;
 
   try {
+    // Using gemini-3-flash-preview for Basic Text Tasks as per guidelines.
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: userMessage,
       config: {
         systemInstruction: systemInstruction,
@@ -75,6 +51,7 @@ export const getChatResponse = async (userMessage: string, inventory: Property[]
       }
     });
 
+    // Access the .text property directly as per GenerateContentResponse definition.
     return response.text || "I apologize, I didn't quite catch that. Could you rephrase your inquiry?";
   } catch (error) {
     console.error("Concierge Chat Error:", error);

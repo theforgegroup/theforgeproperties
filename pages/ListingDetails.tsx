@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 import { SEO } from '../components/SEO';
 
 export const ListingDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getPropertyBySlug, getProperty, addLead, settings } = useProperties();
+  const { getPropertyBySlug, getProperty, addLead, settings, isLoading } = useProperties();
   const [activeImage, setActiveImage] = useState(0);
   const [formMode, setFormMode] = useState<'viewing' | 'offer'>('viewing');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
@@ -17,27 +17,38 @@ export const ListingDetails: React.FC = () => {
   // Try finding by slug first, then fallback to ID
   const property = slug ? (getPropertyBySlug(slug) || getProperty(slug)) : undefined;
 
-  const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
-  const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
-  const agentImage = settings.listingAgent?.image || property?.agent?.image;
-
   useEffect(() => {
     window.scrollTo(0,0);
   }, [slug]);
 
-  if (!property) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md">
-          <h2 className="text-2xl font-serif text-forge-navy mb-4">Property Not Found</h2>
-          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the residence you're looking for. It may have been sold or moved.</p>
-          <Link to="/listings" className="inline-block bg-forge-gold text-forge-navy px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-forge-navy hover:text-white transition-all">
-            Return to listings
+        <div className="text-center">
+          <Loader2 size={40} className="animate-spin text-forge-gold mx-auto mb-4" />
+          <p className="font-serif italic text-slate-400">Opening The Forge Portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-20">
+        <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md mx-4">
+          <h2 className="text-2xl font-serif text-forge-navy mb-4">Residence Not Found</h2>
+          <p className="text-slate-500 mb-6 text-sm">We couldn't locate the specific residence you're looking for. It may have been acquired or moved to our off-market collection.</p>
+          <Link to="/listings" className="inline-block bg-forge-navy text-white px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-forge-gold hover:text-forge-navy transition-all shadow-lg">
+            Explore Portfolio
           </Link>
         </div>
       </div>
     );
   }
+
+  const agentName = settings.listingAgent?.name || property?.agent?.name || 'The Forge Properties';
+  const agentPhone = settings.listingAgent?.phone || property?.agent?.phone || settings.contactPhone;
+  const agentImage = settings.listingAgent?.image || property?.agent?.image;
 
   const propertySchema = {
     "@type": "RealEstateListing",
@@ -96,10 +107,17 @@ export const ListingDetails: React.FC = () => {
         schema={propertySchema}
       />
 
+      {/* Back button for UX */}
+      <div className="container mx-auto px-4 md:px-6 py-4">
+        <Link to="/listings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-forge-navy transition-colors">
+          <ArrowLeft size={14} /> Back to Portfolio
+        </Link>
+      </div>
+
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img 
           src={property.images[activeImage]} 
-          alt={`${property.title} - Main View`} 
+          alt={property.title} 
           className="w-full h-full object-cover opacity-90"
         />
         <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent overflow-x-auto">
@@ -109,7 +127,7 @@ export const ListingDetails: React.FC = () => {
               onClick={() => setActiveImage(idx)}
               className={`w-16 h-12 md:w-20 md:h-14 border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-forge-gold opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'}`}
             >
-              <img src={img} className="w-full h-full object-cover" alt={`${property.title} - View ${idx + 1}`} />
+              <img src={img} className="w-full h-full object-cover" alt={`${property.title} View ${idx + 1}`} />
             </button>
           ))}
         </div>
@@ -179,7 +197,7 @@ export const ListingDetails: React.FC = () => {
                   scrolling="no" 
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                   className="filter grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
-                  title={`Location for ${property.title}`}
+                  title={`Map for ${property.title}`}
                 ></iframe>
               </div>
             </div>
@@ -213,15 +231,16 @@ export const ListingDetails: React.FC = () => {
                  <div className="bg-green-50 text-green-700 p-4 text-center rounded border border-green-200">
                    <CheckCircle className="mx-auto mb-2 text-green-600" size={24} />
                    <p className="font-bold">Request Sent!</p>
+                   <p className="text-xs mt-1">Our team will contact you shortly.</p>
                  </div>
                ) : (
                  <form className="space-y-4" onSubmit={handleSubmit}>
                    <input type="text" placeholder="Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
                    <input type="email" placeholder="Email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
                    <input type="tel" placeholder="Phone" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
-                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-[10px] hover:bg-forge-dark transition-colors flex items-center justify-center gap-2">
+                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-[10px] hover:bg-forge-dark transition-all flex items-center justify-center gap-2 shadow-lg">
                      {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
-                     {submitStatus === 'submitting' ? 'Sending...' : (formMode === 'viewing' ? 'Request Date' : 'Submit Offer')}
+                     {submitStatus === 'submitting' ? 'Processing...' : (formMode === 'viewing' ? 'Request Viewing' : 'Submit Offer')}
                    </button>
                  </form>
                )}
