@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, 
-  Quote, Undo, Redo, Code, Type
+  Quote, Undo, Redo, Code, Type, Link as LinkIcon
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -32,9 +32,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     }
   };
 
-  const execCommand = (command: string, value: string | undefined = undefined) => {
-    document.execCommand(command, false, value);
-    // Ensure the editor keeps focus
+  const execCommand = (command: string, ui: boolean = false, val: string | undefined = undefined) => {
+    document.execCommand(command, ui, val);
     if (!isCodeView) {
       editorRef.current?.focus();
       handleInput();
@@ -44,7 +43,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
   const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setCurrentBlock(val);
-    execCommand('formatBlock', val);
+    // document.execCommand('formatBlock') works best with tags like <h2> or <h3>
+    execCommand('formatBlock', false, `<${val}>`);
+  };
+
+  const insertLink = () => {
+    const url = prompt("Enter the URL:");
+    if (url) {
+      execCommand('createLink', false, url);
+    }
   };
 
   const toggleCodeView = () => {
@@ -53,25 +60,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
 
   const ToolbarButton = ({ 
     icon: Icon, 
-    command, 
-    arg = undefined, 
+    onClick,
     title,
-    disabled = false
+    disabled = false,
+    active = false
   }: { 
     icon: any, 
-    command: string, 
-    arg?: string, 
+    onClick: () => void, 
     title: string,
-    disabled?: boolean
+    disabled?: boolean,
+    active?: boolean
   }) => (
     <button
       type="button"
-      onClick={() => execCommand(command, arg)}
+      onClick={onClick}
       disabled={disabled}
       className={`p-2 rounded transition-colors ${
-        disabled 
-          ? 'text-slate-300 cursor-not-allowed' 
-          : 'text-slate-600 hover:text-forge-navy hover:bg-slate-100'
+        active ? 'bg-forge-gold text-forge-navy' : 
+        disabled ? 'text-slate-300 cursor-not-allowed' : 
+        'text-slate-600 hover:text-forge-navy hover:bg-slate-100'
       }`}
       title={title}
     >
@@ -80,55 +87,55 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
   );
 
   return (
-    <div className="border border-slate-200 rounded-sm overflow-hidden bg-white flex flex-col h-[600px]">
+    <div className="border border-slate-200 rounded-sm overflow-hidden bg-white flex flex-col h-[600px] shadow-sm">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200">
         
-        {/* 1. Format Block Dropdown (First Item) */}
+        {/* 1. Format Block Dropdown */}
         <div className="flex items-center border-r border-slate-200 pr-2 mr-1">
-          <Type size={18} className="text-slate-400 mr-2 ml-1" />
+          <Type size={16} className="text-slate-400 mr-2 ml-1" />
           <select 
             value={currentBlock}
             onChange={handleBlockChange}
             disabled={isCodeView}
-            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1"
+            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[120px]"
           >
-            <option value="P">Normal Text</option>
-            <option value="H2">Heading 1 (H2)</option>
-            <option value="H3">Heading 2 (H3)</option>
-            <option value="H4">Heading 3 (H4)</option>
+            <option value="P">Paragraph</option>
+            <option value="H2">Heading 1</option>
+            <option value="H3">Heading 2</option>
+            <option value="H4">Heading 3</option>
             <option value="BLOCKQUOTE">Quote</option>
-            <option value="PRE">Code Block</option>
+            <option value="PRE">Code</option>
           </select>
         </div>
 
         {/* 2. Standard Formatting */}
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
-          <ToolbarButton icon={Bold} command="bold" title="Bold" disabled={isCodeView} />
-          <ToolbarButton icon={Italic} command="italic" title="Italic" disabled={isCodeView} />
+          <ToolbarButton icon={Bold} onClick={() => execCommand('bold')} title="Bold" disabled={isCodeView} />
+          <ToolbarButton icon={Italic} onClick={() => execCommand('italic')} title="Italic" disabled={isCodeView} />
+          <ToolbarButton icon={LinkIcon} onClick={insertLink} title="Insert Link" disabled={isCodeView} />
         </div>
 
         {/* 3. Alignment */}
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
-          <ToolbarButton icon={AlignLeft} command="justifyLeft" title="Align Left" disabled={isCodeView} />
-          <ToolbarButton icon={AlignCenter} command="justifyCenter" title="Align Center" disabled={isCodeView} />
-          <ToolbarButton icon={AlignRight} command="justifyRight" title="Align Right" disabled={isCodeView} />
+          <ToolbarButton icon={AlignLeft} onClick={() => execCommand('justifyLeft')} title="Align Left" disabled={isCodeView} />
+          <ToolbarButton icon={AlignCenter} onClick={() => execCommand('justifyCenter')} title="Align Center" disabled={isCodeView} />
+          <ToolbarButton icon={AlignRight} onClick={() => execCommand('justifyRight')} title="Align Right" disabled={isCodeView} />
         </div>
 
-        {/* 4. Lists & Quotes */}
+        {/* 4. Lists */}
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
-           <ToolbarButton icon={List} command="insertUnorderedList" title="Bullet List" disabled={isCodeView} />
-           <ToolbarButton icon={ListOrdered} command="insertOrderedList" title="Numbered List" disabled={isCodeView} />
-           <ToolbarButton icon={Quote} command="formatBlock" arg="BLOCKQUOTE" title="Quote" disabled={isCodeView} />
+           <ToolbarButton icon={List} onClick={() => execCommand('insertUnorderedList')} title="Bullet List" disabled={isCodeView} />
+           <ToolbarButton icon={ListOrdered} onClick={() => execCommand('insertOrderedList')} title="Numbered List" disabled={isCodeView} />
         </div>
 
-        {/* 5. Undo/Redo (Moved here) */}
+        {/* 5. Undo/Redo */}
         <div className="flex items-center gap-1">
-          <ToolbarButton icon={Undo} command="undo" title="Undo" disabled={isCodeView} />
-          <ToolbarButton icon={Redo} command="redo" title="Redo" disabled={isCodeView} />
+          <ToolbarButton icon={Undo} onClick={() => execCommand('undo')} title="Undo" disabled={isCodeView} />
+          <ToolbarButton icon={Redo} onClick={() => execCommand('redo')} title="Redo" disabled={isCodeView} />
         </div>
 
-        {/* 6. Code View Toggle (Far Right) */}
+        {/* 6. Code View Toggle */}
         <div className="ml-auto flex items-center border-l border-slate-200 pl-2">
             <button
               type="button"
@@ -156,10 +163,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
       ) : (
         <div 
           ref={editorRef}
-          className="flex-grow p-6 overflow-y-auto focus:outline-none prose max-w-none font-serif text-lg leading-relaxed text-slate-700"
+          className="flex-grow p-8 overflow-y-auto focus:outline-none prose max-w-none font-serif text-lg leading-relaxed text-slate-700 article-content"
           contentEditable
           onInput={handleInput}
           spellCheck={true}
+          style={{ minHeight: '400px' }}
         />
       )}
       

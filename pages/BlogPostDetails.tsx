@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
-import { User, ArrowLeft, Facebook, Twitter, Linkedin, Share2 } from 'lucide-react';
+import { User, ArrowLeft, Share2 } from 'lucide-react';
 import { SEO } from '../components/SEO';
 
 export const BlogPostDetails: React.FC = () => {
@@ -72,7 +72,7 @@ export const BlogPostDetails: React.FC = () => {
          </div>
 
          <div className="lg:w-2/3 order-1 lg:order-2">
-            <div className="prose prose-lg max-w-none font-serif text-slate-700 leading-relaxed prose-headings:font-serif prose-headings:text-forge-navy prose-headings:font-bold prose-a:text-forge-gold prose-blockquote:border-forge-gold"
+            <div className="prose prose-lg max-w-none font-serif text-slate-700 leading-relaxed prose-headings:font-serif prose-headings:text-forge-navy prose-headings:font-bold prose-a:text-forge-gold prose-blockquote:border-forge-gold article-content"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
             <hr className="my-12 border-slate-200" />
