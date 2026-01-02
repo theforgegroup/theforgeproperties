@@ -77,7 +77,8 @@ export const ListingDetails: React.FC = () => {
   };
 
   const mapSearchQuery = encodeURIComponent(property.location);
-  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${process.env.API_KEY || ''}&q=${mapSearchQuery}`;
+  // Using standard Google Maps embed that doesn't require an API key for search queries
+  const mapEmbedUrl = `https://www.google.com/maps?q=${mapSearchQuery}&output=embed`;
   const mapExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
 
   return (
@@ -184,9 +185,8 @@ export const ListingDetails: React.FC = () => {
                   style={{ border: 0 }}
                   loading="lazy"
                   allowFullScreen
-                  src={mapEmbedUrl.includes('key=') && mapEmbedUrl.split('key=')[1].length > 0 
-                    ? mapEmbedUrl 
-                    : `https://www.google.com/maps?q=${mapSearchQuery}&output=embed`}
+                  title="Property Location"
+                  src={mapEmbedUrl}
                 ></iframe>
               </div>
               <p className="text-xs text-slate-400 mt-3 italic">Map location is approximate based on address provided.</p>

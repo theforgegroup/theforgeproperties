@@ -86,7 +86,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const seedDatabase = async () => {
     setIsLoading(true);
     try {
-      // Ensure Settings row exists with defaults, but do not overwrite if exists
+      // Initialize system settings only, no mock listings
       const { data: existingSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       
       if (!existingSettings) {
