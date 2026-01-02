@@ -18,6 +18,7 @@ export const BlogPostDetails: React.FC = () => {
   if (!post) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <SEO title="Article Not Found" />
         <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Article Not Found</h2>
           <p className="text-slate-500 mb-6 text-sm">We couldn't locate the journal entry you're looking for.</p>
@@ -35,7 +36,7 @@ export const BlogPostDetails: React.FC = () => {
         title={post.title}
         description={post.meta_description || post.excerpt}
         keywords={post.keyphrase}
-        image={post.cover_image}
+        image={post.cover_image} // Specific blog image for social media
         type="article"
         url={`/blog/${post.slug || post.id}`}
       />

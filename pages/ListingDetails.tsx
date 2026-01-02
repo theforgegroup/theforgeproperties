@@ -23,6 +23,7 @@ export const ListingDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <SEO title="Loading Portfolio..." />
         <div className="text-center">
           <Loader2 size={40} className="animate-spin text-forge-gold mx-auto mb-4" />
           <p className="font-serif italic text-slate-400">Opening The Forge Portfolio...</p>
@@ -34,6 +35,7 @@ export const ListingDetails: React.FC = () => {
   if (!property) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 pt-20">
+        <SEO title="Residence Not Found" />
         <div className="text-center p-8 bg-white shadow-xl rounded-sm max-w-md mx-4">
           <h2 className="text-2xl font-serif text-forge-navy mb-4">Residence Not Found</h2>
           <p className="text-slate-500 mb-6 text-sm">We couldn't locate the specific residence you're looking for.</p>
@@ -77,16 +79,15 @@ export const ListingDetails: React.FC = () => {
   };
 
   const mapSearchQuery = encodeURIComponent(property.location);
-  // Using standard Google Maps embed that doesn't require an API key for search queries
   const mapEmbedUrl = `https://www.google.com/maps?q=${mapSearchQuery}&output=embed`;
   const mapExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
       <SEO 
-        title={property.title}
-        description={property.description.substring(0, 160)}
-        image={property.images[0]}
+        title={`${property.title} in ${property.location}`}
+        description={`${property.bedrooms} Bed, ${property.bathrooms} Bath ${property.type}. ${property.description.substring(0, 150)}...`}
+        image={property.images[0]} // Specific listing image for social media
         type="realestate"
         url={`/listings/${property.slug || property.id}`}
       />
