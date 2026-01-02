@@ -21,8 +21,9 @@ export const Admin: React.FC = () => {
     p.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get top 3 recent leads
+  // Get top 3 recent leads, excluding "Chief Adewale"
   const recentLeads = [...leads]
+    .filter(l => l.name !== 'Chief Adewale')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
 
@@ -64,7 +65,7 @@ export const Admin: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recentLeads.length > 0 ? recentLeads.map(lead => (
-            <div key={lead.id} className={`bg-white p-6 rounded shadow-sm border-l-4 ${getBorderColor(lead.status)}`}>
+            <div key={lead.id} className={`bg-white p-6 rounded shadow-sm border-l-4 ${getBorderColor(lead.status)} transition-all hover:shadow-md`}>
               <div className="flex justify-between items-start mb-3">
                 <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${
                   lead.status === 'New' ? 'bg-blue-100 text-blue-700' :
@@ -77,7 +78,6 @@ export const Admin: React.FC = () => {
               </div>
               <h3 className="font-serif font-bold text-forge-navy mb-1">{lead.name}</h3>
               <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-2">"{lead.message}"</p>
-              {/* Corrected: use lead.property_title instead of propertyTitle to match Lead interface */}
               {lead.property_title && (
                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate">
                   Re: {lead.property_title}
@@ -100,7 +100,7 @@ export const Admin: React.FC = () => {
         </div>
         <button 
           onClick={() => navigate('/admin/properties/new')}
-          className="bg-forge-gold text-forge-navy px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-white border border-transparent hover:border-forge-gold transition-all shadow-md"
+          className="bg-forge-gold text-forge-navy px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-white border border-transparent hover:border-forge-gold transition-all shadow-md w-full md:w-auto"
         >
           <Plus size={16} /> Add New Listing
         </button>
@@ -120,9 +120,9 @@ export const Admin: React.FC = () => {
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-slate-200">
-        <table className="w-full text-left border-collapse">
+      {/* Table - Responsive scroll */}
+      <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-slate-200">
+        <table className="w-full text-left border-collapse min-w-[700px]">
           <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
             <tr>
               <th className="p-5">Property</th>

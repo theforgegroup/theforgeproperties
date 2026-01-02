@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Search, Filter, Mail, Phone, Calendar, Check, ChevronDown, Copy, Inbox } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
-// Import Lead type to fix "Cannot find name 'Lead'" error
 import { Lead } from '../types';
 
 type CRMView = 'leads' | 'subscribers';
@@ -14,7 +13,9 @@ export const AdminCRM: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All Statuses');
 
+  // Explicitly remove "Chief Adewale" if it exists as mock data artifact
   const filteredLeads = [...leads]
+    .filter(l => l.name !== 'Chief Adewale')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .filter(lead => {
       const matchesSearch = 
@@ -38,11 +39,11 @@ export const AdminCRM: React.FC = () => {
   return (
     <AdminLayout>
       <div className="w-full">
-        <h1 className="text-4xl font-serif text-forge-navy mb-8">CRM Dashboard</h1>
+        <h1 className="text-3xl md:text-4xl font-serif text-forge-navy mb-6 md:mb-8">CRM Dashboard</h1>
 
-        <div className="flex gap-4 mb-8 border-b border-slate-200">
-          <button onClick={() => setView('leads')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-widest ${view === 'leads' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Leads ({leads.length})</button>
-          <button onClick={() => setView('subscribers')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-widest ${view === 'subscribers' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Newsletter ({subscribers.length})</button>
+        <div className="flex gap-4 mb-6 md:mb-8 border-b border-slate-200">
+          <button onClick={() => setView('leads')} className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'leads' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Leads ({leads.length})</button>
+          <button onClick={() => setView('subscribers')} className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'subscribers' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Newsletter ({subscribers.length})</button>
         </div>
 
         {view === 'leads' ? (
@@ -72,21 +73,20 @@ export const AdminCRM: React.FC = () => {
             </div>
 
             {filteredLeads.length > 0 ? filteredLeads.map(lead => (
-              <div key={lead.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 relative hover:shadow-md transition-shadow">
-                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div key={lead.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8 relative hover:shadow-md transition-shadow">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-6">
                   <div>
-                    <h3 className="font-serif text-2xl font-bold text-forge-navy mb-2">{lead.name}</h3>
-                    <div className="flex flex-wrap gap-6 text-slate-500 text-sm">
-                      <span className="flex items-center gap-2"><Mail size={16} /> {lead.email}</span>
-                      <span className="flex items-center gap-2"><Phone size={16} /> {lead.phone}</span>
+                    <h3 className="font-serif text-xl md:text-2xl font-bold text-forge-navy mb-2">{lead.name}</h3>
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-6 text-slate-500 text-xs md:text-sm">
+                      <span className="flex items-center gap-2"><Mail size={16} className="shrink-0" /> {lead.email}</span>
+                      <span className="flex items-center gap-2"><Phone size={16} className="shrink-0" /> {lead.phone}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full md:w-auto">
                     <select 
                       value={lead.status}
-                      // Fixed: cast e.target.value as Lead['status'] to update lead status
                       onChange={(e) => updateLeadStatus(lead.id, e.target.value as Lead['status'])}
-                      className={`px-5 py-2.5 rounded text-sm font-bold uppercase tracking-wider cursor-pointer focus:outline-none ${getStatusColor(lead.status)}`}
+                      className={`w-full md:w-auto px-5 py-2.5 rounded text-[10px] md:text-sm font-bold uppercase tracking-wider cursor-pointer focus:outline-none transition-colors ${getStatusColor(lead.status)}`}
                     >
                       <option value="New">New</option>
                       <option value="Contacted">Contacted</option>
@@ -95,13 +95,13 @@ export const AdminCRM: React.FC = () => {
                     </select>
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded p-6 my-6 italic text-slate-700 font-serif border-l-4 border-forge-gold">
+                <div className="bg-slate-50 rounded p-4 md:p-6 my-4 md:my-6 italic text-slate-700 font-serif border-l-4 border-forge-gold text-sm md:text-base">
                   "{lead.message}"
                 </div>
-                <div className="flex flex-col sm:flex-row justify-between text-xs text-slate-400 gap-2">
+                <div className="flex flex-col sm:flex-row justify-between text-[10px] text-slate-400 gap-2 uppercase tracking-widest font-bold">
                   <span className="flex items-center gap-2"><Calendar size={14} /> {new Date(lead.date).toLocaleString()}</span>
                   {lead.property_title && (
-                    <span className="text-forge-gold font-bold uppercase tracking-widest">
+                    <span className="text-forge-gold">
                       Ref: {lead.property_title}
                     </span>
                   )}
@@ -116,8 +116,8 @@ export const AdminCRM: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-            <table className="w-full text-left">
+          <div className="bg-white rounded-xl border border-slate-100 overflow-x-auto shadow-sm">
+            <table className="w-full text-left min-w-[600px]">
               <thead className="bg-slate-50 text-[10px] uppercase tracking-widest font-bold text-slate-500 border-b border-slate-100">
                 <tr>
                   <th className="p-6">Email Address</th>
@@ -131,7 +131,7 @@ export const AdminCRM: React.FC = () => {
                     <td className="p-6 font-medium text-forge-navy">{sub.email}</td>
                     <td className="p-6 text-slate-500">{new Date(sub.date).toLocaleDateString()}</td>
                     <td className="p-6 text-right">
-                      <button className="text-forge-gold hover:text-forge-navy font-bold uppercase text-[10px] tracking-widest">Remove</button>
+                      <button className="text-forge-gold hover:text-forge-navy font-bold uppercase text-[10px] tracking-widest transition-colors">Remove</button>
                     </td>
                   </tr>
                 ))}

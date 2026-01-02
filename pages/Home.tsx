@@ -14,7 +14,6 @@ export const Home: React.FC = () => {
     ? featuredOnly.slice(0, 4) 
     : properties.slice(0, 4);
 
-  // Advanced Home Schema with Sitelink Navigation
   const homeSchema = {
     "@type": "RealEstateAgent",
     "name": "The Forge Properties",
@@ -32,7 +31,6 @@ export const Home: React.FC = () => {
     }
   };
 
-  // Explicit Sitelinks Help
   const navigationSchema = {
     "@type": "ItemList",
     "itemListElement": [
@@ -94,34 +92,34 @@ export const Home: React.FC = () => {
         schema={{ "@graph": [homeSchema, navigationSchema, faqSchema] }}
       />
       
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Optimized for Mobile Viewports */}
+      <section className="relative h-[90vh] md:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2600&auto=format&fit=crop" 
-            alt="Luxury Modern Mansion - The Forge Properties Excellence" 
+            alt="Luxury Modern Mansion" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-slate-900/80" />
         </div>
         
-        <div className="relative z-10 container mx-auto px-6 text-center">
-          <span className="text-forge-gold text-xs md:text-base uppercase tracking-[0.4em] mb-4 block animate-fade-in-up font-bold">
+        <div className="relative z-10 container mx-auto px-4 md:px-6 text-center">
+          <span className="text-forge-gold text-[10px] md:text-sm uppercase tracking-[0.4em] mb-4 block animate-fade-in-up font-bold">
             Defined by Excellence
           </span>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif text-white font-bold leading-tight mb-8 drop-shadow-2xl">
-            Luxury Living,<br />Elevated by The Forge.
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-serif text-white font-bold leading-tight mb-8 drop-shadow-2xl">
+            Luxury Living,<br className="hidden sm:block" /> Elevated by The Forge.
           </h1>
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center max-w-lg mx-auto sm:max-w-none">
             <Link 
               to="/listings" 
-              className="bg-forge-gold text-forge-navy text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full md:w-auto shadow-lg"
+              className="bg-forge-gold text-forge-navy text-xs md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full sm:w-auto shadow-lg"
             >
               Explore Portfolio
             </Link>
             <Link 
               to="/contact" 
-              className="border-2 border-white text-white text-sm md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white hover:text-forge-navy transition-colors duration-300 w-full md:w-auto backdrop-blur-sm"
+              className="border-2 border-white text-white text-xs md:text-base px-8 py-4 uppercase tracking-widest font-bold hover:bg-white hover:text-forge-navy transition-colors duration-300 w-full sm:w-auto backdrop-blur-sm"
             >
               Private Consultation
             </Link>
@@ -129,12 +127,12 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Rest of home content... */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-6 text-center max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-serif text-forge-navy mb-6">A Legacy of Distinction</h2>
-          <div className="w-24 h-1 bg-forge-gold mx-auto mb-8"></div>
-          <p className="text-slate-600 leading-loose text-lg">
+      {/* Legacy/Mission Section */}
+      <section className="py-16 md:py-24 bg-white px-4">
+        <div className="container mx-auto text-center max-w-3xl">
+          <h2 className="text-2xl md:text-4xl font-serif text-forge-navy mb-6">A Legacy of Distinction</h2>
+          <div className="w-16 md:w-24 h-1 bg-forge-gold mx-auto mb-8"></div>
+          <p className="text-slate-600 leading-relaxed md:leading-loose text-base md:text-lg">
             At The Forge Properties, we do not merely sell real estate; we curate lifestyles. 
             As the exclusive real estate division of The Forge Group of Companies, we offer access to 
             the most coveted properties in Nigerias most desirable locations.
@@ -142,22 +140,23 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Curated Collection Grid - Responsive Padding */}
       <section className="py-16 md:py-24 bg-slate-50 border-t border-slate-200">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-end mb-12">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end mb-10 gap-4 text-center sm:text-left">
             <div>
-              <h2 className="text-3xl md:text-4xl font-serif text-forge-navy mb-2">
+              <h2 className="text-2xl md:text-4xl font-serif text-forge-navy mb-2">
                 Curated Collection
               </h2>
-              <p className="text-slate-500">Exceptional residences for the discerning client.</p>
+              <p className="text-slate-500 text-sm md:text-base">Exceptional residences for the discerning client.</p>
             </div>
-            <Link to="/listings" className="hidden md:flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors">
+            <Link to="/listings" className="flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-[10px] md:text-xs hover:text-forge-gold transition-colors">
               View All Listings <ArrowRight size={16} />
             </Link>
           </div>
           
           {displayProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {displayProperties.map(property => (
                 <PropertyCard key={property.id} property={property} />
               ))}
