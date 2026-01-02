@@ -21,22 +21,11 @@ export const Admin: React.FC = () => {
     p.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get top 3 recent leads, excluding "Chief Adewale"
+  // Get top 3 recent leads, excluding artifacts
   const recentLeads = [...leads]
-    .filter(l => l.name !== 'Chief Adewale')
+    .filter(l => l.name && l.name !== 'Chief Adewale' && l.email !== 'test@example.com')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'New': return 'bg-blue-50 text-blue-600 border-blue-500';
-      case 'Contacted': return 'bg-amber-50 text-amber-600 border-amber-500';
-      case 'Qualified': return 'bg-green-50 text-green-600 border-green-500';
-      case 'Closed': return 'bg-slate-800 text-white border-slate-700';
-      case 'Lost': return 'bg-red-50 text-red-600 border-red-500';
-      default: return 'bg-slate-50 text-slate-600 border-slate-400';
-    }
-  };
 
   const getBorderColor = (status: string) => {
     switch (status) {
@@ -120,7 +109,7 @@ export const Admin: React.FC = () => {
         />
       </div>
 
-      {/* Table - Responsive scroll */}
+      {/* Table */}
       <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-slate-200">
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
@@ -183,10 +172,6 @@ export const Admin: React.FC = () => {
             )}
           </tbody>
         </table>
-      </div>
-      
-      <div className="mt-6 text-center text-xs text-slate-400">
-        Showing {filteredProperties.length} results
       </div>
     </AdminLayout>
   );

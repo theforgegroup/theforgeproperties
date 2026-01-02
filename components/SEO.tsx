@@ -41,51 +41,51 @@ export const SEO: React.FC<SEOProps> = ({
   const canonicalUrl = getNormalizedUrl(url);
 
   useEffect(() => {
+    // Set Document Title
     document.title = fullTitle;
     
+    // Meta Tag Update Helper
     const updateMeta = (name: string, content: string, attr: 'name' | 'property' = 'name') => {
-      let element = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attr, name);
-        document.head.appendChild(element);
-      }
+      // Find and remove any duplicates first to ensure the crawler sees only the newest data
+      const existingTags = document.querySelectorAll(`meta[${attr}="${name}"]`);
+      existingTags.forEach(tag => tag.remove());
+
+      const element = document.createElement('meta');
+      element.setAttribute(attr, name);
       element.setAttribute('content', content);
+      document.head.appendChild(element);
     };
 
     const finalDescription = description || defaultDesc;
     updateMeta('description', finalDescription);
     updateMeta('keywords', keywords || defaultKeywords);
 
-    // Open Graph
+    // Image URL Logic: Ensure it is an absolute URL
+    let socialImage = image || defaultImage;
+    if (socialImage.startsWith('/') && !socialImage.startsWith('//')) {
+      socialImage = `https://theforgeproperties.com${socialImage}`;
+    }
+
+    // Open Graph Tags
     updateMeta('og:title', title, 'property'); 
     updateMeta('og:description', finalDescription, 'property');
     updateMeta('og:url', canonicalUrl, 'property');
     updateMeta('og:type', type === 'article' ? 'article' : 'website', 'property');
     updateMeta('og:site_name', siteName, 'property');
-    
-    // Image Handling for Social Media
-    let socialImage = image || defaultImage;
-    if (socialImage.startsWith('/') && !socialImage.startsWith('//')) {
-      socialImage = `https://theforgeproperties.com${socialImage}`;
-    }
-    
     updateMeta('og:image', socialImage, 'property');
     updateMeta('og:image:secure_url', socialImage, 'property');
     updateMeta('og:image:alt', title, 'property');
-    
-    // Help crawlers know the image size immediately
     updateMeta('og:image:width', '1200', 'property');
     updateMeta('og:image:height', '630', 'property');
     
-    // Twitter Card
-    updateMeta('twitter:card', 'summary_large_image'); // Large image format
+    // Twitter Card Tags
+    updateMeta('twitter:card', 'summary_large_image');
     updateMeta('twitter:site', '@theforgegroup');
     updateMeta('twitter:title', title);
     updateMeta('twitter:description', finalDescription);
     updateMeta('twitter:image', socialImage);
 
-    // Canonical
+    // Canonical Link
     let link: HTMLLinkElement | null = document.querySelector('link[rel="canonical"]');
     if (link) {
       link.setAttribute('href', canonicalUrl);
@@ -104,7 +104,8 @@ export const SEO: React.FC<SEOProps> = ({
       "@type": "Organization",
       "name": siteName,
       "url": "https://theforgeproperties.com",
-      "logo": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=512"
+      "logo": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=512",
+      "image": socialImage // Link preview image in schema
     };
 
     const combinedSchemaList = [baseOrgSchema];

@@ -13,18 +13,19 @@ export const AdminCRM: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All Statuses');
 
-  // Explicitly remove "Chief Adewale" if it exists as mock data artifact
-  const filteredLeads = [...leads]
-    .filter(l => l.name !== 'Chief Adewale')
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .filter(lead => {
-      const matchesSearch = 
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.property_title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'All Statuses' || lead.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
+  // Hard filter artifacts and sort
+  const allLeads = [...leads]
+    .filter(l => l.name && l.name !== 'Chief Adewale' && l.email !== 'test@example.com')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const filteredLeads = allLeads.filter(lead => {
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.property_title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All Statuses' || lead.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,8 +43,18 @@ export const AdminCRM: React.FC = () => {
         <h1 className="text-3xl md:text-4xl font-serif text-forge-navy mb-6 md:mb-8">CRM Dashboard</h1>
 
         <div className="flex gap-4 mb-6 md:mb-8 border-b border-slate-200">
-          <button onClick={() => setView('leads')} className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'leads' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Leads ({leads.length})</button>
-          <button onClick={() => setView('subscribers')} className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'subscribers' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}>Newsletter ({subscribers.length})</button>
+          <button 
+            onClick={() => setView('leads')} 
+            className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'leads' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}
+          >
+            Leads ({allLeads.length})
+          </button>
+          <button 
+            onClick={() => setView('subscribers')} 
+            className={`pb-4 px-2 text-[10px] md:text-sm font-bold uppercase tracking-widest ${view === 'subscribers' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}
+          >
+            Newsletter ({subscribers.length})
+          </button>
         </div>
 
         {view === 'leads' ? (

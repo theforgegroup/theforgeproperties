@@ -1,8 +1,8 @@
+
 /**
  * Resizes and compresses an image file to a base64 string.
- * This is critical for keeping database payload sizes manageable.
  */
-export const resizeImage = (file: File, maxWidth = 800, maxHeight = 800, quality = 0.7): Promise<string> => {
+export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -12,7 +12,6 @@ export const resizeImage = (file: File, maxWidth = 800, maxHeight = 800, quality
         let width = img.width;
         let height = img.height;
 
-        // Maintain aspect ratio while resizing
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -41,4 +40,22 @@ export const resizeImage = (file: File, maxWidth = 800, maxHeight = 800, quality
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+};
+
+/**
+ * Converts a base64/data URL to a Blob object.
+ * Supabase Storage requires Blobs or Files for uploads.
+ */
+export const dataURLtoBlob = (dataurl: string): Blob => {
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  if (!mimeMatch) throw new Error("Invalid data URL");
+  const mime = mimeMatch[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
 };
