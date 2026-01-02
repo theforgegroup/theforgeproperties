@@ -45,75 +45,6 @@ const DEFAULT_SETTINGS: SiteSettings = {
   }
 };
 
-const LEGACY_MOCK_PROPERTIES: Property[] = [
-  {
-    id: '1',
-    slug: 'banana-island-waterfront-mansion',
-    title: 'The Ivory Waterfront Estate',
-    description: 'An architectural masterpiece located in the most exclusive enclave of Banana Island. This 7-bedroom residence features a private jetty, glass-walled infinity pool, and a 12-seat cinema room. Finished with Italian marble and smart home automation throughout.',
-    price: 3500000000,
-    location: 'Banana Island, Ikoyi, Lagos',
-    bedrooms: 7,
-    bathrooms: 8,
-    area_sq_ft: 12500,
-    type: PropertyType.VILLA,
-    status: ListingStatus.FOR_SALE,
-    images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1600'],
-    features: ['Private Jetty', 'Infinity Pool', 'Cinema Room', 'Smart Home', 'Chef\'s Kitchen'],
-    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
-    featured: true
-  },
-  {
-    id: '2',
-    slug: 'maitama-diplomatic-zone-mansion',
-    title: 'Diplomatic Zone Mansion',
-    description: 'A stately residence in Abuja\'s most prestigious neighborhood. Perfect for high-level entertaining with massive grand halls and dual-wing living spaces. Features a breathtaking view of the city and top-tier security installations.',
-    price: 1800000000,
-    location: 'Maitama, Abuja',
-    bedrooms: 6,
-    bathrooms: 7,
-    area_sq_ft: 9800,
-    type: PropertyType.VILLA,
-    status: ListingStatus.FOR_SALE,
-    images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600'],
-    features: ['Diplomatic Zone', 'High Security', 'Grand Hall', 'City Views', 'Guest Wing'],
-    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
-    featured: true
-  },
-  {
-    id: '3',
-    slug: 'eko-atlantic-ocean-view-penthouse',
-    title: 'Azure Ocean Penthouse',
-    description: 'Commanding views of the Atlantic Ocean from the highest point of Eko Atlantic City. This triple-aspect penthouse offers unparalleled luxury with floor-to-ceiling glass and a wraparound terrace.',
-    price: 1200000000,
-    location: 'Eko Atlantic, Victoria Island, Lagos',
-    bedrooms: 4,
-    bathrooms: 5,
-    area_sq_ft: 5500,
-    type: PropertyType.PENTHOUSE,
-    status: ListingStatus.FOR_SALE,
-    images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1600'],
-    features: ['Ocean View', 'Smart Automation', 'Concierge Service', 'Helipad Access'],
-    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
-    featured: false
-  }
-];
-
-const INITIAL_LEADS: Lead[] = [
-  {
-    id: 'seed-l1',
-    name: 'Chief Adewale',
-    email: 'chief.a@royal.com',
-    phone: '+234 801 000 0001',
-    message: 'I am interested in the Banana Island Waterfront. Please have a senior broker call me.',
-    property_id: '1',
-    property_title: 'The Ivory Waterfront Estate',
-    date: new Date().toISOString(),
-    status: 'New',
-    type: 'Viewing Request'
-  }
-];
-
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -155,24 +86,18 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const seedDatabase = async () => {
     setIsLoading(true);
     try {
-      // 1. Seed Properties
-      for (const p of LEGACY_MOCK_PROPERTIES) {
-        await supabase.from('properties').upsert(p);
+      // Ensure Settings row exists with defaults, but do not overwrite if exists
+      const { data: existingSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+      
+      if (!existingSettings) {
+        await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
       }
-      // 2. Seed Leads (if empty)
-      if (leads.length === 0) {
-        for (const l of INITIAL_LEADS) {
-          await supabase.from('leads').upsert(l);
-        }
-      }
-      // 3. Ensure Settings row exists
-      await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
       
       await fetchData();
-      alert("System data restored successfully!");
+      alert("System configuration initialized. You can now add your own listings and posts.");
     } catch (err) {
       console.error(err);
-      alert("Restore failed. Check Supabase connection.");
+      alert("Initialization failed. Check Supabase connection.");
     } finally {
       setIsLoading(false);
     }

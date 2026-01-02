@@ -43,7 +43,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const handleSeed = async () => {
-    if (window.confirm("This will restore the original high-end mock listings. Continue?")) {
+    if (window.confirm("This will ensure essential system settings are initialized. No mock listings will be created. Continue?")) {
       setIsSeeding(true);
       await seedDatabase();
       setIsSeeding(false);
@@ -110,7 +110,7 @@ export const AdminSettings: React.FC = () => {
             className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-500 px-4 py-2 hover:bg-forge-gold hover:text-forge-navy transition-colors border border-slate-200"
           >
             {isSeeding ? <Loader2 size={12} className="animate-spin" /> : <Database size={12} />}
-            Seed Original Listings
+            Initialize System
           </button>
         </div>
 
