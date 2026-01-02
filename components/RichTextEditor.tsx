@@ -14,7 +14,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalChange = useRef(false);
   const [isCodeView, setIsCodeView] = useState(false);
-  const [currentBlock, setCurrentBlock] = useState('P');
+  const [currentBlock, setCurrentBlock] = useState('p');
 
   // Sync initial value or external updates to editor content
   useEffect(() => {
@@ -37,17 +37,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     // Ensure editor is focused before executing command
     editorRef.current?.focus();
     
-    // For lists, some browsers require specific handling if current selection is empty
-    // But standard execCommand should work fine for basic usage
-    document.execCommand(command, ui, val);
+    try {
+      document.execCommand(command, ui, val);
+    } catch (e) {
+      console.warn('ExecCommand failed:', e);
+    }
     handleInput();
   };
 
   const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setCurrentBlock(val);
-    // Use the standard formatBlock command with the tag name
-    execCommand('formatBlock', false, val);
+    // Use tag name wrapped in brackets for better browser compatibility
+    execCommand('formatBlock', false, `<${val}>`);
   };
 
   const insertLink = () => {
@@ -102,14 +104,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
             disabled={isCodeView}
             className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[140px] ml-1"
           >
-            <option value="P">Paragraph</option>
-            <option value="H1">Heading 1</option>
-            <option value="H2">Heading 2</option>
-            <option value="H3">Heading 3</option>
-            <option value="H4">Heading 4</option>
-            <option value="H5">Heading 5</option>
-            <option value="H6">Heading 6</option>
-            <option value="PRE">Preformatted</option>
+            <option value="p">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+            <option value="h5">Heading 5</option>
+            <option value="h6">Heading 6</option>
+            <option value="pre">Preformatted</option>
           </select>
         </div>
 
@@ -131,7 +133,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
            <ToolbarButton icon={List} onClick={() => execCommand('insertUnorderedList')} title="Bullet List" disabled={isCodeView} />
            <ToolbarButton icon={ListOrdered} onClick={() => execCommand('insertOrderedList')} title="Numbered List" disabled={isCodeView} />
-           <ToolbarButton icon={Quote} onClick={() => execCommand('formatBlock', false, 'BLOCKQUOTE')} title="Blockquote" disabled={isCodeView} />
+           <ToolbarButton icon={Quote} onClick={() => execCommand('formatBlock', false, '<blockquote>')} title="Blockquote" disabled={isCodeView} />
         </div>
 
         {/* 5. Undo/Redo */}
@@ -168,7 +170,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
       ) : (
         <div 
           ref={editorRef}
-          className="flex-grow p-8 overflow-y-auto focus:outline-none prose max-w-none font-serif text-lg leading-relaxed text-slate-700 article-content"
+          className="flex-grow p-8 overflow-y-auto focus:outline-none article-content font-serif text-lg leading-relaxed text-slate-700"
           contentEditable
           onInput={handleInput}
           spellCheck={true}
