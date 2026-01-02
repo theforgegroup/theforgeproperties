@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
-  AlertCircle, Globe, Settings, FileText, ChevronDown, Calendar
+  AlertCircle, Globe, Settings, FileText, ChevronDown, Calendar, Plus
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -26,7 +26,9 @@ export const AdminPostForm: React.FC = () => {
   const [isEditingSlug, setIsEditingSlug] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [categories] = useState(['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment']);
+  const [categories, setCategories] = useState(['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment']);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const [formData, setFormData] = useState<BlogPost>({
     id: '',
@@ -58,6 +60,10 @@ export const AdminPostForm: React.FC = () => {
         const post = getPost(id);
         if (post) {
           setFormData(post);
+          // If the post has a category not in the default list, add it
+          if (post.category && !categories.includes(post.category)) {
+            setCategories(prev => [...prev, post.category]);
+          }
           setDataLoaded(true);
         } else {
           setError("Post not found.");
@@ -98,6 +104,18 @@ export const AdminPostForm: React.FC = () => {
       setError(`Upload failed: ${err.message}. Ensure you have run the SQL RLS fix in Supabase.`);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleAddCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (trimmed) {
+      if (!categories.includes(trimmed)) {
+        setCategories([...categories, trimmed]);
+      }
+      setFormData({ ...formData, category: trimmed });
+      setNewCategoryName('');
+      setIsAddingCategory(false);
     }
   };
 
@@ -346,7 +364,43 @@ export const AdminPostForm: React.FC = () => {
                     </label>
                   ))}
                 </div>
-                <button type="button" className="text-blue-600 text-xs underline mt-4 block">+ Add New Category</button>
+                
+                {isAddingCategory ? (
+                  <div className="mt-4 space-y-2">
+                    <input 
+                      type="text" 
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="New Category"
+                      className="w-full border border-slate-300 p-2 text-xs focus:outline-none focus:border-blue-400"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button 
+                        type="button" 
+                        onClick={handleAddCategory}
+                        className="bg-blue-600 text-white px-3 py-1 text-[10px] font-bold rounded"
+                      >
+                        Add
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => { setIsAddingCategory(false); setNewCategoryName(''); }}
+                        className="bg-slate-200 text-slate-600 px-3 py-1 text-[10px] font-bold rounded"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={() => setIsAddingCategory(true)}
+                    className="text-blue-600 text-xs underline mt-4 block"
+                  >
+                    + Add New Category
+                  </button>
+                )}
               </div>
             </div>
 
