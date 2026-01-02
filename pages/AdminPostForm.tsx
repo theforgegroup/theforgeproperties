@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
@@ -15,7 +15,7 @@ import { uploadImage } from '../lib/supabaseClient';
 export const AdminPostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPost, addPost, updatePost, isLoading } = useProperties();
+  const { posts, getPost, addPost, updatePost, isLoading } = useProperties();
   const isEditing = !!id;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,9 @@ export const AdminPostForm: React.FC = () => {
   const [isEditingSlug, setIsEditingSlug] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [categories, setCategories] = useState(['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment']);
+  
+  // Local state for categories added during this specific form session
+  const [sessionCategories, setSessionCategories] = useState<string[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -45,6 +47,14 @@ export const AdminPostForm: React.FC = () => {
     keyphrase: ''
   });
 
+  // Dynamically derive all available categories from defaults, existing posts, and current session additions
+  const availableCategories = useMemo(() => {
+    const defaults = ['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment'];
+    const fromPosts = posts.map(p => p.category).filter(Boolean);
+    const combined = Array.from(new Set([...defaults, ...fromPosts, ...sessionCategories]));
+    return combined.sort();
+  }, [posts, sessionCategories]);
+
   const slugify = (text: string) => {
     return text.toString().toLowerCase().trim()
       .replace(/\s+/g, '-')
@@ -60,10 +70,6 @@ export const AdminPostForm: React.FC = () => {
         const post = getPost(id);
         if (post) {
           setFormData(post);
-          // If the post has a category not in the default list, add it
-          if (post.category && !categories.includes(post.category)) {
-            setCategories(prev => [...prev, post.category]);
-          }
           setDataLoaded(true);
         } else {
           setError("Post not found.");
@@ -101,7 +107,7 @@ export const AdminPostForm: React.FC = () => {
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
     } catch (err: any) {
-      setError(`Upload failed: ${err.message}. Ensure you have run the SQL RLS fix in Supabase.`);
+      setError(`Upload failed: ${err.message}.`);
     } finally {
       setIsUploading(false);
     }
@@ -110,10 +116,12 @@ export const AdminPostForm: React.FC = () => {
   const handleAddCategory = () => {
     const trimmed = newCategoryName.trim();
     if (trimmed) {
-      if (!categories.includes(trimmed)) {
-        setCategories([...categories, trimmed]);
+      // Add to session categories so it appears in the list immediately
+      if (!availableCategories.includes(trimmed)) {
+        setSessionCategories(prev => [...prev, trimmed]);
       }
-      setFormData({ ...formData, category: trimmed });
+      // Update the actual form data with the new category
+      setFormData(prev => ({ ...prev, category: trimmed }));
       setNewCategoryName('');
       setIsAddingCategory(false);
     }
@@ -165,7 +173,7 @@ export const AdminPostForm: React.FC = () => {
           <h1 className="text-2xl font-sans font-normal text-slate-800">
             {isEditing ? 'Edit Post' : 'Add New Post'}
           </h1>
-          <button onClick={() => navigate('/admin/blog/new')} className="px-2 py-1 border border-slate-300 rounded bg-white text-blue-600 text-xs font-bold hover:bg-blue-600 hover:text-white transition-colors">
+          <button type="button" onClick={() => navigate('/admin/blog/new')} className="px-2 py-1 border border-slate-300 rounded bg-white text-blue-600 text-xs font-bold hover:bg-blue-600 hover:text-white transition-colors">
             Add New
           </button>
         </div>
@@ -352,7 +360,7 @@ export const AdminPostForm: React.FC = () => {
               </div>
               <div className="p-4">
                 <div className="max-h-40 overflow-y-auto space-y-2">
-                  {categories.map(cat => (
+                  {availableCategories.map(cat => (
                     <label key={cat} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                       <input 
                         type="checkbox" 
