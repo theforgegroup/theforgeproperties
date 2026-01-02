@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
-  AlertCircle, Globe, Settings, FileText
+  AlertCircle, Globe, Settings, FileText, ChevronDown, Calendar
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -23,6 +23,7 @@ export const AdminPostForm: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [isEditingSlug, setIsEditingSlug] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [categories] = useState(['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment']);
@@ -94,7 +95,7 @@ export const AdminPostForm: React.FC = () => {
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
     } catch (err: any) {
-      setError(`Upload failed: ${err.message}. If permissions persist, run the RLS SQL fix.`);
+      setError(`Upload failed: ${err.message}. Ensure you have run the SQL RLS fix in Supabase.`);
     } finally {
       setIsUploading(false);
     }
@@ -142,12 +143,12 @@ export const AdminPostForm: React.FC = () => {
   return (
     <AdminLayout>
       <div className="max-w-[1400px] mx-auto pb-20">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-serif font-bold text-forge-navy">
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-sans font-normal text-slate-800">
             {isEditing ? 'Edit Post' : 'Add New Post'}
           </h1>
-          <button onClick={() => navigate('/admin/blog')} className="text-slate-400 hover:text-forge-navy flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-            <ArrowLeft size={14} /> Back to Blog List
+          <button onClick={() => navigate('/admin/blog/new')} className="px-2 py-1 border border-slate-300 rounded bg-white text-blue-600 text-xs font-bold hover:bg-blue-600 hover:text-white transition-colors">
+            Add New
           </button>
         </div>
 
@@ -157,156 +158,195 @@ export const AdminPostForm: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={(e) => handleSave(e)} className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content Area (WordPress Left Column) */}
-          <div className="flex-1 space-y-6">
+        <form onSubmit={(e) => handleSave(e)} className="flex flex-col lg:flex-row gap-6">
+          
+          {/* Main Column (Left) */}
+          <div className="flex-1 space-y-4">
+            {/* 1. Title */}
             <input 
               type="text" 
               value={formData.title} 
               onChange={handleTitleChange} 
               placeholder="Enter title here"
-              className="w-full bg-white border border-slate-200 p-4 text-2xl font-serif font-bold focus:border-forge-gold focus:outline-none shadow-sm"
+              className="w-full bg-white border border-slate-300 p-2 text-xl focus:border-blue-400 focus:outline-none"
               required
             />
             
-            <div className="bg-white border border-slate-200 shadow-sm">
+            {/* 2. Permalink (URL Slug) */}
+            <div className="text-sm flex items-center gap-1 text-slate-600">
+              <span className="font-bold">Permalink:</span>
+              <span>https://theforgeproperties.com/blog/</span>
+              {isEditingSlug ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    value={formData.slug} 
+                    onChange={(e) => setFormData({...formData, slug: slugify(e.target.value)})}
+                    className="border border-slate-300 px-1 text-xs"
+                  />
+                  <button type="button" onClick={() => setIsEditingSlug(false)} className="px-2 py-0.5 bg-slate-100 border border-slate-300 text-[10px] rounded">OK</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="bg-yellow-50 px-1">{formData.slug || '(slug)'}</span>
+                  <button type="button" onClick={() => setIsEditingSlug(true)} className="px-2 py-0.5 bg-white border border-slate-300 text-[10px] rounded hover:bg-slate-50">Edit</button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Content Editor */}
+            <div className="bg-white border border-slate-300">
               <RichTextEditor value={formData.content} onChange={(content) => setFormData({...formData, content})} />
             </div>
 
-            <div className="bg-white border border-slate-200 p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-forge-navy uppercase tracking-widest mb-4">Excerpt</h3>
-              <textarea 
-                value={formData.excerpt} 
-                onChange={(e) => setFormData({...formData, excerpt: e.target.value})} 
-                rows={4} 
-                className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none"
-                placeholder="Write a brief summary for the blog list page..."
-              />
+            {/* 4. Excerpt Box */}
+            <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center cursor-default">
+                <span className="text-sm font-bold text-slate-700">Excerpt</span>
+                <ChevronDown size={14} className="text-slate-400" />
+              </div>
+              <div className="p-4">
+                <textarea 
+                  value={formData.excerpt} 
+                  onChange={(e) => setFormData({...formData, excerpt: e.target.value})} 
+                  rows={3} 
+                  className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300"
+                  placeholder="Excerpts are optional hand-crafted summaries of your content..."
+                />
+              </div>
             </div>
+
+            {/* 5. SEO Focus Keyphrase */}
+            <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-700">Focus Keyphrase</span>
+                <ChevronDown size={14} className="text-slate-400" />
+              </div>
+              <div className="p-4">
+                <input 
+                  type="text" 
+                  value={formData.keyphrase || ''} 
+                  onChange={(e) => setFormData({...formData, keyphrase: e.target.value})}
+                  className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300"
+                  placeholder="Enter the main search term for this post"
+                />
+              </div>
+            </div>
+
+            {/* 6. Meta Description */}
+            <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-700">Meta Description</span>
+                <ChevronDown size={14} className="text-slate-400" />
+              </div>
+              <div className="p-4">
+                <textarea 
+                  value={formData.meta_description || ''} 
+                  onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
+                  rows={3}
+                  className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300 resize-none"
+                  placeholder="The snippet that appears in Google search results"
+                />
+              </div>
+            </div>
+
           </div>
 
-          {/* Sidebar Area (WordPress Right Column) */}
-          <div className="w-full lg:w-80 space-y-6">
+          {/* Sidebar Column (Right) */}
+          <div className="w-full lg:w-72 space-y-6">
             
-            {/* Publish Box */}
-            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Publish</span>
-                <Settings size={14} className="text-slate-400" />
+            {/* 1. Publish Box */}
+            <div className="bg-white border border-slate-300 shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700">
+                Publish
               </div>
-              <div className="p-4 space-y-4">
-                <div className="text-xs text-slate-600 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Globe size={14} /> Status: <span className="font-bold text-forge-navy">{formData.status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileText size={14} /> Visibility: <span className="font-bold text-forge-navy">Public</span>
-                  </div>
+              <div className="p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Status: <span className="text-slate-800 font-bold">{formData.status}</span></span>
+                  <button type="button" className="text-blue-600 underline">Edit</button>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <button 
-                    type="button" 
-                    onClick={(e) => handleSave(e, 'Draft')}
-                    disabled={isSubmitting || isSuccess}
-                    className="flex-1 py-2 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-colors"
-                  >
-                    Save Draft
-                  </button>
-                  <button 
-                    type="button"
-                    className="flex-1 py-2 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50"
-                  >
-                    Preview
-                  </button>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Visibility: <span className="text-slate-800 font-bold">Public</span></span>
+                  <button type="button" className="text-blue-600 underline">Edit</button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 flex items-center gap-1"><Calendar size={12} /> Publish <b>immediately</b></span>
+                  <button type="button" className="text-blue-600 underline">Edit</button>
                 </div>
               </div>
-              <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
+              <div className="bg-slate-50 p-3 border-t border-slate-300 flex justify-between items-center">
+                <button type="button" onClick={() => navigate('/admin/blog')} className="text-red-600 text-xs underline">Move to Trash</button>
                 <button 
                   type="submit" 
                   onClick={(e) => handleSave(e, 'Published')}
                   disabled={isSubmitting || isSuccess}
-                  className="bg-forge-navy text-white px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-forge-dark transition-all flex items-center gap-2 shadow-md"
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
-                  {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : (isSuccess ? <CheckCircle size={12} /> : null)}
+                  {isSubmitting && <Loader2 size={12} className="animate-spin" />}
                   {isEditing ? 'Update' : 'Publish'}
                 </button>
               </div>
             </div>
 
-            {/* SEO Settings (WP Focus Keyphrase / Meta Description) */}
-            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">SEO Settings</span>
+            {/* 2. Featured Image Box (Right under Publish) */}
+            <div className="bg-white border border-slate-300 shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700 flex justify-between items-center">
+                Featured Image
+                <ChevronDown size={14} className="text-slate-400" />
               </div>
-              <div className="p-4 space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Focus Keyphrase</label>
-                  <input 
-                    type="text" 
-                    value={formData.keyphrase || ''} 
-                    onChange={(e) => setFormData({...formData, keyphrase: e.target.value})}
-                    className="w-full border border-slate-200 p-2 text-sm focus:border-forge-gold focus:outline-none"
-                    placeholder="Enter keyphrase"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Description</label>
-                  <textarea 
-                    value={formData.meta_description || ''} 
-                    onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
-                    rows={3}
-                    className="w-full border border-slate-200 p-2 text-xs focus:border-forge-gold focus:outline-none resize-none"
-                    placeholder="Enter search snippet"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Slug</label>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 p-2 border border-slate-100 rounded font-mono truncate">
-                    /{formData.slug}
+              <div className="p-4">
+                {formData.cover_image ? (
+                  <div className="space-y-3">
+                    <img src={formData.cover_image} className="w-full aspect-video object-cover border border-slate-200" alt="Preview" />
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-blue-600 text-xs underline block"
+                    >
+                      Click the image to edit or update
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setFormData({...formData, cover_image: ''})}
+                      className="text-red-600 text-xs underline"
+                    >
+                      Remove featured image
+                    </button>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Categories Box */}
-            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categories</span>
-              </div>
-              <div className="p-4">
-                <select 
-                  value={formData.category} 
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  className="w-full border border-slate-200 p-2 text-sm focus:outline-none"
-                >
-                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Featured Image Box */}
-            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Featured Image</span>
-              </div>
-              <div className="p-4">
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-forge-gold overflow-hidden relative group"
-                >
-                  {formData.cover_image ? (
-                    <>
-                      <img src={formData.cover_image} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">Change Image</div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      {isUploading ? <Loader2 size={20} className="animate-spin text-forge-gold" /> : <ImageIcon size={20} className="text-slate-300" />}
-                      <span className="text-[8px] text-slate-400 font-bold uppercase mt-2">Set Featured Image</span>
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-blue-600 text-xs underline"
+                  >
+                    Set featured image
+                  </button>
+                )}
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
+              </div>
+            </div>
+
+            {/* 3. Categories Box (Followed by Featured Image) */}
+            <div className="bg-white border border-slate-300 shadow-sm">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700 flex justify-between items-center">
+                Categories
+                <ChevronDown size={14} className="text-slate-400" />
+              </div>
+              <div className="p-4">
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {categories.map(cat => (
+                    <label key={cat} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.category === cat} 
+                        onChange={() => setFormData({...formData, category: cat})}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      {cat}
+                    </label>
+                  ))}
+                </div>
+                <button type="button" className="text-blue-600 text-xs underline mt-4 block">+ Add New Category</button>
               </div>
             </div>
 
