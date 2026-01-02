@@ -25,7 +25,24 @@ export const SEO: React.FC<SEOProps> = ({
   const defaultDesc = 'Discover Nigerias most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences, penthouses, and estates defined by excellence.';
   const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria, maitama houses';
   const defaultImage = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200';
-  const canonicalUrl = url ? `https://theforgeproperties.com${url}` : window.location.href;
+  
+  // URL Normalization: Force lowercase and remove trailing slashes to prevent duplicate indexing
+  const getNormalizedUrl = (path?: string) => {
+    const domain = 'https://theforgeproperties.com';
+    let cleanPath = path || window.location.pathname;
+    
+    // Ensure path starts with slash
+    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+    
+    // Remove trailing slash if it's not the root
+    if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
+      cleanPath = cleanPath.slice(0, -1);
+    }
+    
+    return `${domain}${cleanPath.toLowerCase()}`;
+  };
+
+  const canonicalUrl = getNormalizedUrl(url);
 
   useEffect(() => {
     // 1. Browser Title
@@ -65,20 +82,21 @@ export const SEO: React.FC<SEOProps> = ({
     updateMeta('twitter:description', description || defaultDesc);
     updateMeta('twitter:image', socialImage);
 
-    // 6. Canonical Link
+    // 6. Strict Canonical Link (Critical for resolving "Duplicate without user-selected canonical")
     let link: HTMLLinkElement | null = document.querySelector('link[rel="canonical"]');
-    if (!link) {
+    if (link) {
+      link.setAttribute('href', canonicalUrl);
+    } else {
       link = document.createElement('link');
       link.setAttribute('rel', 'canonical');
+      link.setAttribute('href', canonicalUrl);
       document.head.appendChild(link);
     }
-    link.setAttribute('href', canonicalUrl);
 
-    // 7. Structured Data (JSON-LD) - Advanced Implementation
+    // 7. Structured Data (JSON-LD)
     const existingScript = document.getElementById('json-ld-schema');
     if (existingScript) existingScript.remove();
 
-    // Base Organization Schema (Always present for brand authority)
     const baseOrgSchema = {
       "@type": "Organization",
       "name": siteName,
@@ -97,7 +115,6 @@ export const SEO: React.FC<SEOProps> = ({
       ]
     };
 
-    // Website & Sitelinks Searchbox
     const websiteSchema = {
       "@type": "WebSite",
       "name": siteName,
@@ -110,7 +127,13 @@ export const SEO: React.FC<SEOProps> = ({
     };
 
     const combinedSchemaList = [baseOrgSchema, websiteSchema];
-    if (schema) combinedSchemaList.push(schema);
+    if (schema) {
+      if ((schema as any)["@graph"]) {
+        combinedSchemaList.push(...(schema as any)["@graph"]);
+      } else {
+        combinedSchemaList.push(schema);
+      }
+    }
 
     const script = document.createElement('script');
     script.id = 'json-ld-schema';

@@ -1,6 +1,8 @@
+
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin/*
 
+# Sitemap: Standardized URL
 Sitemap: https://theforgeproperties.com/sitemap.xml
