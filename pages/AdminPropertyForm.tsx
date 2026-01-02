@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info
+  ArrowLeft, Save, X, Upload, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Property, PropertyType, ListingStatus } from '../types';
@@ -215,6 +215,18 @@ export const AdminPropertyForm: React.FC = () => {
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Description</label>
                     <textarea name="description" value={formData.description} onChange={handleChange} rows={6} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold resize-none" placeholder="Detailed description..." required></textarea>
+                  </div>
+
+                  {/* Restored Key Features Input */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Key Features (comma separated)</label>
+                    <input 
+                      type="text" 
+                      value={featuresInput} 
+                      onChange={(e) => setFeaturesInput(e.target.value)} 
+                      className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" 
+                      placeholder="e.g. Swimming Pool, Gym, Smart Home, Security" 
+                    />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
