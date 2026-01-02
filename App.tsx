@@ -42,13 +42,27 @@ const AppLayout: React.FC = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    // Corrected to use snake_case field 'listing_agent'
     const agentImage = settings?.listing_agent?.image;
     if (agentImage) {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-      if (link) {
-        link.href = agentImage;
-      } else {
+      // Robustly update all types of link rel icons
+      const selectors = [
+        "link[rel='icon']",
+        "link[rel='shortcut icon']",
+        "link[rel='apple-touch-icon']",
+        "link[rel*='icon']"
+      ];
+      
+      let found = false;
+      selectors.forEach(selector => {
+        const links = document.querySelectorAll(selector);
+        if (links.length > 0) found = true;
+        links.forEach(link => {
+          (link as HTMLLinkElement).href = agentImage;
+        });
+      });
+
+      // If no icon links exist at all, create one
+      if (!found) {
         const newLink = document.createElement('link');
         newLink.rel = 'icon';
         newLink.href = agentImage;

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Mail, Phone, Calendar, Check, ChevronDown, Copy, Inbox } from 'lucide-react';
+import { Search, Mail, Phone, Calendar, Inbox } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { Lead } from '../types';
@@ -13,16 +13,21 @@ export const AdminCRM: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All Statuses');
 
-  // Hard filter artifacts and sort
+  // Strict cleanup of artifacts
   const allLeads = [...leads]
-    .filter(l => l.name && l.name !== 'Chief Adewale' && l.email !== 'test@example.com')
+    .filter(l => 
+      l.name && 
+      l.name.trim() !== '' && 
+      l.name !== 'Chief Adewale' && 
+      l.email !== 'test@example.com'
+    )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const filteredLeads = allLeads.filter(lead => {
     const matchesSearch = 
       lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.property_title?.toLowerCase().includes(searchTerm.toLowerCase());
+      (lead.property_title || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'All Statuses' || lead.status === filterStatus;
     return matchesSearch && matchesStatus;
   });

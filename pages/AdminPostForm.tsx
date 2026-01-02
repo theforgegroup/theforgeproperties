@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, AlertCircle, Eye
+  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
+  AlertCircle, Eye, Globe, Settings, FileText, Search
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -19,7 +20,6 @@ export const AdminPostForm: React.FC = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<'Published' | 'Draft' | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -58,7 +58,7 @@ export const AdminPostForm: React.FC = () => {
         if (post) {
           setFormData(post);
           setDataLoaded(true);
-        } else if (id !== 'new') {
+        } else {
           setError("Post not found.");
         }
       } else {
@@ -94,50 +94,46 @@ export const AdminPostForm: React.FC = () => {
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
     } catch (err: any) {
-      setError(`Cover upload failed: ${err.message}. Ensure 'blog-images' bucket is public.`);
+      setError(`Upload failed: ${err.message}. Ensure 'blog-images' bucket is public.`);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleSubmit = async (e: React.MouseEvent | React.FormEvent, statusOverride: 'Published' | 'Draft') => {
+  const handleSave = async (e: React.FormEvent, statusOverride?: 'Published' | 'Draft') => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      setError("Please enter a title.");
+      setError("Article title is required.");
       return;
     }
-    if (isUploading) return;
 
     setIsSubmitting(true);
-    setPendingStatus(statusOverride);
     setError('');
 
-    const finalSlug = formData.slug || slugify(formData.title);
     const submissionData = { 
       ...formData, 
-      slug: finalSlug,
-      status: statusOverride
+      status: statusOverride || formData.status,
+      slug: formData.slug || slugify(formData.title)
     };
 
     try {
       if (isEditing) await updatePost(submissionData);
       else await addPost(submissionData);
       setIsSuccess(true);
-      setTimeout(() => navigate('/admin/blog'), 1500);
+      setTimeout(() => navigate('/admin/blog'), 1200);
     } catch (err: any) {
       setError(err.message || "Failed to save post.");
     } finally {
       setIsSubmitting(false);
-      setPendingStatus(null);
     }
   };
 
   if (isLoading || (isEditing && !dataLoaded)) {
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-400">
-          <Loader2 size={40} className="animate-spin mb-4" />
-          <p className="font-serif italic">Accessing Archives...</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 size={32} className="animate-spin text-forge-gold mb-4" />
+          <p className="font-serif italic text-slate-400">Loading Article...</p>
         </div>
       </AdminLayout>
     );
@@ -145,69 +141,176 @@ export const AdminPostForm: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto pb-20">
-        <div className="flex items-center justify-between mb-8">
-            <button onClick={() => navigate('/admin/blog')} className="text-slate-400 hover:text-forge-navy flex items-center gap-2 text-sm font-medium">
-              <ArrowLeft size={16} /> Back to Journal
-            </button>
-            <span className={`text-[10px] font-bold px-3 py-1 uppercase tracking-widest rounded-full ${formData.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-              Status: {formData.status}
-            </span>
+      <div className="max-w-[1400px] mx-auto pb-20">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-serif font-bold text-forge-navy">
+            {isEditing ? 'Edit Post' : 'Add New Post'}
+          </h1>
+          <button onClick={() => navigate('/admin/blog')} className="text-slate-400 hover:text-forge-navy flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+            <ArrowLeft size={14} /> Back
+          </button>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm font-bold border border-red-200 flex items-center gap-2">
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm border border-red-200 flex items-center gap-2">
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
-        <form className="flex flex-col lg:flex-row gap-8">
-           <div className="flex-1 space-y-8">
-              <div className="bg-white p-8 shadow-sm border border-slate-200 rounded-sm">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Article Title</label>
-                <input type="text" value={formData.title} onChange={handleTitleChange} className="w-full bg-transparent border-0 border-b-2 border-slate-100 py-4 text-3xl font-serif font-bold text-forge-navy focus:border-forge-gold focus:outline-none" placeholder="The Future of Waterfront Estates..." required />
-              </div>
-
+        <form onSubmit={(e) => handleSave(e)} className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content Area (WordPress Left Column) */}
+          <div className="flex-1 space-y-6">
+            <input 
+              type="text" 
+              value={formData.title} 
+              onChange={handleTitleChange} 
+              placeholder="Enter title here"
+              className="w-full bg-white border border-slate-200 p-4 text-2xl font-serif font-bold focus:border-forge-gold focus:outline-none shadow-sm"
+              required
+            />
+            
+            <div className="bg-white border border-slate-200 shadow-sm">
               <RichTextEditor value={formData.content} onChange={(content) => setFormData({...formData, content})} />
+            </div>
 
-              <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Excerpt</label>
-                <textarea value={formData.excerpt} onChange={(e) => setFormData({...formData, excerpt: e.target.value})} rows={3} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none" placeholder="Brief overview for social media..." />
+            <div className="bg-white border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-forge-navy uppercase tracking-widest mb-4">Excerpt</h3>
+              <textarea 
+                value={formData.excerpt} 
+                onChange={(e) => setFormData({...formData, excerpt: e.target.value})} 
+                rows={4} 
+                className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none"
+                placeholder="Write a brief summary for the blog list page..."
+              />
+            </div>
+          </div>
+
+          {/* Sidebar Area (WordPress Right Column) */}
+          <div className="w-full lg:w-80 space-y-6">
+            
+            {/* Publish Box */}
+            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Publish</span>
+                <Settings size={14} className="text-slate-400" />
               </div>
-           </div>
-
-           <div className="w-full lg:w-80 space-y-6">
-              <div className="bg-white p-6 shadow-sm border border-slate-200 rounded-sm sticky top-24">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Publishing Actions</h3>
-                <div className="space-y-3">
-                  <button type="button" onClick={(e) => handleSubmit(e, 'Draft')} disabled={isSubmitting || isUploading || isSuccess} className="w-full py-4 border border-slate-200 text-slate-500 font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-slate-50">
-                     {isSubmitting && pendingStatus === 'Draft' && <Loader2 size={12} className="animate-spin" />} Save as Draft
+              <div className="p-4 space-y-4">
+                <div className="text-xs text-slate-600 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Globe size={14} /> Status: <span className="font-bold text-forge-navy">{formData.status}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText size={14} /> Visibility: <span className="font-bold text-forge-navy">Public</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={(e) => handleSave(e, 'Draft')}
+                    disabled={isSubmitting || isSuccess}
+                    className="flex-1 py-2 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-colors"
+                  >
+                    Save Draft
                   </button>
-                  <button type="button" onClick={(e) => handleSubmit(e, 'Published')} disabled={isSubmitting || isUploading || isSuccess} className="w-full py-4 bg-forge-navy text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-forge-dark">
-                     {isSubmitting && pendingStatus === 'Published' && <Loader2 size={12} className="animate-spin" />} {isEditing ? 'Update & Sync' : 'Publish Article'}
+                  <button 
+                    type="button"
+                    className="flex-1 py-2 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50"
+                  >
+                    Preview
                   </button>
                 </div>
               </div>
-
-              <div className="bg-white p-6 shadow-sm border border-slate-200">
-                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Cover Image (Public URL)</h3>
-                 <div onClick={() => fileInputRef.current?.click()} className="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-forge-gold overflow-hidden relative group">
-                    {formData.cover_image ? (
-                      <>
-                        <img src={formData.cover_image} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">Change</div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        {isUploading ? <Loader2 size={24} className="animate-spin text-forge-gold" /> : <ImageIcon size={24} className="text-slate-300" />}
-                        <span className="text-[10px] text-slate-400 font-bold uppercase mt-2">Upload Cover</span>
-                      </div>
-                    )}
-                 </div>
-                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
-                 <p className="text-[8px] text-slate-400 mt-2 uppercase tracking-tight">Best for social: 1200x630px</p>
+              <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
+                <button 
+                  type="submit" 
+                  onClick={(e) => handleSave(e, 'Published')}
+                  disabled={isSubmitting || isSuccess}
+                  className="bg-forge-navy text-white px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-forge-dark transition-all flex items-center gap-2 shadow-md"
+                >
+                  {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : (isSuccess ? <CheckCircle size={12} /> : null)}
+                  {isEditing ? 'Update Post' : 'Publish Post'}
+                </button>
               </div>
-           </div>
+            </div>
+
+            {/* SEO Settings (WordPress Focus Keyphrase / Meta) */}
+            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">SEO Settings</span>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Focus Keyphrase</label>
+                  <input 
+                    type="text" 
+                    value={formData.keyphrase || ''} 
+                    onChange={(e) => setFormData({...formData, keyphrase: e.target.value})}
+                    className="w-full border border-slate-200 p-2 text-sm focus:border-forge-gold focus:outline-none"
+                    placeholder="e.g. Luxury Real Estate Lagos"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Description</label>
+                  <textarea 
+                    value={formData.meta_description || ''} 
+                    onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
+                    rows={3}
+                    className="w-full border border-slate-200 p-2 text-xs focus:border-forge-gold focus:outline-none resize-none"
+                    placeholder="Snippet for search results..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">URL Slug</label>
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 p-2 border border-slate-100 rounded font-mono">
+                    <LinkIcon size={10} /> /{formData.slug}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Categories Box */}
+            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categories</span>
+              </div>
+              <div className="p-4">
+                <select 
+                  value={formData.category} 
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full border border-slate-200 p-2 text-sm focus:outline-none"
+                >
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Featured Image Box */}
+            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Featured Image</span>
+              </div>
+              <div className="p-4">
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-forge-gold overflow-hidden relative group"
+                >
+                  {formData.cover_image ? (
+                    <>
+                      <img src={formData.cover_image} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">Change Image</div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      {isUploading ? <Loader2 size={20} className="animate-spin text-forge-gold" /> : <ImageIcon size={20} className="text-slate-300" />}
+                      <span className="text-[8px] text-slate-400 font-bold uppercase mt-2">Set Featured Image</span>
+                    </div>
+                  )}
+                </div>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
+              </div>
+            </div>
+
+          </div>
         </form>
       </div>
     </AdminLayout>

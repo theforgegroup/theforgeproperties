@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, Link as LinkIcon, AlertCircle, CheckCircle
+  ArrowLeft, Save, X, Upload, Image as ImageIcon, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Property, PropertyType, ListingStatus } from '../types';
@@ -22,7 +22,6 @@ export const AdminPropertyForm: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const agentFileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Property>({
     id: '',
@@ -83,7 +82,7 @@ export const AdminPropertyForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    const val = type === 'number' ? parseFloat(value) : (type === 'checkbox' ? (e.target as HTMLInputElement).checked : value);
+    const val = type === 'number' ? (value === '' ? 0 : parseFloat(value)) : (type === 'checkbox' ? (e.target as HTMLInputElement).checked : value);
     
     setFormData(prev => {
       const updated = { ...prev, [name]: val };
@@ -109,13 +108,16 @@ export const AdminPropertyForm: React.FC = () => {
         const blob = dataURLtoBlob(resizedBase64);
         const fileName = `${Date.now()}-${files[i].name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         
-        // Upload to Supabase Storage
         const publicUrl = await uploadImage('property-images', fileName, blob);
         newImageUrls.push(publicUrl);
       }
       setFormData({ ...formData, images: newImageUrls });
     } catch (err: any) {
-      setError(`Upload failed: ${err.message}. Ensure 'property-images' bucket exists and is public.`);
+      if (err.message.includes('Bucket not found')) {
+        setError("Storage Error: 'property-images' bucket not found. Please create it in Supabase Storage and set it to PUBLIC.");
+      } else {
+        setError(`Upload failed: ${err.message}`);
+      }
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -126,24 +128,6 @@ export const AdminPropertyForm: React.FC = () => {
     const newImages = [...formData.images];
     newImages.splice(index, 1);
     setFormData({ ...formData, images: newImages });
-  };
-
-  const handleAgentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const resizedBase64 = await resizeImage(file, 400, 400);
-      const blob = dataURLtoBlob(resizedBase64);
-      const fileName = `agent-${Date.now()}-${file.name}`;
-      const publicUrl = await uploadImage('property-images', fileName, blob);
-      setFormData({ ...formData, agent: { ...formData.agent, image: publicUrl } });
-    } catch (err: any) {
-      setError(`Agent photo upload failed: ${err.message}`);
-    } finally {
-      setIsUploading(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,8 +162,14 @@ export const AdminPropertyForm: React.FC = () => {
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm font-bold border border-red-200 flex items-center gap-2">
-            <AlertCircle size={16} /> {error}
+          <div className="bg-red-50 text-red-700 p-6 rounded mb-6 border border-red-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={20} className="shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-sm mb-1">Action Required</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -205,7 +195,7 @@ export const AdminPropertyForm: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Price (₦)</label>
-                      <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" required />
+                      <input type="number" name="price" value={formData.price || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" required />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Type</label>
@@ -230,15 +220,15 @@ export const AdminPropertyForm: React.FC = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Beds</label>
-                      <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
+                      <input type="number" name="bedrooms" value={formData.bedrooms || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Baths</label>
-                      <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
+                      <input type="number" name="bathrooms" value={formData.bathrooms || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sq Ft</label>
-                      <input type="number" name="area_sq_ft" value={formData.area_sq_ft} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
+                      <input type="number" name="area_sq_ft" value={formData.area_sq_ft || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
                     </div>
                   </div>
 
@@ -289,7 +279,9 @@ export const AdminPropertyForm: React.FC = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8">
-            <div className="text-slate-400 text-xs italic">All images are automatically optimized for performance.</div>
+            <div className="text-slate-400 text-xs italic flex items-center gap-1">
+              <Info size={14} /> Images are optimized for performance.
+            </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
               <button type="button" onClick={() => navigate('/admin')} className="flex-1 md:flex-none px-10 py-5 bg-white border border-slate-200 text-slate-400 font-bold uppercase tracking-widest text-xs">Cancel</button>
               <button type="submit" disabled={isSubmitting || isUploading || isSuccess} className="flex-1 md:flex-none px-12 py-5 bg-forge-navy text-white font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-2xl transition-all flex items-center justify-center gap-2">
