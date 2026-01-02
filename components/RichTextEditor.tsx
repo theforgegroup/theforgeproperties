@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, 
-  Quote, Undo, Redo, Code, Type, Link as LinkIcon
+  Undo, Redo, Code, Link as LinkIcon
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -19,7 +19,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
   // Sync initial value or external updates to editor content
   useEffect(() => {
     if (editorRef.current && !isInternalChange.current && !isCodeView && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+      editorRef.current.innerHTML = value || '<p><br></p>';
     }
   }, [value, isCodeView]);
 
@@ -27,24 +27,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     if (editorRef.current) {
       isInternalChange.current = true;
       onChange(editorRef.current.innerHTML);
-      // Reset flag after a short delay to allow external updates again if needed
       setTimeout(() => isInternalChange.current = false, 0);
     }
   };
 
   const execCommand = (command: string, ui: boolean = false, val: string | undefined = undefined) => {
+    if (isCodeView) return;
+    
+    // Ensure editor is focused before executing command
+    editorRef.current?.focus();
     document.execCommand(command, ui, val);
-    if (!isCodeView) {
-      editorRef.current?.focus();
-      handleInput();
-    }
+    handleInput();
   };
 
   const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setCurrentBlock(val);
-    // document.execCommand('formatBlock') works best with tags like <h2> or <h3>
-    execCommand('formatBlock', false, `<${val}>`);
+    // Use the standard formatBlock command
+    execCommand('formatBlock', false, val);
   };
 
   const insertLink = () => {
@@ -91,14 +91,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200">
         
-        {/* 1. Format Block Dropdown */}
+        {/* 1. Format Block Dropdown (Removed 'T' icon) */}
         <div className="flex items-center border-r border-slate-200 pr-2 mr-1">
-          <Type size={16} className="text-slate-400 mr-2 ml-1" />
           <select 
             value={currentBlock}
             onChange={handleBlockChange}
             disabled={isCodeView}
-            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[120px]"
+            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[120px] ml-1"
           >
             <option value="P">Paragraph</option>
             <option value="H2">Heading 1</option>
@@ -123,7 +122,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
           <ToolbarButton icon={AlignRight} onClick={() => execCommand('justifyRight')} title="Align Right" disabled={isCodeView} />
         </div>
 
-        {/* 4. Lists */}
+        {/* 4. Lists (Active functionality) */}
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
            <ToolbarButton icon={List} onClick={() => execCommand('insertUnorderedList')} title="Bullet List" disabled={isCodeView} />
            <ToolbarButton icon={ListOrdered} onClick={() => execCommand('insertOrderedList')} title="Numbered List" disabled={isCodeView} />
