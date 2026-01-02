@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bed, Bath, Move, MapPin } from 'lucide-react';
+import { Bed, Bath, Move, MapPin, Map as MapIcon } from 'lucide-react';
 import { Property } from '../types';
 
 interface PropertyCardProps {
@@ -10,6 +10,7 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const listingUrl = `/listings/${property.slug || property.id}`;
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`;
   
   return (
     <div className="group bg-white shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-100 flex flex-col h-full">
@@ -26,18 +27,36 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             {property.status}
           </span>
         </div>
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex gap-2">
            <span className="bg-forge-gold text-forge-navy text-xs font-bold px-3 py-1 uppercase tracking-widest">
             {property.type}
           </span>
         </div>
+        
+        {/* Quick Map Action */}
+        <a 
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full text-forge-navy hover:bg-forge-gold transition-colors shadow-lg translate-y-12 group-hover:translate-y-0 transition-transform duration-300"
+          title="View on Google Maps"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MapIcon size={18} />
+        </a>
       </div>
 
       <div className="p-6 flex flex-col flex-grow">
-        <div className="flex items-center text-slate-500 text-xs mb-3 font-medium uppercase tracking-wide">
+        <a 
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-slate-500 text-xs mb-3 font-medium uppercase tracking-wide hover:text-forge-gold transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
           <MapPin size={14} className="mr-1 text-forge-gold" />
           {property.location}
-        </div>
+        </a>
         
         <Link to={listingUrl} className="block mb-2">
           <h3 className="text-xl font-serif text-slate-900 group-hover:text-forge-gold transition-colors line-clamp-1">
@@ -61,7 +80,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
           <div className="flex items-center gap-1">
             <Move size={16} />
-            {/* Standardized to area_sq_ft */}
             <span>{property.area_sq_ft.toLocaleString()} <span className="hidden sm:inline">sq ft</span></span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 import { SEO } from '../components/SEO';
@@ -45,7 +45,6 @@ export const ListingDetails: React.FC = () => {
     );
   }
 
-  // Use Global Listing Agent if available, else property-specific, else fallback
   const agentName = settings.listing_agent?.name || property?.agent?.name || 'The Forge Properties';
   const agentPhone = settings.listing_agent?.phone || property?.agent?.phone || settings.contact_phone;
   const agentImage = settings.listing_agent?.image || property?.agent?.image;
@@ -77,6 +76,10 @@ export const ListingDetails: React.FC = () => {
     }
   };
 
+  const mapSearchQuery = encodeURIComponent(property.location);
+  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${process.env.API_KEY || ''}&q=${mapSearchQuery}`;
+  const mapExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
+
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
       <SEO 
@@ -93,8 +96,23 @@ export const ListingDetails: React.FC = () => {
         </Link>
       </div>
 
+      {/* Gallery Section */}
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
+        
+        {property.images.length > 1 && (
+          <div className="absolute bottom-6 left-6 flex gap-2">
+            {property.images.map((img, idx) => (
+              <button 
+                key={idx} 
+                onClick={() => setActiveImage(idx)}
+                className={`w-16 h-12 border-2 transition-all ${activeImage === idx ? 'border-forge-gold scale-110 shadow-lg' : 'border-white/50 opacity-70 hover:opacity-100'}`}
+              >
+                <img src={img} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
@@ -145,8 +163,37 @@ export const ListingDetails: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* Location Section with Google Maps */}
+            <div className="mb-12">
+              <div className="flex justify-between items-end mb-6">
+                <h3 className="text-xl font-serif text-forge-navy">Location & Neighborhood</h3>
+                <a 
+                  href={mapExternalUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2 text-xs font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-colors"
+                >
+                  View on Google Maps <ExternalLink size={14} />
+                </a>
+              </div>
+              <div className="w-full h-80 bg-slate-200 rounded overflow-hidden border border-slate-200 shadow-sm">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={mapEmbedUrl.includes('key=') && mapEmbedUrl.split('key=')[1].length > 0 
+                    ? mapEmbedUrl 
+                    : `https://www.google.com/maps?q=${mapSearchQuery}&output=embed`}
+                ></iframe>
+              </div>
+              <p className="text-xs text-slate-400 mt-3 italic">Map location is approximate based on address provided.</p>
+            </div>
           </div>
 
+          {/* Sidebar */}
           <div className="lg:w-1/3">
              <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
                <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
