@@ -6,22 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Forge Properties | Luxury Real Estate</title>
     
-    <!-- Google Search Console Verification -->
-    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE" />
-
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Discover the most exclusive luxury real estate portfolio in Nigeria with The Forge Properties. Exceptional residences for discerning clients." />
+    <!-- SEO & Social Meta -->
+    <meta name="description" content="Discover Nigerias most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences for discerning clients." />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="The Forge Properties" />
     <meta name="theme-color" content="#0F172A" />
     
-    <!-- PWA Manifest -->
+    <!-- Brand Favicon (Critical for Search Results) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=32&h=32" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=192&h=192" />
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=180&h=180" />
+    
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=32&h=32" />
-
-    <!-- Polyfill 'process' for browser environments -->
+    <!-- Polyfill 'process' -->
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
       window.global = window;
@@ -62,27 +60,8 @@
       }
       .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
 
-      /* Responsive Video Fix */
-      .article-content iframe, 
-      .article-content video, 
-      .article-content object, 
-      .article-content embed {
-        width: 100% !important;
-        height: auto !important;
-        aspect-ratio: 16 / 9;
-        max-width: 100%;
-        border-radius: 4px;
-        margin: 2rem 0;
-      }
-
-      /* Base Prose Styles for Editor and Display */
       .prose h2 { font-size: 2rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #0F172A; font-family: Georgia, serif; }
-      .prose h3 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #0F172A; font-family: Georgia, serif; }
-      .prose h4 { font-size: 1.25rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #0F172A; font-family: Georgia, serif; }
       .prose p { margin-bottom: 1.5rem; line-height: 1.8; }
-      .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; }
-      .prose ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; }
-      .prose blockquote { border-left: 4px solid #D4AF37; padding-left: 1.5rem; font-style: italic; margin: 2rem 0; color: #334155; }
     </style>
   
   <script type="importmap">

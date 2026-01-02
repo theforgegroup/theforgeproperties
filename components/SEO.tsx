@@ -22,8 +22,8 @@ export const SEO: React.FC<SEOProps> = ({
 }) => {
   const siteName = 'The Forge Properties';
   const fullTitle = `${title} | ${siteName}`;
-  const defaultDesc = 'The Forge Properties is the premier luxury real estate division of The Forge Group. Discover exclusive villas, penthouses, and estates in Nigeria.';
-  const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria';
+  const defaultDesc = 'Discover Nigerias most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences, penthouses, and estates defined by excellence.';
+  const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria, maitama houses';
   const defaultImage = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200';
   const canonicalUrl = url ? `https://theforgeproperties.com${url}` : window.location.href;
 
@@ -46,12 +46,10 @@ export const SEO: React.FC<SEOProps> = ({
     updateMeta('description', description || defaultDesc);
     updateMeta('keywords', keywords || defaultKeywords);
 
-    // 4. Open Graph (Facebook / WhatsApp / LinkedIn)
-    // IMPORTANT: Social platforms prefer the RAW title for the card
+    // 4. Open Graph (Social Cards)
     updateMeta('og:title', title, 'property'); 
     updateMeta('og:description', description || defaultDesc, 'property');
     
-    // Ensure image is absolute for social scrapers
     let socialImage = image || defaultImage;
     if (socialImage.startsWith('/') && !socialImage.startsWith('//')) {
       socialImage = `https://theforgeproperties.com${socialImage}`;
@@ -76,20 +74,53 @@ export const SEO: React.FC<SEOProps> = ({
     }
     link.setAttribute('href', canonicalUrl);
 
-    // 7. Structured Data (JSON-LD)
+    // 7. Structured Data (JSON-LD) - Advanced Implementation
     const existingScript = document.getElementById('json-ld-schema');
     if (existingScript) existingScript.remove();
 
-    if (schema) {
-      const script = document.createElement('script');
-      script.id = 'json-ld-schema';
-      script.type = 'application/ld+json';
-      script.text = JSON.stringify({
-        "@context": "https://schema.org",
-        ...schema
-      });
-      document.head.appendChild(script);
-    }
+    // Base Organization Schema (Always present for brand authority)
+    const baseOrgSchema = {
+      "@type": "Organization",
+      "name": siteName,
+      "url": "https://theforgeproperties.com",
+      "logo": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=512",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+234 800 FORGE 00",
+        "contactType": "customer service",
+        "areaServed": "NG",
+        "availableLanguage": "en"
+      },
+      "sameAs": [
+        "https://www.instagram.com/theforgeproperties_",
+        "https://www.tiktok.com/@theforgegroup"
+      ]
+    };
+
+    // Website & Sitelinks Searchbox
+    const websiteSchema = {
+      "@type": "WebSite",
+      "name": siteName,
+      "url": "https://theforgeproperties.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://theforgeproperties.com/listings?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    };
+
+    const combinedSchemaList = [baseOrgSchema, websiteSchema];
+    if (schema) combinedSchemaList.push(schema);
+
+    const script = document.createElement('script');
+    script.id = 'json-ld-schema';
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": combinedSchemaList
+    });
+    document.head.appendChild(script);
+
   }, [fullTitle, title, description, keywords, image, canonicalUrl, type, schema]);
 
   return null;
