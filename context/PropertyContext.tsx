@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Property, Lead, SiteSettings, Subscriber, BlogPost } from '../types';
+import { Property, Lead, SiteSettings, Subscriber, BlogPost, PropertyType, ListingStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
@@ -24,6 +24,7 @@ interface PropertyContextType {
   deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
   getPostBySlug: (slug: string) => BlogPost | undefined;
+  seedDatabase: () => Promise<void>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -40,24 +41,78 @@ const DEFAULT_SETTINGS: SiteSettings = {
   listing_agent: {
     name: "The Forge Properties",
     phone: "+234 800 FORGE 00",
-    image: ""
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=200"
   }
 };
 
-const SAMPLE_POST: BlogPost = {
-  id: 'sample-1',
-  slug: 'the-future-of-luxury-real-estate-in-lagos',
-  title: 'The Future of Luxury Real Estate in Lagos',
-  excerpt: 'An in-depth look at how the Lekki-Epe corridor is transforming into the new gold standard for high-net-worth investments.',
-  content: '<p>As the skyline of Lagos continues to evolve, a new definition of luxury is emerging...</p>',
-  cover_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1000&auto=format&fit=crop',
-  author: 'The Forge Properties',
-  date: new Date().toISOString(),
-  category: 'Market Insights',
-  status: 'Published',
-  meta_description: 'Discover the emerging trends in Lagos luxury real estate market.',
-  keyphrase: 'Lagos Luxury Real Estate'
-};
+const LEGACY_MOCK_PROPERTIES: Property[] = [
+  {
+    id: '1',
+    slug: 'banana-island-waterfront-mansion',
+    title: 'The Ivory Waterfront Estate',
+    description: 'An architectural masterpiece located in the most exclusive enclave of Banana Island. This 7-bedroom residence features a private jetty, glass-walled infinity pool, and a 12-seat cinema room. Finished with Italian marble and smart home automation throughout.',
+    price: 3500000000,
+    location: 'Banana Island, Ikoyi, Lagos',
+    bedrooms: 7,
+    bathrooms: 8,
+    area_sq_ft: 12500,
+    type: PropertyType.VILLA,
+    status: ListingStatus.FOR_SALE,
+    images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1600'],
+    features: ['Private Jetty', 'Infinity Pool', 'Cinema Room', 'Smart Home', 'Chef\'s Kitchen'],
+    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
+    featured: true
+  },
+  {
+    id: '2',
+    slug: 'maitama-diplomatic-zone-mansion',
+    title: 'Diplomatic Zone Mansion',
+    description: 'A stately residence in Abuja\'s most prestigious neighborhood. Perfect for high-level entertaining with massive grand halls and dual-wing living spaces. Features a breathtaking view of the city and top-tier security installations.',
+    price: 1800000000,
+    location: 'Maitama, Abuja',
+    bedrooms: 6,
+    bathrooms: 7,
+    area_sq_ft: 9800,
+    type: PropertyType.VILLA,
+    status: ListingStatus.FOR_SALE,
+    images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600'],
+    features: ['Diplomatic Zone', 'High Security', 'Grand Hall', 'City Views', 'Guest Wing'],
+    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
+    featured: true
+  },
+  {
+    id: '3',
+    slug: 'eko-atlantic-ocean-view-penthouse',
+    title: 'Azure Ocean Penthouse',
+    description: 'Commanding views of the Atlantic Ocean from the highest point of Eko Atlantic City. This triple-aspect penthouse offers unparalleled luxury with floor-to-ceiling glass and a wraparound terrace.',
+    price: 1200000000,
+    location: 'Eko Atlantic, Victoria Island, Lagos',
+    bedrooms: 4,
+    bathrooms: 5,
+    area_sq_ft: 5500,
+    type: PropertyType.PENTHOUSE,
+    status: ListingStatus.FOR_SALE,
+    images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1600'],
+    features: ['Ocean View', 'Smart Automation', 'Concierge Service', 'Helipad Access'],
+    agent: { name: 'The Forge Properties', image: '', phone: '+234 800 FORGE 00' },
+    featured: false
+  }
+];
+
+const INITIAL_LEADS: Lead[] = [
+  {
+    id: 'seed-l1',
+    name: 'Chief Adewale',
+    email: 'chief.a@royal.com',
+    phone: '+234 801 000 0001',
+    message: 'I am interested in the Banana Island Waterfront. Please have a senior broker call me.',
+    property_id: '1',
+    property_title: 'The Ivory Waterfront Estate',
+    date: new Date().toISOString(),
+    status: 'New',
+    type: 'Viewing Request'
+  }
+];
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -67,48 +122,61 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const propsRes = await supabase.from('properties').select('*');
-        if (propsRes.error) console.error("Properties Fetch Error:", propsRes.error);
-        else setProperties(propsRes.data || []);
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const { data: propsData } = await supabase.from('properties').select('*').order('id', { ascending: false });
+      if (propsData) setProperties(propsData);
 
-        const leadsRes = await supabase.from('leads').select('*');
-        if (leadsRes.error) console.error("Leads Fetch Error:", leadsRes.error);
-        else setLeads(leadsRes.data || []);
+      const { data: leadsData } = await supabase.from('leads').select('*').order('date', { ascending: false });
+      if (leadsData) setLeads(leadsData);
 
-        const subsRes = await supabase.from('subscribers').select('*');
-        if (subsRes.error) console.error("Subscribers Fetch Error:", subsRes.error);
-        else setSubscribers(subsRes.data || []);
+      const { data: subsData } = await supabase.from('subscribers').select('*');
+      if (subsData) setSubscribers(subsData);
 
-        const postsRes = await supabase.from('posts').select('*');
-        if (postsRes.error) {
-           console.warn("Using sample post due to schema mismatch:", postsRes.error.message);
-           setPosts([SAMPLE_POST]);
-        } else {
-           setPosts(postsRes.data && postsRes.data.length > 0 ? postsRes.data : [SAMPLE_POST]);
-        }
+      const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
+      if (postsData) setPosts(postsData);
 
-        const settingsRes = await supabase.from('site_settings').select('*').single();
-        if (settingsRes.error) {
-           console.warn("Settings Load Error, using defaults:", settingsRes.error.message);
-           setSettings(DEFAULT_SETTINGS);
-        } else if (settingsRes.data) {
-           // Merging to ensure we don't have partial objects if DB row is incomplete
-           setSettings({ ...DEFAULT_SETTINGS, ...settingsRes.data });
-        }
-
-      } catch (error) {
-        console.error('Critical Error in Data Fetch:', error);
-        setPosts([SAMPLE_POST]);
-      } finally {
-        setIsLoading(false);
+      const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+      if (settingsData) {
+        setSettings({ ...DEFAULT_SETTINGS, ...settingsData });
       }
-    };
+    } catch (error) {
+      console.error('Fetch error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const seedDatabase = async () => {
+    setIsLoading(true);
+    try {
+      // 1. Seed Properties
+      for (const p of LEGACY_MOCK_PROPERTIES) {
+        await supabase.from('properties').upsert(p);
+      }
+      // 2. Seed Leads (if empty)
+      if (leads.length === 0) {
+        for (const l of INITIAL_LEADS) {
+          await supabase.from('leads').upsert(l);
+        }
+      }
+      // 3. Ensure Settings row exists
+      await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
+      
+      await fetchData();
+      alert("System data restored successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Restore failed. Check Supabase connection.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addProperty = async (property: Property) => {
     const { error } = await supabase.from('properties').insert([property]);
@@ -155,20 +223,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
-    if (updatedPost.id === 'sample-1') {
-        setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
-        return;
-    }
     const { error } = await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
     if (error) throw error;
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
   };
 
   const deletePost = async (id: string) => {
-    if (id === 'sample-1') {
-        setPosts(prev => prev.filter(p => p.id !== id));
-        return;
-    }
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (error) throw error;
     setPosts(prev => prev.filter(p => p.id !== id));
@@ -185,7 +245,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       properties, leads, subscribers, posts, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
-      addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug)
+      addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
+      seedDatabase
     }}>
       {children}
     </PropertyContext.Provider>

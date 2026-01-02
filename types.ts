@@ -2,7 +2,7 @@
 export enum PropertyType {
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
-  PENTHOUSE = 'Penthouse',
+  PENTHOUSE = 'PENTHOUSE',
   ESTATE = 'Estate',
   COMMERCIAL = 'Commercial'
 }
@@ -83,11 +83,11 @@ export interface ListingAgent {
 }
 
 export interface SiteSettings {
-  contact_email: string; // Updated to snake_case
-  contact_phone: string; // Updated to snake_case
+  contact_email: string;
+  contact_phone: string;
   address: string;
-  team_members: TeamMember[]; // Updated to snake_case
-  listing_agent: ListingAgent; // Updated to snake_case
+  team_members: TeamMember[];
+  listing_agent: ListingAgent;
 }
 
 export interface FilterCriteria {

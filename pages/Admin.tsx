@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Trash2, Edit, Plus, Search, MapPin, Info } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
@@ -76,9 +77,10 @@ export const Admin: React.FC = () => {
               </div>
               <h3 className="font-serif font-bold text-forge-navy mb-1">{lead.name}</h3>
               <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-2">"{lead.message}"</p>
-              {lead.propertyTitle && (
+              {/* Corrected: use lead.property_title instead of propertyTitle to match Lead interface */}
+              {lead.property_title && (
                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate">
-                  Re: {lead.propertyTitle}
+                  Re: {lead.property_title}
                 </div>
               )}
             </div>

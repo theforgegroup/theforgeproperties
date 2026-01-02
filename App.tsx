@@ -42,18 +42,20 @@ const AppLayout: React.FC = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    if (settings?.listingAgent?.image) {
+    // Corrected to use snake_case field 'listing_agent'
+    const agentImage = settings?.listing_agent?.image;
+    if (agentImage) {
       const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
       if (link) {
-        link.href = settings.listingAgent.image;
+        link.href = agentImage;
       } else {
         const newLink = document.createElement('link');
         newLink.rel = 'icon';
-        newLink.href = settings.listingAgent.image;
+        newLink.href = agentImage;
         document.head.appendChild(newLink);
       }
     }
-  }, [settings?.listingAgent?.image]);
+  }, [settings?.listing_agent?.image]);
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900 selection:bg-forge-gold selection:text-forge-navy">

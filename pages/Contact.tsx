@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, CheckCircle } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
@@ -16,7 +17,7 @@ export const Contact: React.FC = () => {
       email: formData.email,
       phone: formData.phone,
       message: formData.message,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString(),
       status: 'New',
       type: 'General Inquiry'
     };
@@ -65,7 +66,7 @@ export const Contact: React.FC = () => {
                    </div>
                    <div>
                      <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Phone</p>
-                     <p className="text-lg leading-relaxed font-light">{settings.contactPhone}</p>
+                     <p className="text-lg leading-relaxed font-light">{settings.contact_phone}</p>
                    </div>
                  </div>
 
@@ -75,7 +76,7 @@ export const Contact: React.FC = () => {
                    </div>
                    <div>
                      <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Email</p>
-                     <p className="text-lg leading-relaxed font-light">{settings.contactEmail}</p>
+                     <p className="text-lg leading-relaxed font-light">{settings.contact_email}</p>
                    </div>
                  </div>
                  
