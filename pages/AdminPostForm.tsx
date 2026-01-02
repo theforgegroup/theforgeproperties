@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
-  AlertCircle, Globe, Settings, FileText, ChevronDown, Calendar, Plus
+  Loader2, AlertCircle, ChevronDown, Calendar
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -15,7 +14,7 @@ import { uploadImage } from '../lib/supabaseClient';
 export const AdminPostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { posts, getPost, addPost, updatePost, isLoading } = useProperties();
+  const { categories, getPost, addPost, updatePost, addCategory, isLoading } = useProperties();
   const isEditing = !!id;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,9 +25,6 @@ export const AdminPostForm: React.FC = () => {
   const [isEditingSlug, setIsEditingSlug] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Local state for categories added during this specific form session
-  const [sessionCategories, setSessionCategories] = useState<string[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -46,14 +42,6 @@ export const AdminPostForm: React.FC = () => {
     meta_description: '',
     keyphrase: ''
   });
-
-  // Dynamically derive all available categories from defaults, existing posts, and current session additions
-  const availableCategories = useMemo(() => {
-    const defaults = ['Market Insights', 'Luxury Lifestyle', 'Company News', 'Investment'];
-    const fromPosts = posts.map(p => p.category).filter(Boolean);
-    const combined = Array.from(new Set([...defaults, ...fromPosts, ...sessionCategories]));
-    return combined.sort();
-  }, [posts, sessionCategories]);
 
   const slugify = (text: string) => {
     return text.toString().toLowerCase().trim()
@@ -113,17 +101,18 @@ export const AdminPostForm: React.FC = () => {
     }
   };
 
-  const handleAddCategory = () => {
-    const trimmed = newCategoryName.trim();
-    if (trimmed) {
-      // Add to session categories so it appears in the list immediately
-      if (!availableCategories.includes(trimmed)) {
-        setSessionCategories(prev => [...prev, trimmed]);
-      }
-      // Update the actual form data with the new category
-      setFormData(prev => ({ ...prev, category: trimmed }));
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    try {
+      // addCategory interacts with the blog_categories table via PropertyContext
+      const newCat = await addCategory(name);
+      setFormData({ ...formData, category: newCat.name });
       setNewCategoryName('');
       setIsAddingCategory(false);
+    } catch (err: any) {
+      setError(`Failed to create category: ${err.message}. Ensure you have run the corrected SQL in Supabase.`);
     }
   };
 
@@ -186,9 +175,8 @@ export const AdminPostForm: React.FC = () => {
 
         <form onSubmit={(e) => handleSave(e)} className="flex flex-col lg:flex-row gap-6">
           
-          {/* Main Column (Left) */}
+          {/* Main Column */}
           <div className="flex-1 space-y-4">
-            {/* 1. Title */}
             <input 
               type="text" 
               value={formData.title} 
@@ -198,7 +186,6 @@ export const AdminPostForm: React.FC = () => {
               required
             />
             
-            {/* 2. Permalink (URL Slug) */}
             <div className="text-sm flex items-center gap-1 text-slate-600">
               <span className="font-bold">Permalink:</span>
               <span>https://theforgeproperties.com/blog/</span>
@@ -220,12 +207,10 @@ export const AdminPostForm: React.FC = () => {
               )}
             </div>
 
-            {/* 3. Content Editor */}
             <div className="bg-white border border-slate-300">
               <RichTextEditor value={formData.content} onChange={(content) => setFormData({...formData, content})} />
             </div>
 
-            {/* 4. Excerpt Box */}
             <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center cursor-default">
                 <span className="text-sm font-bold text-slate-700">Excerpt</span>
@@ -237,12 +222,11 @@ export const AdminPostForm: React.FC = () => {
                   onChange={(e) => setFormData({...formData, excerpt: e.target.value})} 
                   rows={3} 
                   className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300"
-                  placeholder="Excerpts are optional hand-crafted summaries of your content..."
+                  placeholder="Excerpts are optional hand-crafted summaries..."
                 />
               </div>
             </div>
 
-            {/* 5. SEO Focus Keyphrase */}
             <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center">
                 <span className="text-sm font-bold text-slate-700">Focus Keyphrase</span>
@@ -254,12 +238,11 @@ export const AdminPostForm: React.FC = () => {
                   value={formData.keyphrase || ''} 
                   onChange={(e) => setFormData({...formData, keyphrase: e.target.value})}
                   className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300"
-                  placeholder="Enter the main search term for this post"
+                  placeholder="Enter main search term"
                 />
               </div>
             </div>
 
-            {/* 6. Meta Description */}
             <div className="bg-white border border-slate-300 overflow-hidden shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 flex justify-between items-center">
                 <span className="text-sm font-bold text-slate-700">Meta Description</span>
@@ -271,17 +254,14 @@ export const AdminPostForm: React.FC = () => {
                   onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
                   rows={3}
                   className="w-full border border-slate-300 p-2 text-sm focus:outline-none focus:border-blue-300 resize-none"
-                  placeholder="The snippet that appears in Google search results"
+                  placeholder="Snippet for search results"
                 />
               </div>
             </div>
-
           </div>
 
-          {/* Sidebar Column (Right) */}
+          {/* Sidebar */}
           <div className="w-full lg:w-72 space-y-6">
-            
-            {/* 1. Publish Box */}
             <div className="bg-white border border-slate-300 shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700">
                 Publish
@@ -289,19 +269,12 @@ export const AdminPostForm: React.FC = () => {
               <div className="p-4 space-y-3 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Status: <span className="text-slate-800 font-bold">{formData.status}</span></span>
-                  <button type="button" className="text-blue-600 underline">Edit</button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Visibility: <span className="text-slate-800 font-bold">Public</span></span>
-                  <button type="button" className="text-blue-600 underline">Edit</button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 flex items-center gap-1"><Calendar size={12} /> Publish <b>immediately</b></span>
-                  <button type="button" className="text-blue-600 underline">Edit</button>
                 </div>
               </div>
-              <div className="bg-slate-50 p-3 border-t border-slate-300 flex justify-between items-center">
-                <button type="button" onClick={() => navigate('/admin/blog')} className="text-red-600 text-xs underline">Move to Trash</button>
+              <div className="bg-slate-50 p-3 border-t border-slate-300 flex justify-end">
                 <button 
                   type="submit" 
                   onClick={(e) => handleSave(e, 'Published')}
@@ -314,61 +287,38 @@ export const AdminPostForm: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. Featured Image Box (Right under Publish) */}
             <div className="bg-white border border-slate-300 shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700 flex justify-between items-center">
                 Featured Image
-                <ChevronDown size={14} className="text-slate-400" />
               </div>
               <div className="p-4">
                 {formData.cover_image ? (
                   <div className="space-y-3">
                     <img src={formData.cover_image} className="w-full aspect-video object-cover border border-slate-200" alt="Preview" />
-                    <button 
-                      type="button" 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-blue-600 text-xs underline block"
-                    >
-                      Click the image to edit or update
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setFormData({...formData, cover_image: ''})}
-                      className="text-red-600 text-xs underline"
-                    >
-                      Remove featured image
-                    </button>
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="text-blue-600 text-xs underline block">Update image</button>
                   </div>
                 ) : (
-                  <button 
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-600 text-xs underline"
-                  >
-                    Set featured image
-                  </button>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="text-blue-600 text-xs underline">Set featured image</button>
                 )}
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
               </div>
             </div>
 
-            {/* 3. Categories Box (Followed by Featured Image) */}
             <div className="bg-white border border-slate-300 shadow-sm">
               <div className="bg-slate-50 px-3 py-2 border-b border-slate-300 font-bold text-sm text-slate-700 flex justify-between items-center">
                 Categories
-                <ChevronDown size={14} className="text-slate-400" />
               </div>
               <div className="p-4">
                 <div className="max-h-40 overflow-y-auto space-y-2">
-                  {availableCategories.map(cat => (
-                    <label key={cat} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                  {categories.map(cat => (
+                    <label key={cat.id} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={formData.category === cat} 
-                        onChange={() => setFormData({...formData, category: cat})}
+                        checked={formData.category === cat.name} 
+                        onChange={() => setFormData({...formData, category: cat.name})}
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
-                      {cat}
+                      {cat.name}
                     </label>
                   ))}
                 </div>
@@ -379,39 +329,20 @@ export const AdminPostForm: React.FC = () => {
                       type="text" 
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="New Category"
+                      placeholder="New Category Name"
                       className="w-full border border-slate-300 p-2 text-xs focus:outline-none focus:border-blue-400"
                       autoFocus
                     />
                     <div className="flex gap-2">
-                      <button 
-                        type="button" 
-                        onClick={handleAddCategory}
-                        className="bg-blue-600 text-white px-3 py-1 text-[10px] font-bold rounded"
-                      >
-                        Add
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => { setIsAddingCategory(false); setNewCategoryName(''); }}
-                        className="bg-slate-200 text-slate-600 px-3 py-1 text-[10px] font-bold rounded"
-                      >
-                        Cancel
-                      </button>
+                      <button type="button" onClick={handleCreateCategory} className="bg-blue-600 text-white px-3 py-1 text-[10px] font-bold rounded">Add</button>
+                      <button type="button" onClick={() => { setIsAddingCategory(false); setNewCategoryName(''); }} className="bg-slate-200 text-slate-600 px-3 py-1 text-[10px] font-bold rounded">Cancel</button>
                     </div>
                   </div>
                 ) : (
-                  <button 
-                    type="button" 
-                    onClick={() => setIsAddingCategory(true)}
-                    className="text-blue-600 text-xs underline mt-4 block"
-                  >
-                    + Add New Category
-                  </button>
+                  <button type="button" onClick={() => setIsAddingCategory(true)} className="text-blue-600 text-xs underline mt-4 block">+ Add New Category</button>
                 )}
               </div>
             </div>
-
           </div>
         </form>
       </div>

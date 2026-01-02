@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Property, Lead, SiteSettings, Subscriber, BlogPost, PropertyType, ListingStatus } from '../types';
+import { Property, Lead, SiteSettings, Subscriber, BlogPost, BlogCategory } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
@@ -8,6 +8,7 @@ interface PropertyContextType {
   leads: Lead[];
   subscribers: Subscriber[];
   posts: BlogPost[];
+  categories: BlogCategory[];
   settings: SiteSettings;
   isLoading: boolean;
   addProperty: (property: Property) => Promise<void>;
@@ -24,6 +25,7 @@ interface PropertyContextType {
   deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
   getPostBySlug: (slug: string) => BlogPost | undefined;
+  addCategory: (name: string) => Promise<BlogCategory>;
   seedDatabase: () => Promise<void>;
 }
 
@@ -50,6 +52,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,6 +71,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
       if (postsData) setPosts(postsData);
 
+      const { data: catsData } = await supabase.from('blog_categories').select('*').order('name', { ascending: true });
+      if (catsData) setCategories(catsData);
+
       const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       if (settingsData) {
         setSettings({ ...DEFAULT_SETTINGS, ...settingsData });
@@ -83,21 +89,36 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchData();
   }, []);
 
+  const addCategory = async (name: string): Promise<BlogCategory> => {
+    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const newCat = { name, slug };
+    
+    // Insert into Supabase blog_categories table
+    const { data, error } = await supabase
+      .from('blog_categories')
+      .insert([newCat])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    // Update local state
+    setCategories(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+    return data;
+  };
+
   const seedDatabase = async () => {
     setIsLoading(true);
     try {
-      // Initialize system settings only, no mock listings
       const { data: existingSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-      
       if (!existingSettings) {
         await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
       }
-      
       await fetchData();
-      alert("System configuration initialized. You can now add your own listings and posts.");
+      alert("System configuration initialized.");
     } catch (err) {
       console.error(err);
-      alert("Initialization failed. Check Supabase connection.");
+      alert("Initialization failed.");
     } finally {
       setIsLoading(false);
     }
@@ -167,10 +188,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, posts, settings, isLoading,
+      properties, leads, subscribers, posts, categories, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
       addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
+      addCategory,
       seedDatabase
     }}>
       {children}
