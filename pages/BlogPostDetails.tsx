@@ -64,10 +64,13 @@ export const BlogPostDetails: React.FC = () => {
          <div className="lg:w-1/6 order-2 lg:order-1">
             <div className="sticky top-32 flex flex-row lg:flex-col gap-6 justify-center lg:justify-start">
                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 hidden lg:block">Share</span>
-               <button className="text-slate-400 hover:text-forge-navy transition-colors" aria-label="Share via Link" onClick={() => {
+               <button className="text-slate-400 hover:text-forge-navy transition-colors flex items-center gap-2 lg:gap-0" aria-label="Share via Link" onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert("Link copied");
-               }}><Share2 size={20} /></button>
+                  alert("Link copied to clipboard");
+               }}>
+                 <Share2 size={20} />
+                 <span className="lg:hidden text-[10px] font-bold uppercase tracking-widest">Share Article</span>
+               </button>
             </div>
          </div>
 
@@ -77,8 +80,8 @@ export const BlogPostDetails: React.FC = () => {
             />
             <hr className="my-12 border-slate-200" />
             <div className="flex justify-between items-center">
-              <Link to="/blog" className="flex items-center gap-2 text-slate-500 hover:text-forge-navy transition-colors font-bold uppercase text-xs tracking-widest">
-                <ArrowLeft size={16} /> Back to Journal
+              <Link to="/blog" className="flex items-center gap-2 text-slate-500 hover:text-forge-navy transition-colors font-bold uppercase text-xs tracking-widest group">
+                <ArrowLeft size={16} className="transform group-hover:-translate-x-1 transition-transform" /> Back to Journal
               </Link>
             </div>
          </div>

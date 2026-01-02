@@ -24,27 +24,36 @@ export const Blog: React.FC = () => {
       <div className="container mx-auto px-6 py-16 md:py-24">
          {publishedPosts.length > 0 ? (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-             {publishedPosts.map(post => (
-               <article key={post.id} className="flex flex-col group">
-                 <Link to={`/blog/${post.slug}`} className="block overflow-hidden mb-6 rounded-sm">
-                   {post.cover_image ? (
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
-                      </div>
-                   ) : (
-                     <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><span className="font-serif italic text-xs uppercase tracking-widest">No Image</span></div>
-                   )}
-                 </Link>
-                 <div className="flex items-center gap-4 text-xs text-slate-400 uppercase tracking-widest mb-3">
-                   <span className="text-forge-gold font-bold">{post.category}</span>
-                   <span>•</span>
-                   <span>{new Date(post.date).toLocaleDateString()}</span>
-                 </div>
-                 <Link to={`/blog/${post.slug}`} className="mb-3"><h2 className="text-2xl font-serif text-forge-navy font-bold leading-tight group-hover:text-forge-gold transition-colors">{post.title}</h2></Link>
-                 <p className="text-slate-600 leading-relaxed mb-6 line-clamp-3 flex-grow">{post.excerpt}</p>
-                 <Link to={`/blog/${post.slug}`} className="flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors self-start">Read Article <ArrowRight size={16} /></Link>
-               </article>
-             ))}
+             {publishedPosts.map(post => {
+               const postUrl = `/blog/${post.slug || post.id}`;
+               return (
+                 <article key={post.id} className="flex flex-col group">
+                   <Link to={postUrl} className="block overflow-hidden mb-6 rounded-sm">
+                     {post.cover_image ? (
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                        </div>
+                     ) : (
+                       <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300"><span className="font-serif italic text-xs uppercase tracking-widest">No Image</span></div>
+                     )}
+                   </Link>
+                   <div className="flex items-center gap-4 text-xs text-slate-400 uppercase tracking-widest mb-3">
+                     <span className="text-forge-gold font-bold">{post.category}</span>
+                     <span>•</span>
+                     <span>{new Date(post.date).toLocaleDateString()}</span>
+                   </div>
+                   <Link to={postUrl} className="mb-3">
+                    <h2 className="text-2xl font-serif text-forge-navy font-bold leading-tight group-hover:text-forge-gold transition-colors">
+                      {post.title}
+                    </h2>
+                   </Link>
+                   <p className="text-slate-600 leading-relaxed mb-6 line-clamp-3 flex-grow">{post.excerpt}</p>
+                   <Link to={postUrl} className="flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors self-start">
+                    Read Article <ArrowRight size={16} />
+                   </Link>
+                 </article>
+               );
+             })}
            </div>
          ) : (
            <div className="text-center py-20 border border-dashed border-slate-200 bg-slate-50">
