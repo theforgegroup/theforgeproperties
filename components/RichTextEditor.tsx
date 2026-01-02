@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, 
-  Undo, Redo, Code, Link as LinkIcon
+  Undo, Redo, Code, Link as LinkIcon, Quote
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -36,6 +36,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     
     // Ensure editor is focused before executing command
     editorRef.current?.focus();
+    
+    // For lists, some browsers require specific handling if current selection is empty
+    // But standard execCommand should work fine for basic usage
     document.execCommand(command, ui, val);
     handleInput();
   };
@@ -43,7 +46,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
   const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setCurrentBlock(val);
-    // Use the standard formatBlock command
+    // Use the standard formatBlock command with the tag name
     execCommand('formatBlock', false, val);
   };
 
@@ -91,20 +94,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200">
         
-        {/* 1. Format Block Dropdown (Removed 'T' icon) */}
+        {/* 1. Headings Dropdown (P, H1-H6) - No 'T' icon */}
         <div className="flex items-center border-r border-slate-200 pr-2 mr-1">
           <select 
             value={currentBlock}
             onChange={handleBlockChange}
             disabled={isCodeView}
-            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[120px] ml-1"
+            className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none cursor-pointer py-1 max-w-[140px] ml-1"
           >
             <option value="P">Paragraph</option>
-            <option value="H2">Heading 1</option>
-            <option value="H3">Heading 2</option>
-            <option value="H4">Heading 3</option>
-            <option value="BLOCKQUOTE">Quote</option>
-            <option value="PRE">Code</option>
+            <option value="H1">Heading 1</option>
+            <option value="H2">Heading 2</option>
+            <option value="H3">Heading 3</option>
+            <option value="H4">Heading 4</option>
+            <option value="H5">Heading 5</option>
+            <option value="H6">Heading 6</option>
+            <option value="PRE">Preformatted</option>
           </select>
         </div>
 
@@ -122,10 +127,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
           <ToolbarButton icon={AlignRight} onClick={() => execCommand('justifyRight')} title="Align Right" disabled={isCodeView} />
         </div>
 
-        {/* 4. Lists (Active functionality) */}
+        {/* 4. Lists & Quote Group (Bullet, Numbered, Quote) */}
         <div className="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
            <ToolbarButton icon={List} onClick={() => execCommand('insertUnorderedList')} title="Bullet List" disabled={isCodeView} />
            <ToolbarButton icon={ListOrdered} onClick={() => execCommand('insertOrderedList')} title="Numbered List" disabled={isCodeView} />
+           <ToolbarButton icon={Quote} onClick={() => execCommand('formatBlock', false, 'BLOCKQUOTE')} title="Blockquote" disabled={isCodeView} />
         </div>
 
         {/* 5. Undo/Redo */}
