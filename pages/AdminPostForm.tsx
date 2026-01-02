@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, Image as ImageIcon, Loader2, Link as LinkIcon, 
-  AlertCircle, Eye, Globe, Settings, FileText, Search
+  AlertCircle, Globe, Settings, FileText
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { BlogPost } from '../types';
@@ -94,7 +94,7 @@ export const AdminPostForm: React.FC = () => {
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
     } catch (err: any) {
-      setError(`Upload failed: ${err.message}. Ensure 'blog-images' bucket is public.`);
+      setError(`Upload failed: ${err.message}. If permissions persist, run the RLS SQL fix.`);
     } finally {
       setIsUploading(false);
     }
@@ -147,7 +147,7 @@ export const AdminPostForm: React.FC = () => {
             {isEditing ? 'Edit Post' : 'Add New Post'}
           </h1>
           <button onClick={() => navigate('/admin/blog')} className="text-slate-400 hover:text-forge-navy flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-            <ArrowLeft size={14} /> Back
+            <ArrowLeft size={14} /> Back to Blog List
           </button>
         </div>
 
@@ -228,12 +228,12 @@ export const AdminPostForm: React.FC = () => {
                   className="bg-forge-navy text-white px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-forge-dark transition-all flex items-center gap-2 shadow-md"
                 >
                   {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : (isSuccess ? <CheckCircle size={12} /> : null)}
-                  {isEditing ? 'Update Post' : 'Publish Post'}
+                  {isEditing ? 'Update' : 'Publish'}
                 </button>
               </div>
             </div>
 
-            {/* SEO Settings (WordPress Focus Keyphrase / Meta) */}
+            {/* SEO Settings (WP Focus Keyphrase / Meta Description) */}
             <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">SEO Settings</span>
@@ -246,7 +246,7 @@ export const AdminPostForm: React.FC = () => {
                     value={formData.keyphrase || ''} 
                     onChange={(e) => setFormData({...formData, keyphrase: e.target.value})}
                     className="w-full border border-slate-200 p-2 text-sm focus:border-forge-gold focus:outline-none"
-                    placeholder="e.g. Luxury Real Estate Lagos"
+                    placeholder="Enter keyphrase"
                   />
                 </div>
                 <div>
@@ -256,13 +256,13 @@ export const AdminPostForm: React.FC = () => {
                     onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
                     rows={3}
                     className="w-full border border-slate-200 p-2 text-xs focus:border-forge-gold focus:outline-none resize-none"
-                    placeholder="Snippet for search results..."
+                    placeholder="Enter search snippet"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">URL Slug</label>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 p-2 border border-slate-100 rounded font-mono">
-                    <LinkIcon size={10} /> /{formData.slug}
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Slug</label>
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 p-2 border border-slate-100 rounded font-mono truncate">
+                    /{formData.slug}
                   </div>
                 </div>
               </div>
