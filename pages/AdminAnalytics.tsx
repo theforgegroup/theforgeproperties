@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { DollarSign, Home, Users, TrendingUp, Activity, MapPin } from 'lucide-react';
+import { DollarSign, Home, Users, TrendingUp, Activity, MapPin, BarChart } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
+import { ListingStatus } from '../types';
 
 export const AdminAnalytics: React.FC = () => {
   const { properties, leads } = useProperties();
@@ -17,12 +18,20 @@ export const AdminAnalytics: React.FC = () => {
     l.email.includes('@')
   );
 
-  // Metrics derived ONLY from validLeads array
-  const totalValue = properties.reduce((sum, p) => sum + (p.price || 0), 0);
-  const activeListings = properties.filter(p => p.status === 'For Sale' || p.status === 'For Rent').length;
-  const soldListings = properties.filter(p => p.status === 'Sold').length;
+  // Financial Metrics
+  // Total Sales Volume: Only the price of properties marked as 'Sold'
+  const salesVolume = properties
+    .filter(p => p.status === ListingStatus.SOLD)
+    .reduce((sum, p) => sum + (p.price || 0), 0);
+
+  // Portfolio Value: The total value of properties currently 'For Sale' or 'For Rent'
+  const inventoryValue = properties
+    .filter(p => p.status === ListingStatus.FOR_SALE || p.status === ListingStatus.FOR_RENT || p.status === ListingStatus.SHORT_LET)
+    .reduce((sum, p) => sum + (p.price || 0), 0);
+
+  const activeListings = properties.filter(p => p.status === ListingStatus.FOR_SALE || p.status === ListingStatus.FOR_RENT || p.status === ListingStatus.SHORT_LET).length;
+  const soldListings = properties.filter(p => p.status === ListingStatus.SOLD).length;
   
-  // These counts will accurately reflect 0 if validLeads is empty
   const totalLeadsCount = validLeads.length;
   const newLeads = validLeads.filter(l => l.status === 'New').length;
   const closedLeads = validLeads.filter(l => l.status === 'Closed').length;
@@ -78,22 +87,24 @@ export const AdminAnalytics: React.FC = () => {
         <h1 className="text-3xl font-serif text-forge-navy mb-8">Performance Analytics</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          {/* Sales Volume Card - Now accurately reflects 0 if nothing is sold */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 bg-green-50 text-green-600 rounded-full"><DollarSign size={20} /></div>
-              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Portfolio Value</span>
+              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Sales Volume</span>
             </div>
-            <h3 className="text-2xl font-bold text-forge-navy truncate">₦{(totalValue / 1000000000).toFixed(2)}B</h3>
-            <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><TrendingUp size={12} /> Live Valuation</p>
+            <h3 className="text-2xl font-bold text-forge-navy truncate">₦{(salesVolume / 1000000000).toFixed(2)}B</h3>
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><TrendingUp size={12} /> Total Revenue</p>
           </div>
 
+          {/* Active Portfolio Value Card - Shows value of current inventory */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <div className="flex items-center gap-4 mb-2">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><Home size={20} /></div>
-              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Active Listings</span>
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><BarChart size={20} /></div>
+              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Inventory Value</span>
             </div>
-            <h3 className="text-2xl font-bold text-forge-navy">{activeListings}</h3>
-            <p className="text-xs text-slate-400 mt-1">{soldListings} properties sold</p>
+            <h3 className="text-2xl font-bold text-forge-navy truncate">₦{(inventoryValue / 1000000000).toFixed(2)}B</h3>
+            <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">{activeListings} active units</p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
