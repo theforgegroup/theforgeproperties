@@ -22,11 +22,11 @@ export const SEO: React.FC<SEOProps> = ({
 }) => {
   const siteName = 'The Forge Properties';
   const fullTitle = `${title} | ${siteName}`;
-  const defaultDesc = 'Discover Nigerias most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences, penthouses, and estates defined by excellence.';
+  const defaultDesc = 'Discover Nigeria\'s most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences, penthouses, and estates defined by excellence.';
   const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria, maitama houses';
   
-  // High-res default image for the brand
-  const defaultImage = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200';
+  // High-res default image for the brand (1200x630 is optimal for OG/Twitter)
+  const defaultImage = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&h=630&fit=crop';
   
   const getNormalizedUrl = (path?: string) => {
     const domain = 'https://theforgeproperties.com';
@@ -46,24 +46,30 @@ export const SEO: React.FC<SEOProps> = ({
     
     // Meta Tag Update Helper
     const updateMeta = (name: string, content: string, attr: 'name' | 'property' = 'name') => {
-      // Find and remove any duplicates first to ensure the crawler sees only the newest data
+      // Find and remove any existing tags with this specific attribute/name combo
       const existingTags = document.querySelectorAll(`meta[${attr}="${name}"]`);
       existingTags.forEach(tag => tag.remove());
 
-      const element = document.createElement('meta');
-      element.setAttribute(attr, name);
-      element.setAttribute('content', content);
-      document.head.appendChild(element);
+      if (content) {
+        const element = document.createElement('meta');
+        element.setAttribute(attr, name);
+        element.setAttribute('content', content);
+        document.head.appendChild(element);
+      }
     };
 
     const finalDescription = description || defaultDesc;
     updateMeta('description', finalDescription);
     updateMeta('keywords', keywords || defaultKeywords);
 
-    // Image URL Logic: Ensure it is an absolute URL
+    // Image URL Logic: Ensure it is an absolute HTTPS URL
     let socialImage = image || defaultImage;
     if (socialImage.startsWith('/') && !socialImage.startsWith('//')) {
       socialImage = `https://theforgeproperties.com${socialImage}`;
+    }
+    // Force https if it's missing (common in some dynamic URL scenarios)
+    if (socialImage.startsWith('http:')) {
+      socialImage = socialImage.replace('http:', 'https:');
     }
 
     // Open Graph Tags
@@ -105,7 +111,7 @@ export const SEO: React.FC<SEOProps> = ({
       "name": siteName,
       "url": "https://theforgeproperties.com",
       "logo": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=512",
-      "image": socialImage // Link preview image in schema
+      "image": socialImage 
     };
 
     const combinedSchemaList = [baseOrgSchema];
