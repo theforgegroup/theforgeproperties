@@ -22,8 +22,8 @@ export const SEO: React.FC<SEOProps> = ({
 }) => {
   const siteName = 'The Forge Properties';
   const fullTitle = `${title} | ${siteName}`;
-  const defaultDesc = 'Discover Nigeria\'s most exclusive luxury real estate portfolio with The Forge Properties. Exceptional residences, penthouses, and estates defined by excellence.';
-  const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria, maitama houses';
+  const defaultDesc = 'Discover Nigeria\'s most exclusive luxury real estate portfolio. Exceptional residences, penthouses, and estates defined by excellence.';
+  const defaultKeywords = 'luxury real estate nigeria, lagos property, banana island homes, the forge properties, real estate investment nigeria';
   
   // High-res default image for the brand (1200x630 is optimal for OG/Twitter)
   const defaultImage = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&h=630&fit=crop';
@@ -72,7 +72,7 @@ export const SEO: React.FC<SEOProps> = ({
       socialImage = socialImage.replace('http:', 'https:');
     }
 
-    // Open Graph Tags
+    // Open Graph Tags - Essential for WhatsApp/FB/LinkedIn
     updateMeta('og:title', title, 'property'); 
     updateMeta('og:description', finalDescription, 'property');
     updateMeta('og:url', canonicalUrl, 'property');
