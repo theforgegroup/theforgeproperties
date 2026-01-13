@@ -3,64 +3,65 @@ import { Property } from "../types";
 
 /**
  * The Brain: RAG Implementation for The Forge AI Concierge
- * Accepts current inventory dynamically from the context.
  */
 export const getChatResponse = async (userMessage: string, inventory: Property[]): Promise<string> => {
   try {
-    // Always use the mandatory initialization pattern with process.env.API_KEY
+    // 1. Initialize the Google GenAI client
+    // Guidelines: Always use new GoogleGenAI({ apiKey: process.env.API_KEY })
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    // 1. Context Injection: Prepare the property inventory for the AI
-    // We simplify the data to save tokens and focus on key details
-    const inventoryContext = inventory.map(p => ({
+    // 2. Prepare limited inventory context to optimize token usage and accuracy
+    const inventoryContext = inventory.slice(0, 15).map(p => ({
       title: p.title,
       location: p.location,
-      price: p.price,
+      price: `₦${p.price.toLocaleString()}`,
       type: p.type,
-      features: p.features ? p.features.slice(0, 4) : [], // Top 4 features with safety check
-      status: p.status
+      status: p.status,
+      features: p.features ? p.features.slice(0, 3) : []
     }));
 
-    // 2. Persona & Rules Configuration
+    // 3. Define the System Instruction
     const systemInstruction = `
-      You are 'The Forge AI', the premier luxury real estate assistant for 'The Forge Properties' in Nigeria.
+      You are 'The Forge AI', the sophisticated virtual concierge for 'The Forge Properties' (a division of The Forge Group, Nigeria).
       
-      YOUR KNOWLEDGE BASE (REAL-TIME INVENTORY):
+      CURRENT INVENTORY DATA:
       ${JSON.stringify(inventoryContext)}
 
       YOUR PERSONA:
-      - Tone: Sophisticated, polite, and speaking with "understated elegance" (e.g., use words like "residence", "estate", "distinguished").
-      - Role: Guide high-net-worth individuals to their dream properties.
+      - Tone: Professional, elegant, and highly helpful.
+      - Objective: Assist clients in identifying luxury properties from our portfolio.
       
-      OPERATIONAL RULES:
-      1. **Currency Formatting**: Never use raw numbers like 2500000000. Always convert to readable text: "2.5 Billion Naira" or "500 Million Naira".
-      2. **Location Filtering**: If the user mentions a specific state or area (e.g., "Abuja", "Banana Island"), ONLY discuss properties from that location.
-      3. **Specificity**: Always mention the specific property Title when recommending. E.g., "We have a magnificent option: the [Property Title]...".
-      4. **Market Insight**: If asked about the market or investment value, confidently mention that "Nigerian luxury real estate is a robust hedge against inflation."
-      5. **Brevity**: Keep responses concise (under 100 words) unless detailed specifications are explicitly requested.
-      6. **No Matches**: If no inventory matches the user's request, politely suggest they contact our Senior Brokers for "exclusive off-market listings" to maintain the feeling of luxury access.
+      RULES:
+      1. ONLY recommend properties listed in the provided 'CURRENT INVENTORY DATA'.
+      2. If a user asks for a specific location (e.g. Abuja, Ikoyi) or property type, filter based on the data.
+      3. Format prices in readable text (e.g. "Two Billion Naira" instead of "2,000,000,000").
+      4. If no exact match exists, explain that our "Exclusive Off-Market Portfolio" likely contains a match and invite them to contact our Senior Brokers.
+      5. Keep responses concise (under 80 words) and refined.
     `;
 
-    // Using gemini-3-flash-preview for Basic Text Tasks as per guidelines.
-    // We use the structured parts format for contents to ensure maximum compatibility.
+    // 4. Generate Content
+    // Guidelines: Use 'gemini-3-flash-preview' for basic text tasks.
+    // We pass userMessage as a simple string for maximum robustness.
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: userMessage }] }],
+      contents: userMessage,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 0.7, // Slightly creative but grounded
+        temperature: 0.7,
+        topP: 0.95,
       }
     });
 
-    // Access the .text property directly as per GenerateContentResponse definition.
+    // 5. Extract and Return Response
+    // Guidelines: Access .text property directly.
     if (!response || !response.text) {
-      return "I apologize, but I'm unable to provide a detailed recommendation at this moment. Please try asking about specific locations or property types.";
+      throw new Error("Empty response from AI");
     }
 
     return response.text;
   } catch (error) {
-    console.error("Concierge Chat Error:", error);
-    // Return a graceful error message as a string so the UI remains stable
+    console.error("The Forge AI Concierge Error:", error);
+    // Graceful fallback for the UI
     return "I am currently experiencing a high volume of inquiries. Please try again in a moment or contact our office directly for immediate assistance with our exclusive portfolio.";
   }
 };
