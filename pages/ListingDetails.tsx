@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft, ExternalLink } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft, ExternalLink, Phone } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 import { SEO } from '../components/SEO';
@@ -87,7 +86,7 @@ export const ListingDetails: React.FC = () => {
       <SEO 
         title={`${property.title} in ${property.location}`}
         description={`${property.bedrooms} Bed, ${property.bathrooms} Bath ${property.type}. ${property.description.substring(0, 150)}...`}
-        image={property.images[0]} // Specific listing image for social media
+        image={property.images[0]} 
         type="realestate"
         url={`/listings/${property.slug || property.id}`}
       />
@@ -98,7 +97,6 @@ export const ListingDetails: React.FC = () => {
         </Link>
       </div>
 
-      {/* Gallery Section */}
       <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
         <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
         
@@ -166,7 +164,6 @@ export const ListingDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Location Section with Google Maps */}
             <div className="mb-12">
               <div className="flex justify-between items-end mb-6">
                 <h3 className="text-xl font-serif text-forge-navy">Location & Neighborhood</h3>
@@ -194,7 +191,6 @@ export const ListingDetails: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:w-1/3">
              <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
                <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
@@ -209,6 +205,14 @@ export const ListingDetails: React.FC = () => {
                    <p className="text-forge-gold text-sm font-bold">{agentPhone}</p>
                  </div>
                </div>
+
+               {/* Direct Call Button */}
+               <a 
+                 href={`tel:${agentPhone}`} 
+                 className="w-full mb-6 bg-forge-gold text-forge-navy py-4 uppercase font-bold tracking-widest text-xs hover:bg-white border border-forge-gold transition-all flex items-center justify-center gap-3 shadow-lg group"
+               >
+                 <Phone size={16} className="group-hover:animate-bounce" /> Call Agent Now
+               </a>
 
                <div className="flex gap-2 mb-6">
                  <button onClick={() => setFormMode('viewing')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Viewing</button>
