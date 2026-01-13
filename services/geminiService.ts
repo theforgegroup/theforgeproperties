@@ -41,10 +41,9 @@ export const getChatResponse = async (userMessage: string, inventory: Property[]
 
     // 4. Generate Content
     // Guidelines: Use 'gemini-3-flash-preview' for basic text tasks.
-    // We pass userMessage as a simple string for maximum robustness.
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: userMessage,
+      contents: [{ parts: [{ text: userMessage }] }],
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.7,
@@ -61,7 +60,7 @@ export const getChatResponse = async (userMessage: string, inventory: Property[]
     return response.text;
   } catch (error) {
     console.error("The Forge AI Concierge Error:", error);
-    // Graceful fallback for the UI
-    return "I am currently experiencing a high volume of inquiries. Please try again in a moment or contact our office directly for immediate assistance with our exclusive portfolio.";
+    // Graceful fallback for the UI with direct contact details
+    return "I am currently experiencing a high volume of inquiries. Please try again in a moment or contact our office directly for immediate assistance with our exclusive portfolio. Contact: Whatsapp/call +234 810 613 3572 | Email: theforgeproperties@gmail.com";
   }
 };
