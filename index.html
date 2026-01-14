@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,9 +16,11 @@
     
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Polyfill 'process' -->
+    <!-- Polyfill 'process' - Safely merge injected environment variables -->
     <script>
-      window.process = { env: { NODE_ENV: 'production' } };
+      window.process = window.process || {};
+      window.process.env = window.process.env || {};
+      window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
       window.global = window;
     </script>
 

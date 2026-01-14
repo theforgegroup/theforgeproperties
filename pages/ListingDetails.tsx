@@ -206,7 +206,7 @@ export const ListingDetails: React.FC = () => {
                  </div>
                </div>
 
-               {/* Direct Call Button */}
+               {/* Direct Call Button - tel: protocol */}
                <a 
                  href={`tel:${agentPhone}`} 
                  className="w-full mb-6 bg-forge-gold text-forge-navy py-4 uppercase font-bold tracking-widest text-xs hover:bg-white border border-forge-gold transition-all flex items-center justify-center gap-3 shadow-lg group"
