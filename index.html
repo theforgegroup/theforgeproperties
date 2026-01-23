@@ -18,9 +18,15 @@
 
     <!-- Polyfill 'process' - Safely merge injected environment variables -->
     <script>
+      // Initialize process and env safely without overwriting platform-injected keys
       window.process = window.process || {};
       window.process.env = window.process.env || {};
-      window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
+      
+      // Only set NODE_ENV if it's not already defined
+      if (!window.process.env.NODE_ENV) {
+        window.process.env.NODE_ENV = 'production';
+      }
+      
       window.global = window;
     </script>
 
