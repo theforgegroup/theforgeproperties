@@ -7,7 +7,7 @@ import { useProperties } from '../context/PropertyContext';
 export const AIConcierge: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Welcome to The Forge. I am your personal AI assistant. How may I assist you in finding your exceptional residence today?' }
+    { role: 'model', text: 'Welcome to The Forge Properties. I am The Forge AI, your elite concierge. We currently feature exclusive listings, including ₦750M villas in Lekki Phase 1 and ₦220M homes in Lekki Palm City. How may I assist your search today? For bespoke inquiries, please reach us at theforgeproperties@gmail.com. +234 810 613 3572' }
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
