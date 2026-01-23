@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color: #0F172A;">
+<html lang="en" style="background-color: #0F172A !important;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +16,7 @@
     
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Polyfill 'process' safely to preserve platform-injected keys -->
+    <!-- Robust Polyfill for production environment variables -->
     <script>
       (function() {
         window.process = window.process || {};
@@ -52,7 +52,7 @@
       }
     </script>
     <style>
-      /* Prevent the 'whitish' flash by setting the base color to Forge Navy immediately */
+      /* Enforce brand colors immediately */
       html, body { 
         background-color: #0F172A !important; 
         margin: 0;
@@ -71,7 +71,6 @@
       }
       .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
 
-      /* Visual Editor Content Styling */
       .article-content {
         min-height: 400px;
         outline: none;
