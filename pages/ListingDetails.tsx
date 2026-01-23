@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-// Fixed missing Shield import on line 5
-import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft, ExternalLink, Phone, Share2, Shield } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, CheckCircle, Calendar, DollarSign, Loader2, Headset, ArrowLeft, ExternalLink, Phone } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Lead } from '../types';
 import { SEO } from '../components/SEO';
@@ -83,7 +82,7 @@ export const ListingDetails: React.FC = () => {
   const mapExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-50 pt-20">
       <SEO 
         title={`${property.title} in ${property.location}`}
         description={`${property.bedrooms} Bed, ${property.bathrooms} Bath ${property.type}. ${property.description.substring(0, 150)}...`}
@@ -92,108 +91,92 @@ export const ListingDetails: React.FC = () => {
         url={`/listings/${property.slug || property.id}`}
       />
 
-      {/* Breadcrumb / Back */}
-      <div className="container mx-auto px-6 py-4">
-        <Link to="/listings" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-forge-navy transition-colors">
+      <div className="container mx-auto px-4 md:px-6 py-4">
+        <Link to="/listings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-forge-navy transition-colors">
           <ArrowLeft size={14} /> Back to Portfolio
         </Link>
       </div>
 
-      {/* Hero Gallery */}
-      <div className="h-[50vh] md:h-[70vh] bg-slate-900 relative">
-        <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90 transition-all duration-700" />
+      <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
+        <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
         
-        {/* Gallery Thumbnails Overlay */}
         {property.images.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:left-6 md:translate-x-0 flex gap-2 max-w-[90vw] overflow-x-auto pb-2 px-2 no-scrollbar">
+          <div className="absolute bottom-6 left-6 flex gap-2">
             {property.images.map((img, idx) => (
               <button 
                 key={idx} 
                 onClick={() => setActiveImage(idx)}
-                className={`w-20 h-16 shrink-0 border-2 transition-all duration-300 ${activeImage === idx ? 'border-forge-gold scale-105 shadow-2xl' : 'border-white/30 opacity-60 hover:opacity-100'}`}
+                className={`w-16 h-12 border-2 transition-all ${activeImage === idx ? 'border-forge-gold scale-110 shadow-lg' : 'border-white/50 opacity-70 hover:opacity-100'}`}
               >
-                <img src={img} className="w-full h-full object-cover" alt={`Thumb ${idx}`} />
+                <img src={img} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
         )}
-
-        <button 
-          className="absolute top-6 right-6 p-3 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-forge-gold hover:text-forge-navy transition-all"
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Listing link copied!');
-          }}
-        >
-          <Share2 size={20} />
-        </button>
       </div>
 
-      <div className="container mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-          
-          {/* Main Info */}
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           <div className="lg:w-2/3">
-            <div className="mb-10">
-              <span className="inline-block bg-forge-navy text-forge-gold text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1 mb-4 rounded-sm">
-                {property.type} • {property.status}
-              </span>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif text-forge-navy font-bold mb-6 leading-tight">{property.title}</h1>
-              <div className="flex items-center text-slate-500 text-lg">
-                <MapPin size={24} className="mr-3 text-forge-gold shrink-0" />
-                {property.location}
+            <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
+              <div>
+                <span className="text-forge-gold text-xs font-bold uppercase tracking-widest mb-2 block">{property.type}</span>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-forge-navy font-bold mb-2 leading-tight">{property.title}</h1>
+                <div className="flex items-center text-slate-500">
+                  <MapPin size={18} className="mr-2 text-forge-gold shrink-0" />
+                  {property.location}
+                </div>
+              </div>
+              <div className="text-left md:text-right">
+                <div className="text-2xl md:text-3xl text-forge-navy font-light">₦{property.price.toLocaleString()}</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-y border-slate-200 py-10 mb-12">
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Price</span>
-                 <span className="text-2xl font-light text-forge-navy">₦{property.price.toLocaleString()}</span>
+            <div className="flex gap-4 md:gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600 overflow-x-auto">
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Bed className="text-forge-gold" size={20} />
+                 <span className="font-bold text-forge-navy">{property.bedrooms}</span> Beds
                </div>
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Bedrooms</span>
-                 <span className="text-2xl font-light text-forge-navy">{property.bedrooms} <Bed size={16} className="inline ml-1 text-forge-gold" /></span>
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Bath className="text-forge-gold" size={20} />
+                 <span className="font-bold text-forge-navy">{property.bathrooms}</span> Baths
                </div>
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Bathrooms</span>
-                 <span className="text-2xl font-light text-forge-navy">{property.bathrooms} <Bath size={16} className="inline ml-1 text-forge-gold" /></span>
-               </div>
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Total Area</span>
-                 <span className="text-2xl font-light text-forge-navy">{property.area_sq_ft.toLocaleString()} <span className="text-sm">sq ft</span></span>
+               <div className="flex items-center gap-2 whitespace-nowrap">
+                 <Move className="text-forge-gold" size={20} />
+                 <span className="font-bold text-forge-navy">{property.area_sq_ft.toLocaleString()}</span> Sq Ft
                </div>
             </div>
 
-            <div className="mb-16">
-              <h3 className="text-2xl font-serif text-forge-navy mb-6">About this Residence</h3>
-              <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-line">{property.description}</p>
+            <div className="mb-12">
+              <h3 className="text-xl font-serif text-forge-navy mb-4">Description</h3>
+              <p className="text-slate-600 leading-relaxed text-base md:text-lg">{property.description}</p>
             </div>
 
-            <div className="mb-16">
-              <h3 className="text-2xl font-serif text-forge-navy mb-8 italic">Exceptional Features</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="mb-12">
+              <h3 className="text-xl font-serif text-forge-navy mb-6">Key Features</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {property.features.map(feature => (
-                  <div key={feature} className="flex items-center gap-4 text-slate-600 p-4 bg-white border border-slate-100 rounded-sm hover:border-forge-gold/30 transition-colors">
-                    <CheckCircle size={20} className="text-forge-gold shrink-0" />
-                    <span className="font-medium">{feature}</span>
+                  <div key={feature} className="flex items-center gap-3 text-slate-600">
+                    <CheckCircle size={16} className="text-forge-gold shrink-0" />
+                    <span>{feature}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-16">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
-                <h3 className="text-2xl font-serif text-forge-navy">Location & Neighborhood</h3>
+            <div className="mb-12">
+              <div className="flex justify-between items-end mb-6">
+                <h3 className="text-xl font-serif text-forge-navy">Location & Neighborhood</h3>
                 <a 
                   href={mapExternalUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="group flex items-center gap-2 text-[10px] font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-all"
+                  className="flex items-center gap-2 text-xs font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-colors"
                 >
-                  View full map <ExternalLink size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                  View on Google Maps <ExternalLink size={14} />
                 </a>
               </div>
-              <div className="w-full h-[400px] bg-slate-200 rounded-sm overflow-hidden border border-slate-200 shadow-lg">
+              <div className="w-full h-80 bg-slate-200 rounded overflow-hidden border border-slate-200 shadow-sm">
                 <iframe
                   width="100%"
                   height="100%"
@@ -204,84 +187,59 @@ export const ListingDetails: React.FC = () => {
                   src={mapEmbedUrl}
                 ></iframe>
               </div>
+              <p className="text-xs text-slate-400 mt-3 italic">Map location is approximate based on address provided.</p>
             </div>
           </div>
 
-          {/* Contact Sidebar - Fixed on Tablet/Desktop */}
           <div className="lg:w-1/3">
-             <div className="bg-white p-8 md:p-10 shadow-2xl border-t-4 border-forge-gold lg:sticky lg:top-28">
-               <div className="flex items-center gap-6 mb-8 border-b border-slate-100 pb-8">
-                 <div className="relative">
-                   {agentImage ? (
-                     <img src={agentImage} alt={agentName} className="w-20 h-20 rounded-full object-cover border-2 border-slate-100" />
-                   ) : (
-                     <div className="w-20 h-20 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0"><Headset size={32} /></div>
-                   )}
-                   <span className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-4 border-white rounded-full"></span>
-                 </div>
+             <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
+               <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+                 {agentImage ? (
+                   <img src={agentImage} alt={agentName} className="w-16 h-16 rounded-full object-cover border border-slate-200" />
+                 ) : (
+                   <div className="w-16 h-16 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0"><Headset size={28} /></div>
+                 )}
                  <div>
-                   <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">Exclusive Broker</p>
-                   <h4 className="font-serif text-xl text-forge-navy font-bold leading-tight">{agentName}</h4>
-                   <a href={`tel:${agentPhone}`} className="text-forge-gold text-sm font-bold hover:underline">{agentPhone}</a>
+                   <p className="text-slate-400 text-xs uppercase tracking-wider">Listing Agent</p>
+                   <h4 className="font-serif text-lg text-forge-navy leading-tight mb-1">{agentName}</h4>
+                   <p className="text-forge-gold text-sm font-bold">{agentPhone}</p>
                  </div>
                </div>
 
-               <div className="flex gap-2 mb-8 bg-slate-50 p-1 rounded-sm">
-                 <button onClick={() => setFormMode('viewing')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm ${formMode === 'viewing' ? 'bg-forge-navy text-white shadow-lg' : 'text-slate-500 hover:bg-slate-200'}`}>Request Viewing</button>
-                 <button onClick={() => setFormMode('offer')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm ${formMode === 'offer' ? 'bg-forge-navy text-white shadow-lg' : 'text-slate-500 hover:bg-slate-200'}`}>Private Offer</button>
+               {/* Direct Call Button - tel: protocol */}
+               <a 
+                 href={`tel:${agentPhone}`} 
+                 className="w-full mb-6 bg-forge-gold text-forge-navy py-4 uppercase font-bold tracking-widest text-xs hover:bg-white border border-forge-gold transition-all flex items-center justify-center gap-3 shadow-lg group"
+               >
+                 <Phone size={16} className="group-hover:animate-bounce" /> Call Agent Now
+               </a>
+
+               <div className="flex gap-2 mb-6">
+                 <button onClick={() => setFormMode('viewing')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Viewing</button>
+                 <button onClick={() => setFormMode('offer')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Make Offer</button>
                </div>
+
+               <h3 className="text-lg font-serif text-forge-navy mb-4">{formMode === 'viewing' ? 'Schedule a Viewing' : 'Submit an Offer'}</h3>
                
                {submitStatus === 'success' ? (
-                 <div className="bg-green-50 text-green-700 p-8 text-center rounded border border-green-200 animate-fade-in-up">
-                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="text-green-600" size={32} />
-                   </div>
-                   <h4 className="text-xl font-serif font-bold mb-2">Request Transmitted</h4>
-                   <p className="text-sm opacity-80">One of our senior brokers will contact you via your preferred channel within the next 2 hours.</p>
+                 <div className="bg-green-50 text-green-700 p-4 text-center rounded border border-green-200">
+                   <CheckCircle className="mx-auto mb-2 text-green-600" size={24} />
+                   <p className="font-bold">Request Sent!</p>
                  </div>
                ) : (
-                 <form className="space-y-5" onSubmit={handleSubmit}>
-                   <div>
-                     <input type="text" placeholder="Full Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none transition-colors" />
-                   </div>
-                   <div>
-                     <input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none transition-colors" />
-                   </div>
-                   <div>
-                     <input type="tel" placeholder="Phone Number" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none transition-colors" />
-                   </div>
-                   <button 
-                     disabled={submitStatus === 'submitting'} 
-                     className="w-full bg-forge-navy text-white py-5 uppercase font-bold tracking-[0.2em] text-[11px] hover:bg-forge-dark transition-all flex items-center justify-center gap-3 shadow-xl group"
-                   >
-                     {submitStatus === 'submitting' ? <Loader2 size={18} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={18} /> : <DollarSign size={18} />)}
-                     {submitStatus === 'submitting' ? 'Processing...' : (formMode === 'viewing' ? 'Confirm Schedule' : 'Submit Private Offer')}
+                 <form className="space-y-4" onSubmit={handleSubmit}>
+                   <input type="text" placeholder="Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <input type="email" placeholder="Email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <input type="tel" placeholder="Phone" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
+                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-all flex items-center justify-center gap-2 shadow-lg">
+                     {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
+                     {submitStatus === 'submitting' ? 'Processing...' : (formMode === 'viewing' ? 'Request Viewing' : 'Submit Offer')}
                    </button>
                  </form>
                )}
-
-               <p className="mt-8 text-center text-[10px] text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                 <Shield size={12} /> Confidential Transmission
-               </p>
              </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky CTA - Crucial for Mobile Conversion */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 z-[90] shadow-[0_-10px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
-          <a 
-            href={`tel:${agentPhone}`} 
-            className="flex-1 bg-forge-navy text-white py-4 rounded-sm flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-[10px]"
-          >
-            <Phone size={16} /> Call Now
-          </a>
-          <button 
-            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-            className="flex-1 bg-forge-gold text-forge-navy py-4 rounded-sm font-bold uppercase tracking-widest text-[10px]"
-          >
-            Inquire
-          </button>
       </div>
     </div>
   );

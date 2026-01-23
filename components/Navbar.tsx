@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Search, BookOpen, Phone, User, ArrowRight } from 'lucide-react';
+import { Menu, X, Home, Search, BookOpen, Phone, User } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,66 +11,58 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      setScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isOpen]);
-
+  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
   }, [location]);
 
   const navLinks = [
-    { name: 'Home', path: '/', icon: <Home size={20} /> },
-    { name: 'Portfolio', path: '/listings', icon: <Search size={20} /> },
-    { name: 'Journal', path: '/blog', icon: <BookOpen size={20} /> },
-    { name: 'Our Team', path: '/about', icon: <User size={20} /> },
-    { name: 'Contact', path: '/contact', icon: <Phone size={20} /> },
+    { name: 'Home', path: '/', icon: <Home size={18} /> },
+    { name: 'Listings', path: '/listings', icon: <Search size={18} /> },
+    { name: 'Blog', path: '/blog', icon: <BookOpen size={18} /> },
+    { name: 'About', path: '/about', icon: <User size={18} /> },
+    { name: 'Contact', path: '/contact', icon: <Phone size={18} /> },
   ];
 
   return (
     <nav 
-      className={`fixed w-full z-[100] transition-all duration-500 ${
-        scrolled || !isHome || isOpen
-          ? 'bg-forge-navy/95 backdrop-blur-xl text-white shadow-2xl py-3' 
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        scrolled || !isHome
+          ? 'bg-forge-navy/95 backdrop-blur-md text-white shadow-lg py-3' 
           : 'bg-transparent text-white py-6'
       }`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex flex-col group items-start">
-          <span className="text-xl md:text-2xl font-serif font-bold tracking-[0.2em] text-white group-hover:text-forge-gold transition-colors duration-300">
+        <Link to="/" className="flex flex-col group items-center">
+          <span className="text-2xl font-serif font-bold tracking-widest text-white group-hover:text-forge-gold transition-colors">
             THE FORGE
           </span>
-          <span className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-forge-gold">Properties</span>
         </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-10 items-center">
+        <div className="hidden md:flex space-x-8 items-center">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
-              className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group ${
-                location.pathname === link.path ? 'text-forge-gold' : 'text-slate-300 hover:text-white'
+              className={`text-sm font-medium uppercase tracking-wider hover:text-forge-gold transition-colors flex items-center gap-2 ${
+                location.pathname === link.path ? 'text-forge-gold' : 'text-slate-200'
               }`}
             >
               {link.name}
-              <span className={`absolute -bottom-1 left-0 w-full h-px bg-forge-gold transition-transform duration-300 origin-left ${location.pathname === link.path ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
             </Link>
           ))}
           <Link 
             to="/listings"
-            className="bg-forge-gold text-forge-navy px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-white transition-all duration-500 shadow-lg shadow-forge-gold/10"
+            className="border border-forge-gold text-forge-gold px-5 py-2 text-sm uppercase tracking-widest hover:bg-forge-gold hover:text-forge-navy transition-all duration-300"
           >
             Find a Home
           </Link>
@@ -77,37 +70,30 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+          className="md:hidden text-white hover:text-forge-gold transition-colors"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle Menu"
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+          {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      <div className={`md:hidden fixed inset-0 top-[60px] bg-forge-dark z-[-1] transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="h-full flex flex-col justify-center items-center p-8 space-y-8">
-          {navLinks.map((link, idx) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={`flex items-center gap-4 text-2xl font-serif transition-all duration-500 delay-[${idx * 50}ms] ${
-                isOpen ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-              } ${location.pathname === link.path ? 'text-forge-gold italic' : 'text-white'}`}
-            >
-              <span className="text-forge-gold/30 font-sans text-sm font-bold tracking-widest">0{idx + 1}</span>
-              {link.name}
-            </Link>
-          ))}
-          <Link 
-            to="/listings"
-            className={`flex items-center gap-2 bg-forge-gold text-forge-navy px-10 py-5 font-bold uppercase tracking-widest text-xs transition-all duration-700 delay-300 ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
-          >
-            View Portfolio <ArrowRight size={16} />
-          </Link>
+      {/* Mobile Menu Dropdown */}
+      {isOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-forge-navy border-t border-slate-800 shadow-xl">
+          <div className="flex flex-col py-4 px-6 space-y-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className="flex items-center gap-3 text-slate-300 hover:text-forge-gold py-2 text-lg"
+              >
+                {link.icon}
+                {link.name}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 };
