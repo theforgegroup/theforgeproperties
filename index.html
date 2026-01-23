@@ -19,16 +19,11 @@
     <!-- Polyfill 'process' safely to preserve platform-injected keys -->
     <script>
       (function() {
-        // Ensure process.env exists
         window.process = window.process || {};
         window.process.env = window.process.env || {};
-        
-        // Handle production environment flags
         if (!window.process.env.NODE_ENV) {
           window.process.env.NODE_ENV = 'production';
         }
-        
-        // Ensure global points to window
         window.global = window;
       })();
     </script>
@@ -57,7 +52,7 @@
       }
     </script>
     <style>
-      /* Absolute prevention of the 'whitish' flash */
+      /* Prevent the 'whitish' flash by setting the base color to Forge Navy immediately */
       html, body { 
         background-color: #0F172A !important; 
         margin: 0;
@@ -65,7 +60,6 @@
         min-height: 100vh;
       }
 
-      /* Custom Scrollbar */
       ::-webkit-scrollbar { width: 8px; }
       ::-webkit-scrollbar-track { background: #020617; }
       ::-webkit-scrollbar-thumb { background: #334155; }
