@@ -1,6 +1,5 @@
-
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
@@ -44,7 +43,6 @@ const AppLayout: React.FC = () => {
   useEffect(() => {
     const agentImage = settings?.listing_agent?.image;
     if (agentImage) {
-      // Robustly update all types of link rel icons
       const selectors = [
         "link[rel='icon']",
         "link[rel='shortcut icon']",
@@ -61,7 +59,6 @@ const AppLayout: React.FC = () => {
         });
       });
 
-      // If no icon links exist at all, create one
       if (!found) {
         const newLink = document.createElement('link');
         newLink.rel = 'icon';

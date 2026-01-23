@@ -3,57 +3,52 @@ import { Property } from "../types";
 
 /**
  * The Brain: RAG Implementation for The Forge AI Concierge.
- * This service manages the connection to the Gemini API with enhanced error resilience.
+ * Hardened for environment-specific constraints.
  */
 export const getChatResponse = async (userMessage: string, inventory: Property[]): Promise<string> => {
   try {
-    // 1. Initialize API Client
-    // We rely on the platform-injected process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+    // Assume process.env.API_KEY is pre-configured and valid.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
-    // 2. Prepare Context (Limited to 6 items to stay well within token safety margins)
-    const inventorySummary = inventory.slice(0, 6).map(p => ({
-      title: p.title,
-      location: p.location,
-      price: `₦${p.price.toLocaleString()}`,
-      type: p.type
+    // Prepare ultra-slim context to minimize potential parsing/token errors
+    const context = inventory.slice(0, 5).map(p => ({
+      name: p.title,
+      loc: p.location,
+      price: `₦${p.price.toLocaleString()}`
     }));
 
-    // 3. System Instruction - Persona and Rules
-    const systemInstruction = `You are 'The Forge AI', the sophisticated virtual concierge for 'The Forge Properties' (Nigeria).
-    
-    CURRENT LISTINGS:
-    ${JSON.stringify(inventorySummary)}
+    const systemInstruction = `You are 'The Forge AI', a luxury real estate concierge for 'The Forge Properties' (Nigeria). 
+    Your tone is sophisticated and elite.
+    Available Portfolio: ${JSON.stringify(context)}. 
+    If you cannot find a match, invite them to contact our 'Senior Brokers' at theforgeproperties@gmail.com.
+    Keep answers under 40 words.`;
 
-    PERSONA:
-    - Tone: Elegant, professional, and helpful.
-    - Assist clients in finding residences from the listings above.
-    - Format prices as Naira text (e.g. "One Billion Naira").
-    - If a specific match isn't found, invite them to speak with our Senior Brokers for exclusive off-market options.
-    - Keep responses concise (under 60 words).`;
-
-    // 4. API Call
-    // Using gemini-flash-latest for production stability and array-based contents for robustness.
-    const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
-      contents: [{ role: "user", parts: [{ text: userMessage }] }],
+    // Request generation using ai.models.generateContent
+    const result = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: userMessage,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 0.7,
-        topP: 0.95,
+        temperature: 0.6,
+        topP: 0.9,
       }
     });
 
-    // 5. Extract and Clean Output
-    if (response && response.text) {
-      return response.text.trim();
+    // Access the .text property directly as per SDK guidelines
+    const textOutput = result.text;
+    if (textOutput) {
+      return textOutput.trim();
     }
 
-    throw new Error("Invalid or empty response from the AI Concierge service.");
-  } catch (error) {
-    console.error("The Forge AI Concierge Troubleshooting Log:", error);
+    console.warn("The Forge AI: Received empty text output from model.");
+    throw new Error("EMPTY_AI_RESPONSE");
+
+  } catch (error: any) {
+    // Deep log for debugging (only visible in dev console)
+    console.error("The Forge AI Troubleshoot Log:", error);
     
-    // Fallback message with contact details as strictly requested by the user.
+    // Exact brand-standard fallback message
     return "I am currently experiencing a high volume of inquiries. Please try again in a moment or contact our office directly for immediate assistance with our exclusive portfolio.\n\nContact: Whatsapp/call +234 810 613 3572 | Email: theforgeproperties@gmail.com";
   }
 };

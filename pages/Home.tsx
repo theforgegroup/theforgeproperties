@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Award, Clock } from 'lucide-react';
+import { ArrowRight, Shield, Award, Clock, Loader2 } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../context/PropertyContext';
 import { SEO } from '../components/SEO';
 
 export const Home: React.FC = () => {
-  const { properties } = useProperties();
+  const { properties, isLoading } = useProperties();
   
   const featuredOnly = properties.filter(p => p.featured);
   const displayProperties = featuredOnly.length > 0 
@@ -83,6 +82,18 @@ export const Home: React.FC = () => {
     ]
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <SEO title="Loading The Forge..." />
+        <div className="text-center">
+          <Loader2 size={40} className="animate-spin text-forge-gold mx-auto mb-4" />
+          <p className="font-serif italic text-slate-400 tracking-widest uppercase text-xs">Entering The Forge...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <SEO 
@@ -92,7 +103,7 @@ export const Home: React.FC = () => {
         schema={{ "@graph": [homeSchema, navigationSchema, faqSchema] }}
       />
       
-      {/* Hero Section - Optimized for Mobile Viewports */}
+      {/* Hero Section */}
       <section className="relative h-[90vh] md:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
@@ -140,7 +151,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Curated Collection Grid - Responsive Padding */}
+      {/* Curated Collection Grid */}
       <section className="py-16 md:py-24 bg-slate-50 border-t border-slate-200">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end mb-10 gap-4 text-center sm:text-left">
