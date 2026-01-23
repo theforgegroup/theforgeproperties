@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen } from 'lucide-react';
@@ -28,7 +27,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row max-w-full overflow-x-hidden">
       {/* Mobile Header */}
       <div className="lg:hidden bg-forge-navy text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
         <div className="flex items-center gap-3 text-forge-gold">
@@ -37,7 +36,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="text-white hover:text-forge-gold transition-colors"
+          className="text-white hover:text-forge-gold transition-colors focus:outline-none"
         >
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -46,7 +45,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -65,7 +64,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
           
           {/* Navigation */}
-          <nav className="space-y-3 lg:space-y-4 flex-grow">
+          <nav className="space-y-3 lg:space-y-4 flex-grow overflow-y-auto">
             {navItems.map((item) => {
               // Check if active. Handle nested routes
               const isActive = location.pathname === item.path || 
@@ -87,7 +86,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     navigate(item.path);
                     setIsSidebarOpen(false);
                   }}
-                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-colors ${activeClass}`}
+                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 ${activeClass}`}
                 >
                   <item.icon size={20} className="lg:w-6 lg:h-6" />
                   <span className="font-medium text-base lg:text-lg">{item.label}</span>
@@ -100,7 +99,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <div className="border-t border-slate-700 pt-6 lg:pt-8 mt-auto">
              <button 
               onClick={handleLogout}
-              className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors text-base uppercase tracking-wider font-bold w-full"
+              className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors text-base uppercase tracking-wider font-bold w-full p-2"
             >
               <LogOut size={20} /> Logout
             </button>
@@ -109,7 +108,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto w-full bg-slate-50">
+      <div className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto w-full bg-slate-50 min-w-0">
         {children}
       </div>
     </div>

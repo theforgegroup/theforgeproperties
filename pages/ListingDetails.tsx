@@ -97,16 +97,16 @@ export const ListingDetails: React.FC = () => {
         </Link>
       </div>
 
-      <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative">
+      <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative overflow-hidden">
         <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
         
         {property.images.length > 1 && (
-          <div className="absolute bottom-6 left-6 flex gap-2">
+          <div className="absolute bottom-6 left-4 right-4 md:left-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             {property.images.map((img, idx) => (
               <button 
                 key={idx} 
                 onClick={() => setActiveImage(idx)}
-                className={`w-16 h-12 border-2 transition-all ${activeImage === idx ? 'border-forge-gold scale-110 shadow-lg' : 'border-white/50 opacity-70 hover:opacity-100'}`}
+                className={`w-16 h-12 flex-shrink-0 border-2 transition-all ${activeImage === idx ? 'border-forge-gold scale-105 shadow-lg' : 'border-white/50 opacity-70 hover:opacity-100'}`}
               >
                 <img src={img} className="w-full h-full object-cover" />
               </button>
@@ -132,7 +132,7 @@ export const ListingDetails: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-4 md:gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600 overflow-x-auto">
+            <div className="flex gap-4 md:gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600 overflow-x-auto no-scrollbar">
                <div className="flex items-center gap-2 whitespace-nowrap">
                  <Bed className="text-forge-gold" size={20} />
                  <span className="font-bold text-forge-navy">{property.bedrooms}</span> Beds

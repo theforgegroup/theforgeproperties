@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Search, BookOpen, Phone, User } from 'lucide-react';
@@ -32,7 +31,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav 
-      className={`fixed w-full z-50 transition-all duration-300 ${
+      className={`fixed w-full z-[100] transition-all duration-300 ${
         scrolled || !isHome
           ? 'bg-forge-navy/95 backdrop-blur-md text-white shadow-lg py-3' 
           : 'bg-transparent text-white py-6'
@@ -70,7 +69,7 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden text-white hover:text-forge-gold transition-colors"
+          className="md:hidden text-white hover:text-forge-gold transition-colors focus:outline-none"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -78,22 +77,26 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      {isOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-forge-navy border-t border-slate-800 shadow-xl">
-          <div className="flex flex-col py-4 px-6 space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="flex items-center gap-3 text-slate-300 hover:text-forge-gold py-2 text-lg"
-              >
-                {link.icon}
-                {link.name}
-              </Link>
-            ))}
-          </div>
+      <div className={`md:hidden absolute top-full left-0 w-full bg-forge-navy border-t border-slate-800 shadow-xl overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="flex flex-col py-6 px-6 space-y-6 bg-forge-navy">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className="flex items-center gap-4 text-slate-300 hover:text-forge-gold py-1 text-lg font-medium"
+            >
+              <span className="text-forge-gold opacity-80">{link.icon}</span>
+              {link.name}
+            </Link>
+          ))}
+          <Link 
+            to="/listings"
+            className="block text-center border border-forge-gold text-forge-gold px-5 py-4 text-sm uppercase tracking-widest font-bold"
+          >
+            Find a Home
+          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
