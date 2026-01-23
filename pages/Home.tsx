@@ -84,11 +84,11 @@ export const Home: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-forge-navy">
         <SEO title="Loading The Forge..." />
         <div className="text-center">
-          <Loader2 size={40} className="animate-spin text-forge-gold mx-auto mb-4" />
-          <p className="font-serif italic text-slate-400 tracking-widest uppercase text-xs">Entering The Forge...</p>
+          <Loader2 size={48} className="animate-spin text-forge-gold mx-auto mb-6" />
+          <p className="font-serif italic text-forge-gold/60 tracking-[0.3em] uppercase text-[10px]">Entering The Forge Portfolio</p>
         </div>
       </div>
     );

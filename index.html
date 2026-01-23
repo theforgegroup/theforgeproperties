@@ -19,11 +19,9 @@
     <!-- Polyfill 'process' safely to preserve platform-injected keys -->
     <script>
       (function() {
-        if (!window.process) {
-          window.process = { env: { NODE_ENV: 'production' } };
-        } else if (!window.process.env) {
-          window.process.env = { NODE_ENV: 'production' };
-        } else if (!window.process.env.NODE_ENV) {
+        window.process = window.process || {};
+        window.process.env = window.process.env || {};
+        if (!window.process.env.NODE_ENV) {
           window.process.env.NODE_ENV = 'production';
         }
         window.global = window;
@@ -54,10 +52,17 @@
       }
     </script>
     <style>
+      /* Prevent the 'whitish' flash by setting the base color to Forge Navy immediately */
+      html, body { 
+        background-color: #0F172A; 
+        margin: 0;
+        padding: 0;
+      }
+
       ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #f1f1f1; }
+      ::-webkit-scrollbar-track { background: #020617; }
       ::-webkit-scrollbar-thumb { background: #334155; }
-      ::-webkit-scrollbar-thumb:hover { background: #0F172A; }
+      ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
       
       @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -112,7 +117,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 antialiased font-sans">
+  <body class="bg-forge-navy text-slate-900 antialiased font-sans">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>

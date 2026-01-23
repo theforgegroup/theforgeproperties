@@ -21,11 +21,11 @@ export const ListingDetails: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-forge-navy">
         <SEO title="Loading Portfolio..." />
         <div className="text-center">
-          <Loader2 size={40} className="animate-spin text-forge-gold mx-auto mb-4" />
-          <p className="font-serif italic text-slate-400">Opening The Forge Portfolio...</p>
+          <Loader2 size={48} className="animate-spin text-forge-gold mx-auto mb-6" />
+          <p className="font-serif italic text-forge-gold/60 tracking-widest uppercase text-[10px]">Accessing The Forge Portfolio</p>
         </div>
       </div>
     );
