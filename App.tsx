@@ -19,7 +19,6 @@ import { AdminSettings } from './pages/AdminSettings';
 import { AdminBlog } from './pages/AdminBlog';
 import { AdminPostForm } from './pages/AdminPostForm';
 import { AdminAgents } from './pages/AdminAgents';
-import { AdminSales } from './pages/AdminSales';
 import { AdminPayouts } from './pages/AdminPayouts';
 import { AgentPortal } from './pages/AgentPortal';
 import { AgentDashboard } from './pages/AgentDashboard';
@@ -36,15 +35,36 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Handle Referral Redirects
+const ReferralRedirect = () => {
+  const { code } = useParams();
+  useEffect(() => {
+    // Logic to log click in Supabase 'agent_clicks' table would go here
+    console.log(`Referral clicked for code: ${code}`);
+  }, [code]);
+  return <Navigate to="/listings" replace />;
+};
+
 const AdminEntry: React.FC = () => {
   const { isAuthenticated, userRole } = useAuth();
   return (isAuthenticated && userRole === 'Admin') ? <Admin /> : <AdminLogin />;
 };
 
 const AppLayout: React.FC = () => {
+  const { settings } = useProperties();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAgentDashboardRoute = location.pathname.startsWith('/agent/dashboard');
+
+  useEffect(() => {
+    const agentImage = settings?.listing_agent?.image;
+    if (agentImage) {
+      const links = document.querySelectorAll("link[rel*='icon']");
+      links.forEach(link => {
+        (link as HTMLLinkElement).href = agentImage;
+      });
+    }
+  }, [settings?.listing_agent?.image]);
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900 selection:bg-forge-gold selection:text-forge-navy">
@@ -60,13 +80,14 @@ const AppLayout: React.FC = () => {
           <Route path="/blog/:slug" element={<BlogPostDetails />} />
           <Route path="/contact" element={<Contact />} />
           
+          {/* Agent Portal Routes */}
           <Route path="/agent/portal" element={<AgentPortal />} />
           <Route path="/agent/dashboard" element={<ProtectedRoute role="Agent"><AgentDashboard /></ProtectedRoute>} />
-          
+          <Route path="/ref/:code" element={<ReferralRedirect />} />
+
           <Route path="/admin" element={<AdminEntry />} />
           <Route path="/admin/crm" element={<ProtectedRoute role="Admin"><AdminCRM /></ProtectedRoute>} />
           <Route path="/admin/agents" element={<ProtectedRoute role="Admin"><AdminAgents /></ProtectedRoute>} />
-          <Route path="/admin/sales" element={<ProtectedRoute role="Admin"><AdminSales /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute role="Admin"><AdminPayouts /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute role="Admin"><AdminAnalytics /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute role="Admin"><AdminSettings /></ProtectedRoute>} />

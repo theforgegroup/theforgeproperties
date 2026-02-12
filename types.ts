@@ -1,4 +1,5 @@
 
+
 export enum PropertyType {
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
@@ -14,6 +15,9 @@ export enum ListingStatus {
   SOLD = 'Sold'
 }
 
+/**
+ * Interface for property search filters
+ */
 export interface FilterCriteria {
   minPrice?: number;
   maxPrice?: number;
@@ -71,20 +75,16 @@ export interface Agent {
   pending_balance: number;
   total_clicks: number;
   total_leads: number;
-  bank_details?: string;
 }
 
 export interface AgentSale {
   id: string;
   agent_id: string;
-  agent_name: string;
   client_name: string;
-  property_id: string;
   property_name: string;
-  sale_amount: number;
   deal_status: 'Pending' | 'Under Review' | 'Approved' | 'Paid';
-  commission_percentage: number;
   commission_amount: number;
+  payment_status: 'Unpaid' | 'Paid';
   date: string;
 }
 
@@ -95,16 +95,6 @@ export interface PayoutRequest {
   amount: number;
   status: 'Pending' | 'Approved' | 'Rejected';
   date: string;
-  payment_reference?: string;
-}
-
-export interface AuditLog {
-  id: string;
-  action: string;
-  performed_by: string;
-  target_id: string;
-  details: string;
-  timestamp: string;
 }
 
 export interface Subscriber {
@@ -148,9 +138,6 @@ export interface SiteSettings {
   listing_agent: ListingAgent;
   whatsapp_group_link: string;
   min_payout_amount: number;
-  default_commission_rate: number;
-  agent_announcement?: string;
-  show_agent_banner: boolean;
 }
 
 export interface ChatMessage {
