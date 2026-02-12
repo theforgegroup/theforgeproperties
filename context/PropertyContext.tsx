@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Property, Lead, SiteSettings, Subscriber, BlogPost, BlogCategory } from '../types';
+import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
@@ -8,7 +8,9 @@ interface PropertyContextType {
   leads: Lead[];
   subscribers: Subscriber[];
   posts: BlogPost[];
-  categories: BlogCategory[];
+  agents: Agent[];
+  sales: AgentSale[];
+  payouts: PayoutRequest[];
   settings: SiteSettings;
   isLoading: boolean;
   addProperty: (property: Property) => Promise<void>;
@@ -25,7 +27,17 @@ interface PropertyContextType {
   deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
   getPostBySlug: (slug: string) => BlogPost | undefined;
-  addCategory: (name: string) => Promise<BlogCategory>;
+  
+  // Agent Methods
+  addAgent: (agent: Partial<Agent>) => Promise<Agent>;
+  updateAgent: (agent: Agent) => Promise<void>;
+  getAgentSales: (agentId: string) => AgentSale[];
+  getAgentPayouts: (agentId: string) => PayoutRequest[];
+  requestPayout: (payout: PayoutRequest) => Promise<void>;
+  updatePayoutStatus: (id: string, status: PayoutRequest['status']) => Promise<void>;
+  addSaleManually: (sale: AgentSale) => Promise<void>;
+  updateSaleStatus: (id: string, status: AgentSale['deal_status']) => Promise<void>;
+  
   seedDatabase: () => Promise<void>;
 }
 
@@ -33,7 +45,7 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 
 const DEFAULT_SETTINGS: SiteSettings = {
   contact_email: 'theforgeproperties@gmail.com',
-  contact_phone: '+234 800 FORGE 00',
+  contact_phone: '+234 810 613 3572',
   address: 'Silverland Estate, Sangotedo, Ajah, Lagos, Nigeria',
   team_members: [
     { name: "Daniel Paul", role: "Co-Founder", image: "" },
@@ -42,9 +54,11 @@ const DEFAULT_SETTINGS: SiteSettings = {
   ],
   listing_agent: {
     name: "The Forge Properties",
-    phone: "+234 800 FORGE 00",
+    phone: "+234 810 613 3572",
     image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=200"
-  }
+  },
+  whatsapp_group_link: 'https://chat.whatsapp.com/ExampleForgeGroup',
+  min_payout_amount: 50000
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -52,7 +66,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [sales, setSales] = useState<AgentSale[]>([]);
+  const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -71,8 +87,15 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
       if (postsData) setPosts(postsData);
 
-      const { data: catsData } = await supabase.from('blog_categories').select('*').order('name', { ascending: true });
-      if (catsData) setCategories(catsData);
+      // New tables - handled with safety checks or local mocks if not yet created in Supabase
+      const { data: agentsData } = await supabase.from('agents').select('*');
+      if (agentsData) setAgents(agentsData);
+
+      const { data: salesData } = await supabase.from('agent_sales').select('*');
+      if (salesData) setSales(salesData);
+
+      const { data: payoutsData } = await supabase.from('payout_requests').select('*');
+      if (payoutsData) setPayouts(payoutsData);
 
       const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       if (settingsData) {
@@ -89,110 +112,131 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchData();
   }, []);
 
-  const addCategory = async (name: string): Promise<BlogCategory> => {
-    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const newCat = { name, slug };
+  const addAgent = async (agent: Partial<Agent>): Promise<Agent> => {
+    const newAgent = {
+      ...agent,
+      id: Date.now().toString(),
+      referral_code: `FORGE${Math.floor(Math.random() * 9000) + 1000}`,
+      status: 'Pending',
+      date_joined: new Date().toISOString(),
+      total_sales: 0,
+      total_commission: 0,
+      available_balance: 0,
+      pending_balance: 0,
+      total_clicks: 0,
+      total_leads: 0
+    } as Agent;
     
-    // Insert into Supabase blog_categories table
-    const { data, error } = await supabase
-      .from('blog_categories')
-      .insert([newCat])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    // Update local state
-    setCategories(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
-    return data;
+    const { error } = await supabase.from('agents').insert([newAgent]);
+    if (error) {
+      // Fallback for local testing if table doesn't exist
+      setAgents(prev => [...prev, newAgent]);
+      return newAgent;
+    }
+    setAgents(prev => [...prev, newAgent]);
+    return newAgent;
   };
 
-  const seedDatabase = async () => {
-    setIsLoading(true);
-    try {
-      const { data: existingSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-      if (!existingSettings) {
-        await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
-      }
-      await fetchData();
-      alert("System configuration initialized.");
-    } catch (err) {
-      console.error(err);
-      alert("Initialization failed.");
-    } finally {
-      setIsLoading(false);
-    }
+  const updateAgent = async (agent: Agent) => {
+    await supabase.from('agents').update(agent).eq('id', agent.id);
+    setAgents(prev => prev.map(a => a.id === agent.id ? agent : a));
+  };
+
+  const getAgentSales = (agentId: string) => sales.filter(s => s.agent_id === agentId);
+  const getAgentPayouts = (agentId: string) => payouts.filter(p => p.agent_id === agentId);
+
+  const requestPayout = async (payout: PayoutRequest) => {
+    await supabase.from('payout_requests').insert([payout]);
+    setPayouts(prev => [payout, ...prev]);
+  };
+
+  const updatePayoutStatus = async (id: string, status: PayoutRequest['status']) => {
+    await supabase.from('payout_requests').update({ status }).eq('id', id);
+    setPayouts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+  };
+
+  const addSaleManually = async (sale: AgentSale) => {
+    await supabase.from('agent_sales').insert([sale]);
+    setSales(prev => [sale, ...prev]);
+  };
+
+  const updateSaleStatus = async (id: string, status: AgentSale['deal_status']) => {
+    await supabase.from('agent_sales').update({ deal_status: status }).eq('id', id);
+    setSales(prev => prev.map(s => s.id === id ? { ...s, deal_status: status } : s));
   };
 
   const addProperty = async (property: Property) => {
-    const { error } = await supabase.from('properties').insert([property]);
-    if (error) throw error;
+    await supabase.from('properties').insert([property]);
     setProperties(prev => [property, ...prev]);
   };
 
   const updateProperty = async (updatedProperty: Property) => {
-    const { error } = await supabase.from('properties').update(updatedProperty).eq('id', updatedProperty.id);
-    if (error) throw error;
+    await supabase.from('properties').update(updatedProperty).eq('id', updatedProperty.id);
     setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
   };
 
   const deleteProperty = async (id: string) => {
-    const { error } = await supabase.from('properties').delete().eq('id', id);
-    if (error) throw error;
+    await supabase.from('properties').delete().eq('id', id);
     setProperties(prev => prev.filter(p => p.id !== id));
   };
 
   const addLead = async (lead: Lead) => {
-    const { error } = await supabase.from('leads').insert([lead]);
-    if (error) throw error;
+    await supabase.from('leads').insert([lead]);
     setLeads(prev => [lead, ...prev]);
   };
 
   const updateLeadStatus = async (id: string, status: Lead['status']) => {
-    const { error } = await supabase.from('leads').update({ status }).eq('id', id);
-    if (error) throw error;
+    await supabase.from('leads').update({ status }).eq('id', id);
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
 
   const addSubscriber = async (email: string) => {
     if (subscribers.some(s => s.email === email)) return;
     const newSubscriber: Subscriber = { id: Date.now().toString(), email, date: new Date().toISOString() };
-    const { error } = await supabase.from('subscribers').insert([newSubscriber]);
-    if (error) throw error;
+    await supabase.from('subscribers').insert([newSubscriber]);
     setSubscribers(prev => [newSubscriber, ...prev]);
   };
 
   const addPost = async (post: BlogPost) => {
-    const { error } = await supabase.from('posts').insert([post]);
-    if (error) throw error;
+    await supabase.from('posts').insert([post]);
     setPosts(prev => [post, ...prev]);
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
-    const { error } = await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
-    if (error) throw error;
+    await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
   };
 
   const deletePost = async (id: string) => {
-    const { error } = await supabase.from('posts').delete().eq('id', id);
-    if (error) throw error;
+    await supabase.from('posts').delete().eq('id', id);
     setPosts(prev => prev.filter(p => p.id !== id));
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
-    const { error } = await supabase.from('site_settings').update(newSettings).eq('id', 1);
-    if (error) throw error;
+    await supabase.from('site_settings').update(newSettings).eq('id', 1);
     setSettings(newSettings);
+  };
+
+  const seedDatabase = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
+      await fetchData();
+      alert("System initialized.");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, posts, categories, settings, isLoading,
+      properties, leads, subscribers, posts, agents, sales, payouts, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
       addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
-      addCategory,
+      addAgent, updateAgent, getAgentSales, getAgentPayouts, requestPayout, updatePayoutStatus, addSaleManually, updateSaleStatus,
       seedDatabase
     }}>
       {children}

@@ -1,4 +1,5 @@
 
+
 export enum PropertyType {
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
@@ -12,6 +13,17 @@ export enum ListingStatus {
   FOR_RENT = 'For Rent',
   SHORT_LET = 'Short Let',
   SOLD = 'Sold'
+}
+
+/**
+ * Interface for property search filters
+ */
+export interface FilterCriteria {
+  minPrice?: number;
+  maxPrice?: number;
+  minBeds?: number;
+  type?: PropertyType;
+  location?: string;
 }
 
 export interface Property {
@@ -49,16 +61,46 @@ export interface Lead {
   type: 'General Inquiry' | 'Viewing Request' | 'Offer';
 }
 
+export interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  referral_code: string;
+  status: 'Pending' | 'Active' | 'Suspended';
+  date_joined: string;
+  total_sales: number;
+  total_commission: number;
+  available_balance: number;
+  pending_balance: number;
+  total_clicks: number;
+  total_leads: number;
+}
+
+export interface AgentSale {
+  id: string;
+  agent_id: string;
+  client_name: string;
+  property_name: string;
+  deal_status: 'Pending' | 'Under Review' | 'Approved' | 'Paid';
+  commission_amount: number;
+  payment_status: 'Unpaid' | 'Paid';
+  date: string;
+}
+
+export interface PayoutRequest {
+  id: string;
+  agent_id: string;
+  agent_name: string;
+  amount: number;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  date: string;
+}
+
 export interface Subscriber {
   id: string;
   email: string;
   date: string;
-}
-
-export interface BlogCategory {
-  id: string;
-  name: string;
-  slug: string;
 }
 
 export interface BlogPost {
@@ -94,15 +136,8 @@ export interface SiteSettings {
   address: string;
   team_members: TeamMember[];
   listing_agent: ListingAgent;
-}
-
-export interface FilterCriteria {
-  minPrice?: number;
-  maxPrice?: number;
-  minBeds?: number;
-  type?: PropertyType;
-  location?: string;
-  searchQuery?: string;
+  whatsapp_group_link: string;
+  min_payout_amount: number;
 }
 
 export interface ChatMessage {

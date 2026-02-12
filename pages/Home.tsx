@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Award, Clock, Loader2 } from 'lucide-react';
+import { ArrowRight, Shield, Award, Clock, Loader2, Users, ShieldCheck } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useProperties } from '../context/PropertyContext';
+import { useAuth } from '../context/AuthContext';
 import { SEO } from '../components/SEO';
 
 export const Home: React.FC = () => {
   const { properties, isLoading } = useProperties();
+  const { isAuthenticated, userRole } = useAuth();
   
   const featuredOnly = properties.filter(p => p.featured);
   const displayProperties = featuredOnly.length > 0 
@@ -56,28 +59,12 @@ export const Home: React.FC = () => {
         "position": 4,
         "name": "Private Consultation",
         "url": "https://theforgeproperties.com/contact"
-      }
-    ]
-  };
-
-  const faqSchema = {
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Where does The Forge Properties operate?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Forge Properties specializes in high-end luxury real estate in Nigeria, primarily focusing on Lagos (Ikoyi, Banana Island, Lekki) and Abuja (Maitama, Asokoro, Guzape)."
-        }
       },
       {
-        "@type": "Question",
-        "name": "Does The Forge Properties offer off-market listings?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, we maintain an exclusive collection of off-market properties for our high-net-worth clients who prioritize discretion."
-        }
+        "@type": "SiteNavigationElement",
+        "position": 5,
+        "name": "Agent Portal",
+        "url": "https://theforgeproperties.com/agent/portal"
       }
     ]
   };
@@ -100,7 +87,7 @@ export const Home: React.FC = () => {
         title="Luxury Real Estate Nigeria | Defined by Excellence" 
         description="Explore Nigerias most prestigious real estate portfolio. The Forge Properties offers uncompromised luxury residences in Banana Island, Ikoyi, and Maitama."
         keywords="luxury real estate lagos, mansions for sale lagos, banana island houses, real estate nigeria, the forge group"
-        schema={{ "@graph": [homeSchema, navigationSchema, faqSchema] }}
+        schema={{ "@graph": [homeSchema, navigationSchema] }}
       />
       
       {/* Hero Section */}
@@ -178,6 +165,48 @@ export const Home: React.FC = () => {
               <p className="text-slate-500 text-sm">New exclusive listings are currently being added.</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* NEW: Agent CTA Section */}
+      <section className="py-24 bg-forge-navy relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-10">
+          <img 
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000" 
+            className="w-full h-full object-cover" 
+            alt="Corporate Tower"
+          />
+        </div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-4xl mx-auto bg-forge-dark/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 shadow-2xl">
+            <div className="flex-1 text-center md:text-left">
+              <span className="text-forge-gold text-xs font-bold uppercase tracking-[0.3em] mb-4 block">Realtor Partnership</span>
+              <h2 className="text-3xl md:text-5xl font-serif text-white font-bold mb-6">Join our elite network of <span className="text-forge-gold">high-performing</span> agents.</h2>
+              <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+                Unlock exclusive inventory, track your commissions in real-time, and leverage the power of The Forge brand to close bigger deals.
+              </p>
+              <Link 
+                to={isAuthenticated && userRole === 'Agent' ? "/agent/dashboard" : "/agent/portal"}
+                className="inline-flex items-center gap-4 bg-forge-gold text-forge-navy px-10 py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl group"
+              >
+                Access Realtor Portal <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <div className="hidden md:flex flex-col gap-6 w-1/3">
+               {[
+                 { icon: ShieldCheck, title: "Secure Payouts" },
+                 { icon: Users, title: "Network Support" },
+                 { icon: Award, title: "Elite Inventory" }
+               ].map((item, i) => (
+                 <div key={i} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
+                   <div className="w-10 h-10 bg-forge-gold/10 rounded-full flex items-center justify-center text-forge-gold">
+                      <item.icon size={20} />
+                   </div>
+                   <span className="text-white font-bold text-xs uppercase tracking-widest">{item.title}</span>
+                 </div>
+               ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

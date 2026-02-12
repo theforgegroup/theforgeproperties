@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MapPin, Phone, Mail, Check } from 'lucide-react';
+import { Instagram, MapPin, Phone, Mail, Check, ShieldCheck } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
+import { useAuth } from '../context/AuthContext';
 
 const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
@@ -12,6 +13,7 @@ const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: 
 
 export const Footer: React.FC = () => {
   const { settings, addSubscriber } = useProperties();
+  const { isAuthenticated, userRole } = useAuth();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -50,6 +52,15 @@ export const Footer: React.FC = () => {
               <li><Link to="/blog" className="hover:text-white transition-colors">Journal & Insights</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">The Team</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li className="pt-2 border-t border-slate-800">
+                <Link 
+                  to={isAuthenticated && userRole === 'Agent' ? "/agent/dashboard" : "/agent/portal"} 
+                  className="text-forge-gold flex items-center gap-2 hover:text-white transition-colors group"
+                >
+                  <ShieldCheck size={16} className="group-hover:scale-110 transition-transform" />
+                  Realtor Portal
+                </Link>
+              </li>
             </ul>
           </div>
 
