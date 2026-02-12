@@ -1,5 +1,4 @@
 
-
 export enum PropertyType {
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
@@ -15,11 +14,12 @@ export enum ListingStatus {
   SOLD = 'Sold'
 }
 
-// Added TeamMember interface to fix import error in AdminSettings.tsx
-export interface TeamMember {
-  name: string;
-  role: string;
-  image: string;
+export interface FilterCriteria {
+  minPrice?: number;
+  maxPrice?: number;
+  minBeds?: number;
+  type?: PropertyType;
+  location?: string;
 }
 
 export interface Property {
@@ -66,10 +66,9 @@ export interface Agent {
   status: 'Pending' | 'Active' | 'Suspended';
   date_joined: string;
   total_sales: number;
-  total_earned: number; // Sum of all approved commissions
-  pending_balance: number; // Approved but not yet "Available"
-  available_balance: number; // Ready for payout request
-  total_paid: number; // Sum of all processed payouts
+  total_commission: number;
+  available_balance: number;
+  pending_balance: number;
   total_clicks: number;
   total_leads: number;
   bank_details?: string;
@@ -84,10 +83,8 @@ export interface AgentSale {
   property_name: string;
   sale_amount: number;
   deal_status: 'Pending' | 'Under Review' | 'Approved' | 'Paid';
-  commission_type: 'Percentage' | 'Fixed';
-  commission_percentage?: number;
+  commission_percentage: number;
   commission_amount: number;
-  is_available: boolean; // True when admin confirms funds
   date: string;
 }
 
@@ -96,7 +93,7 @@ export interface PayoutRequest {
   agent_id: string;
   agent_name: string;
   amount: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Paid';
+  status: 'Pending' | 'Approved' | 'Rejected';
   date: string;
   payment_reference?: string;
 }
@@ -110,16 +107,10 @@ export interface AuditLog {
   timestamp: string;
 }
 
-export interface SiteSettings {
-  contact_email: string;
-  contact_phone: string;
-  address: string;
-  team_members: any[];
-  listing_agent: any;
-  whatsapp_group_link: string;
-  min_payout_amount: number;
-  default_commission_rate: number;
-  show_agent_banner: boolean;
+export interface Subscriber {
+  id: string;
+  email: string;
+  date: string;
 }
 
 export interface BlogPost {
@@ -133,24 +124,36 @@ export interface BlogPost {
   date: string; 
   category: string;
   status: 'Published' | 'Draft';
+  meta_description?: string;
+  keyphrase?: string;
 }
 
-export interface Subscriber {
-  id: string;
-  email: string;
-  date: string;
+export interface TeamMember {
+  name: string;
+  role: string;
+  image: string;
+}
+
+export interface ListingAgent {
+  name: string;
+  phone: string;
+  image: string;
+}
+
+export interface SiteSettings {
+  contact_email: string;
+  contact_phone: string;
+  address: string;
+  team_members: TeamMember[];
+  listing_agent: ListingAgent;
+  whatsapp_group_link: string;
+  min_payout_amount: number;
+  default_commission_rate: number;
+  agent_announcement?: string;
+  show_agent_banner: boolean;
 }
 
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
-}
-
-// Added FilterCriteria interface to fix import error in Listings.tsx
-export interface FilterCriteria {
-  minPrice?: number;
-  maxPrice?: number;
-  minBeds?: number;
-  type?: PropertyType;
-  location?: string;
 }

@@ -15,6 +15,7 @@ interface PropertyContextType {
   settings: SiteSettings;
   isLoading: boolean;
   
+  // Existing Methods
   addProperty: (property: Property) => Promise<void>;
   updateProperty: (property: Property) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
@@ -24,16 +25,18 @@ interface PropertyContextType {
   addSubscriber: (email: string) => Promise<void>;
   updateSettings: (settings: SiteSettings) => Promise<void>;
   
-  // Agent & Wallet Logic
+  // Agent Methods
   addAgent: (agent: Partial<Agent>) => Promise<Agent>;
   updateAgent: (agent: Agent) => Promise<void>;
+  adjustAgentWallet: (agentId: string, amount: number, reason: string) => Promise<void>;
+  
+  // Sales & Deals
   addSale: (sale: AgentSale) => Promise<void>;
   updateSaleStatus: (saleId: string, status: AgentSale['deal_status']) => Promise<void>;
-  makeCommissionAvailable: (saleId: string) => Promise<void>;
   
-  // Payout Logic
+  // Payouts
   requestPayout: (payout: PayoutRequest) => Promise<void>;
-  processPayout: (payoutId: string, status: PayoutRequest['status'], reference?: string) => Promise<void>;
+  processPayout: (payoutId: string, status: 'Approved' | 'Rejected', reference?: string) => Promise<void>;
   
   seedDatabase: () => Promise<void>;
 }
@@ -45,7 +48,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   contact_phone: '+234 810 613 3572',
   address: 'Silverland Estate, Sangotedo, Ajah, Lagos, Nigeria',
   team_members: [],
-  listing_agent: { name: "The Forge Properties", phone: "+234 810 613 3572", image: "" },
+  listing_agent: { name: "", phone: "", image: "" },
   whatsapp_group_link: 'https://chat.whatsapp.com/TheForgeAgentsOfficial',
   min_payout_amount: 50000,
   default_commission_rate: 5,
@@ -69,25 +72,36 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const { data: props } = await supabase.from('properties').select('*');
       if (props) setProperties(props);
-      const { data: sls } = await supabase.from('agent_sales').select('*');
-      if (sls) setSales(sls);
+
+      const { data: lds } = await supabase.from('leads').select('*');
+      if (lds) setLeads(lds);
+
       const { data: ags } = await supabase.from('agents').select('*');
       if (ags) setAgents(ags);
+
+      const { data: sls } = await supabase.from('agent_sales').select('*');
+      if (sls) setSales(sls);
+
       const { data: pay } = await supabase.from('payout_requests').select('*');
       if (pay) setPayouts(pay);
+
       const { data: sets } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       if (sets) setSettings({ ...DEFAULT_SETTINGS, ...sets });
-    } catch (err) { console.error(err); } finally { setIsLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
 
-  const logAudit = async (action: string, agent_id: string, details: string) => {
+  const logAction = async (action: string, target_id: string, details: string) => {
     const log: AuditLog = {
       id: Date.now().toString(),
       action,
       performed_by: 'Corporate Admin',
-      target_id: agent_id,
+      target_id,
       details,
       timestamp: new Date().toISOString()
     };
@@ -98,7 +112,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const addSale = async (sale: AgentSale) => {
     await supabase.from('agent_sales').insert([sale]);
     setSales(prev => [sale, ...prev]);
-    await logAudit('Deal Recorded', sale.agent_id, `Property: ${sale.property_name}, Amount: ${sale.sale_amount}`);
+    await logAction('New Sale Created', sale.agent_id, `Property: ${sale.property_name}, Amount: ${sale.sale_amount}`);
   };
 
   const updateSaleStatus = async (saleId: string, status: AgentSale['deal_status']) => {
@@ -108,57 +122,44 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     await supabase.from('agent_sales').update({ deal_status: status }).eq('id', saleId);
     setSales(prev => prev.map(s => s.id === saleId ? { ...s, deal_status: status } : s));
 
+    // Wallet logic: If approved, add to pending or available
     if (status === 'Approved') {
       const agent = agents.find(a => a.id === sale.agent_id);
       if (agent) {
         const updatedAgent = {
           ...agent,
-          pending_balance: (agent.pending_balance || 0) + sale.commission_amount,
-          total_earned: (agent.total_earned || 0) + sale.commission_amount,
-          total_sales: (agent.total_sales || 0) + 1
+          available_balance: agent.available_balance + sale.commission_amount,
+          total_commission: agent.total_commission + sale.commission_amount,
+          total_sales: agent.total_sales + 1
         };
         await updateAgent(updatedAgent);
-        await logAudit('Commission Approved (Pending)', agent.id, `₦${sale.commission_amount.toLocaleString()} added to pending.`);
+        await logAction('Wallet Credit (Sale)', sale.agent_id, `Earned ₦${sale.commission_amount} from ${sale.property_name}`);
       }
     }
   };
 
-  const makeCommissionAvailable = async (saleId: string) => {
-    const sale = sales.find(s => s.id === saleId);
-    if (!sale || sale.is_available) return;
+  const adjustAgentWallet = async (agentId: string, amount: number, reason: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
 
-    await supabase.from('agent_sales').update({ is_available: true }).eq('id', saleId);
-    setSales(prev => prev.map(s => s.id === saleId ? { ...s, is_available: true } : s));
-
-    const agent = agents.find(a => a.id === sale.agent_id);
-    if (agent) {
-      const updatedAgent = {
-        ...agent,
-        available_balance: (agent.available_balance || 0) + sale.commission_amount,
-        pending_balance: (agent.pending_balance || 0) - sale.commission_amount
-      };
-      await updateAgent(updatedAgent);
-      await logAudit('Funds Verified (Available)', agent.id, `₦${sale.commission_amount.toLocaleString()} moved to available balance.`);
-    }
+    const updatedAgent = { ...agent, available_balance: agent.available_balance + amount };
+    await updateAgent(updatedAgent);
+    await logAction('Manual Wallet Adjustment', agentId, `${amount > 0 ? 'Added' : 'Deducted'} ₦${Math.abs(amount)}. Reason: ${reason}`);
   };
 
-  const processPayout = async (payoutId: string, status: PayoutRequest['status'], reference?: string) => {
+  const processPayout = async (payoutId: string, status: 'Approved' | 'Rejected', reference?: string) => {
     const payout = payouts.find(p => p.id === payoutId);
     if (!payout) return;
 
     await supabase.from('payout_requests').update({ status, payment_reference: reference }).eq('id', payoutId);
     setPayouts(prev => prev.map(p => p.id === payoutId ? { ...p, status, payment_reference: reference } : p));
 
-    if (status === 'Paid') {
+    if (status === 'Approved') {
       const agent = agents.find(a => a.id === payout.agent_id);
       if (agent) {
-        const updatedAgent = {
-          ...agent,
-          available_balance: (agent.available_balance || 0) - payout.amount,
-          total_paid: (agent.total_paid || 0) + payout.amount
-        };
+        const updatedAgent = { ...agent, available_balance: agent.available_balance - payout.amount };
         await updateAgent(updatedAgent);
-        await logAudit('Payout Processed', agent.id, `₦${payout.amount.toLocaleString()} disbursed. Ref: ${reference}`);
+        await logAction('Payout Authorized', payout.agent_id, `Amount: ₦${payout.amount}. Ref: ${reference || 'N/A'}`);
       }
     }
   };
@@ -170,8 +171,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       referral_code: `FORGE${Math.floor(Math.random() * 9000) + 1000}`,
       status: 'Pending',
       date_joined: new Date().toISOString(),
-      total_sales: 0, total_earned: 0, pending_balance: 0, available_balance: 0, total_paid: 0,
-      total_clicks: 0, total_leads: 0
+      total_sales: 0,
+      total_commission: 0,
+      available_balance: 0,
+      pending_balance: 0,
+      total_clicks: 0,
+      total_leads: 0
     } as Agent;
     await supabase.from('agents').insert([newAgent]);
     setAgents(prev => [...prev, newAgent]);
@@ -183,22 +188,21 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setAgents(prev => prev.map(a => a.id === agent.id ? agent : a));
   };
 
-  const addProperty = async (p: Property) => { await supabase.from('properties').insert([p]); setProperties(prev => [p, ...prev]); };
+  // Rest of standard methods...
+  const addProperty = async (property: Property) => { await supabase.from('properties').insert([property]); setProperties(prev => [property, ...prev]); };
   const updateProperty = async (p: Property) => { await supabase.from('properties').update(p).eq('id', p.id); setProperties(prev => prev.map(old => old.id === p.id ? p : old)); };
   const deleteProperty = async (id: string) => { await supabase.from('properties').delete().eq('id', id); setProperties(prev => prev.filter(p => p.id !== id)); };
-  const addLead = async (l: Lead) => { await supabase.from('leads').insert([l]); setLeads(prev => [l, ...prev]); };
-  const updateLeadStatus = async (id: string, s: Lead['status']) => { await supabase.from('leads').update({ status: s }).eq('id', id); setLeads(prev => prev.map(l => l.id === id ? { ...l, status: s } : l)); };
-  const addSubscriber = async (e: string) => { const s = { id: Date.now().toString(), email: e, date: new Date().toISOString() }; await supabase.from('subscribers').insert([s]); setSubscribers(prev => [s, ...prev]); };
+  const addLead = async (lead: Lead) => { await supabase.from('leads').insert([lead]); setLeads(prev => [lead, ...prev]); };
+  const updateLeadStatus = async (id: string, status: Lead['status']) => { await supabase.from('leads').update({ status }).eq('id', id); setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l)); };
+  const addSubscriber = async (email: string) => { const sub = { id: Date.now().toString(), email, date: new Date().toISOString() }; await supabase.from('subscribers').insert([sub]); setSubscribers(prev => [sub, ...prev]); };
   const updateSettings = async (s: SiteSettings) => { await supabase.from('site_settings').update(s).eq('id', 1); setSettings(s); };
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, posts: [], agents, sales, payouts, auditLogs, settings, isLoading,
+      properties, leads, subscribers, posts, agents, sales, payouts, auditLogs, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
-      addAgent, updateAgent, addSale, updateSaleStatus, makeCommissionAvailable,
-      requestPayout: async(p) => { await supabase.from('payout_requests').insert([p]); setPayouts(prev => [p, ...prev]); },
-      processPayout,
+      addAgent, updateAgent, adjustAgentWallet, addSale, updateSaleStatus, requestPayout: async(p) => { await supabase.from('payout_requests').insert([p]); setPayouts(prev => [p, ...prev]); }, processPayout,
       seedDatabase: async () => { await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS }); fetchData(); }
     }}>
       {children}
