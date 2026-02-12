@@ -57,7 +57,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     phone: "+234 810 613 3572",
     image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=200"
   },
-  whatsapp_group_link: 'https://chat.whatsapp.com/TheForgeAgentsOfficial',
+  whatsapp_group_link: 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t',
   min_payout_amount: 50000
 };
 
