@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck, Landmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminLayoutProps {
@@ -23,6 +23,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { path: '/admin', label: 'Listings', icon: LayoutDashboard },
     { path: '/admin/crm', label: 'Leads', icon: Users },
     { path: '/admin/agents', label: 'Agents', icon: ShieldCheck },
+    { path: '/admin/sales', label: 'Sales & Deals', icon: Landmark },
     { path: '/admin/payouts', label: 'Payouts', icon: Wallet },
     { path: '/admin/blog', label: 'Blog', icon: BookOpen },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
@@ -31,28 +32,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row max-w-full overflow-x-hidden">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-forge-navy text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <div className="flex items-center gap-3 text-forge-gold">
-          <LayoutDashboard size={24} />
-          <span className="font-bold tracking-widest text-lg uppercase">ADMIN</span>
-        </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="text-white hover:text-forge-gold transition-colors focus:outline-none"
-        >
-          {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </div>
-
-      {/* Overlay for mobile */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
       {/* Sidebar - Responsive */}
       <div className={`
         fixed inset-y-0 left-0 z-50 w-72 lg:w-80 bg-forge-navy text-white flex-shrink-0 
@@ -67,22 +46,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           
           <nav className="space-y-3 lg:space-y-4 flex-grow overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path || 
-                               (item.path === '/admin' && (location.pathname === '/admin' || location.pathname.startsWith('/admin/properties'))) ||
-                               (item.path !== '/admin' && location.pathname.startsWith(item.path));
-              
-              const activeClass = isActive 
-                ? 'bg-slate-800 text-white shadow-lg border-l-4 border-forge-gold' 
-                : 'text-slate-400 hover:text-white hover:bg-white/5';
-              
+              const isActive = location.pathname === item.path || (item.path === '/admin' && location.pathname === '/admin');
               return (
                 <div 
                   key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 ${activeClass}`}
+                  onClick={() => { navigate(item.path); setIsSidebarOpen(false); }}
+                  className={`rounded-lg p-3 lg:p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 ${
+                    isActive ? 'bg-slate-800 text-white shadow-lg border-l-4 border-forge-gold' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
                 >
                   <item.icon size={20} className="lg:w-6 lg:h-6" />
                   <span className="font-medium text-base lg:text-lg">{item.label}</span>
