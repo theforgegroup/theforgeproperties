@@ -57,7 +57,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     phone: "+234 810 613 3572",
     image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=200"
   },
-  whatsapp_group_link: 'https://chat.whatsapp.com/ExampleForgeGroup',
+  whatsapp_group_link: 'https://chat.whatsapp.com/TheForgeAgentsOfficial',
   min_payout_amount: 50000
 };
 
@@ -87,7 +87,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
       if (postsData) setPosts(postsData);
 
-      // New tables - handled with safety checks or local mocks if not yet created in Supabase
       const { data: agentsData } = await supabase.from('agents').select('*');
       if (agentsData) setAgents(agentsData);
 
@@ -129,7 +128,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     const { error } = await supabase.from('agents').insert([newAgent]);
     if (error) {
-      // Fallback for local testing if table doesn't exist
       setAgents(prev => [...prev, newAgent]);
       return newAgent;
     }

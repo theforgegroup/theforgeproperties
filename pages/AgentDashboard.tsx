@@ -22,14 +22,24 @@ export const AgentDashboard: React.FC = () => {
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [isWhatsAppDismissed, setIsWhatsAppDismissed] = useState(false);
 
-  // Agent State (In production, this comes from context/db)
-  const agentSales = getAgentSales(currentUser?.id);
-  const agentPayouts = getAgentPayouts(currentUser?.id);
+  // Real Agent Data
+  const agentSales = getAgentSales(currentUser?.id) || [];
+  const agentPayouts = getAgentPayouts(currentUser?.id) || [];
   
-  // Stats
+  // Dynamic Stats
   const totalEarned = agentSales.reduce((sum, s) => sum + s.commission_amount, 0);
   const pendingComm = agentSales.filter(s => s.deal_status === 'Pending' || s.deal_status === 'Under Review').reduce((sum, s) => sum + s.commission_amount, 0);
-  const availableBal = totalEarned - agentPayouts.filter(p => p.status === 'Approved').reduce((sum, p) => sum + p.amount, 0);
+  const approvedPayouts = agentPayouts.filter(p => p.status === 'Approved').reduce((sum, p) => sum + p.amount, 0);
+  const availableBal = totalEarned - approvedPayouts;
+
+  // Real Activity Logic
+  const activityLog = [...agentSales].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map(sale => ({
+    type: 'sale',
+    title: `Deal ${sale.deal_status}: ${sale.property_name}`,
+    time: new Date(sale.date).toLocaleDateString(),
+    icon: sale.deal_status === 'Paid' ? DollarSign : Award,
+    color: sale.deal_status === 'Paid' ? 'text-green-600' : 'text-blue-600'
+  }));
 
   const referralLink = `forgeproperties.ng/ref/${currentUser?.referral_code || 'CODE'}`;
 
@@ -103,7 +113,7 @@ export const AgentDashboard: React.FC = () => {
               </div>
               <div className="truncate">
                 <p className="text-white font-bold text-sm truncate">{currentUser?.name}</p>
-                <p className="text-slate-500 text-[10px] uppercase tracking-wider">Level 1 Realtor</p>
+                <p className="text-slate-500 text-[10px] uppercase tracking-wider">Accredited Realtor</p>
               </div>
             </div>
             <button 
@@ -132,7 +142,6 @@ export const AgentDashboard: React.FC = () => {
 
         <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-8">
           
-          {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
               <h1 className="text-3xl font-serif text-forge-navy font-bold">Good Day, {currentUser?.name?.split(' ')[0]}</h1>
@@ -148,7 +157,6 @@ export const AgentDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* WhatsApp Banner */}
           {!isWhatsAppDismissed && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
                <div className="absolute top-0 right-0 opacity-10 transform translate-x-1/4 -translate-y-1/4 group-hover:scale-110 transition-transform duration-700">
@@ -181,13 +189,12 @@ export const AgentDashboard: React.FC = () => {
 
           {activeTab === 'overview' && (
             <>
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { label: 'Total Earnings', val: `₦${totalEarned.toLocaleString()}`, sub: 'Lifetime commissions', icon: DollarSign, color: 'text-forge-navy' },
                   { label: 'Available Balance', val: `₦${availableBal.toLocaleString()}`, sub: 'Ready for withdrawal', icon: Wallet, color: 'text-forge-gold' },
-                  { label: 'Total Referrals', val: '24', sub: 'Clicks & Leads', icon: Users, color: 'text-blue-500' },
-                  { label: 'Active Deals', val: agentSales.length.toString(), sub: 'In progress', icon: Award, color: 'text-green-500' },
+                  { label: 'Total Referrals', val: (currentUser?.total_clicks || 0).toString(), sub: 'Clicks & Leads', icon: Users, color: 'text-blue-500' },
+                  { label: 'Active Deals', val: agentSales.filter(s => s.deal_status !== 'Paid').length.toString(), sub: 'In progress', icon: Award, color: 'text-green-500' },
                 ].map((stat, i) => (
                   <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
@@ -195,7 +202,7 @@ export const AgentDashboard: React.FC = () => {
                         <stat.icon size={24} />
                       </div>
                       <span className="text-green-500 text-xs font-bold flex items-center gap-1">
-                        <ArrowUpRight size={14} /> +12%
+                        <ArrowUpRight size={14} /> +0%
                       </span>
                     </div>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">{stat.label}</p>
@@ -206,38 +213,34 @@ export const AgentDashboard: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                 {/* Chart Placeholder */}
                  <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <div className="flex justify-between items-center mb-8">
                       <h3 className="font-serif text-xl text-forge-navy font-bold">Earning Performance</h3>
                       <select className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-xs focus:outline-none">
                         <option>Last 6 Months</option>
-                        <option>Last Year</option>
                       </select>
                     </div>
-                    {/* Simplified SVG Chart */}
                     <div className="h-64 flex items-end justify-between gap-4 pt-4">
-                       {[60, 40, 75, 50, 90, 65].map((h, i) => (
+                       {[20, 30, 15, 45, 10, 5].map((h, i) => (
                          <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                           <div className="w-full bg-slate-50 rounded-lg relative overflow-hidden group" style={{ height: '100%' }}>
+                           <div className="w-full bg-slate-50 rounded-lg relative overflow-hidden h-full">
                               <div 
                                 className="absolute bottom-0 left-0 w-full bg-forge-gold transition-all duration-1000 ease-out" 
                                 style={{ height: `${h}%` }}
                               />
                            </div>
-                           <span className="text-[10px] text-slate-400 font-bold">Month {i+1}</span>
+                           <span className="text-[10px] text-slate-400 font-bold">W {i+1}</span>
                          </div>
                        ))}
                     </div>
                  </div>
 
-                 {/* Recent Activity */}
                  <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="font-serif text-xl text-forge-navy font-bold mb-8">Recent Activity</h3>
                     <div className="space-y-6">
-                       {activityLog.map((log, i) => (
+                       {activityLog.length > 0 ? activityLog.map((log, i) => (
                          <div key={i} className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${log.type === 'sale' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-50 ${log.color}`}>
                                <log.icon size={18} />
                             </div>
                             <div className="flex-grow min-w-0">
@@ -245,7 +248,11 @@ export const AgentDashboard: React.FC = () => {
                                <p className="text-xs text-slate-500">{log.time}</p>
                             </div>
                          </div>
-                       ))}
+                       )) : (
+                         <div className="text-center py-12 text-slate-400 text-sm italic">
+                           No recent activity to show.
+                         </div>
+                       )}
                     </div>
                     <button onClick={() => setActiveTab('sales')} className="w-full mt-8 py-4 border-2 border-slate-50 rounded-xl text-xs font-bold uppercase tracking-widest text-forge-navy hover:bg-slate-50 transition-all">
                        View All Transactions
@@ -285,9 +292,9 @@ export const AgentDashboard: React.FC = () => {
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
-                    { label: 'Link Clicks', val: '412', icon: ArrowUpRight },
-                    { label: 'Leads Generated', val: '18', icon: Users },
-                    { label: 'Conversion Rate', val: '4.3%', icon: TrendingUp },
+                    { label: 'Link Clicks', val: (currentUser?.total_clicks || 0).toString(), icon: ArrowUpRight },
+                    { label: 'Leads Generated', val: (currentUser?.total_leads || 0).toString(), icon: Users },
+                    { label: 'Conversion Rate', val: '0.0%', icon: TrendingUp },
                   ].map((s, i) => (
                     <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm text-center">
                        <div className="w-12 h-12 bg-slate-50 text-forge-navy rounded-full flex items-center justify-center mx-auto mb-4">
@@ -417,7 +424,7 @@ export const AgentDashboard: React.FC = () => {
       {showPayoutModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-forge-navy/80 backdrop-blur-sm" onClick={() => setShowPayoutModal(false)} />
-          <div className="bg-white w-full max-w-md rounded-3xl p-10 relative z-10 shadow-2xl animate-fade-in-up">
+          <div className="bg-white w-full max-w-md rounded-3xl p-10 relative z-10 shadow-2xl">
             <h3 className="text-2xl font-serif text-forge-navy font-bold mb-2">Request Payout</h3>
             <p className="text-slate-500 text-sm mb-8">Funds will be disbursed to your registered bank account.</p>
             
@@ -456,9 +463,3 @@ export const AgentDashboard: React.FC = () => {
     </div>
   );
 };
-
-const activityLog = [
-  { type: 'sale', title: 'Commission Earned (₦1.2M)', time: '2 hours ago', icon: DollarSign },
-  { type: 'lead', title: 'New Referral Lead: Adewale K.', time: '5 hours ago', icon: Users },
-  { type: 'sale', title: 'Deal Approved: Lekki Villa', time: 'Yesterday', icon: Award },
-];
