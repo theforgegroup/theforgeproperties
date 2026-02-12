@@ -3,11 +3,17 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 interface PropertyContextType {
   properties: Property[];
   leads: Lead[];
   subscribers: Subscriber[];
   posts: BlogPost[];
+  categories: Category[];
   agents: Agent[];
   sales: AgentSale[];
   payouts: PayoutRequest[];
@@ -27,6 +33,7 @@ interface PropertyContextType {
   deletePost: (id: string) => Promise<void>;
   getPost: (id: string) => BlogPost | undefined;
   getPostBySlug: (slug: string) => BlogPost | undefined;
+  addCategory: (name: string) => Promise<Category>;
   
   // Agent Methods
   addAgent: (agent: Partial<Agent>) => Promise<Agent>;
@@ -66,6 +73,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([
+    { id: '1', name: 'Market Insights' },
+    { id: '2', name: 'Luxury Lifestyle' },
+    { id: '3', name: 'Investment' }
+  ]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [sales, setSales] = useState<AgentSale[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
@@ -86,6 +98,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
       if (postsData) setPosts(postsData);
+
+      const { data: catsData } = await supabase.from('blog_categories').select('*');
+      if (catsData && catsData.length > 0) setCategories(catsData);
 
       const { data: agentsData } = await supabase.from('agents').select('*');
       if (agentsData) setAgents(agentsData);
@@ -110,6 +125,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     fetchData();
   }, []);
+
+  const addCategory = async (name: string): Promise<Category> => {
+    const newCat = { id: Date.now().toString(), name };
+    const { data, error } = await supabase.from('blog_categories').insert([newCat]).select().single();
+    if (error) {
+      setCategories(prev => [...prev, newCat]);
+      return newCat;
+    }
+    setCategories(prev => [...prev, data]);
+    return data;
+  };
 
   const addAgent = async (agent: Partial<Agent>): Promise<Agent> => {
     const newAgent = {
@@ -230,10 +256,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, posts, agents, sales, payouts, settings, isLoading,
+      properties, leads, subscribers, posts, categories, agents, sales, payouts, settings, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
       addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
+      addCategory,
       addAgent, updateAgent, getAgentSales, getAgentPayouts, requestPayout, updatePayoutStatus, addSaleManually, updateSaleStatus,
       seedDatabase
     }}>

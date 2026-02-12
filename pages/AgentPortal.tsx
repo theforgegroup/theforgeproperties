@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
-import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 
 export const AgentPortal: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'success'>('login');
@@ -15,7 +15,7 @@ export const AgentPortal: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { agentLogin, setAuthenticatedUser } = useAuth();
+  const { agentLogin } = useAuth();
   const { addAgent, settings } = useProperties();
   const navigate = useNavigate();
 
@@ -42,7 +42,7 @@ export const AgentPortal: React.FC = () => {
     setError('');
 
     try {
-      const agent = await addAgent({ name, email, phone });
+      await addAgent({ name, email, phone });
       setMode('success');
     } catch (err: any) {
       setError(err.message || 'Signup failed. Please try again.');
@@ -64,7 +64,7 @@ export const AgentPortal: React.FC = () => {
           </p>
           <div className="space-y-4">
             <a 
-              href={settings.whatsapp_group_link} 
+              href={settings.whatsapp_group_link || 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t'} 
               target="_blank" 
               rel="noopener noreferrer"
               className="block w-full bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-green-600 transition-all shadow-lg shadow-green-200"
@@ -105,7 +105,7 @@ export const AgentPortal: React.FC = () => {
             Accredited <br /> <span className="text-forge-gold">Agent Portal</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-md leading-relaxed">
-            The exclusive platform for Nigerias leading real estate professionals. Track sales, manage referrals, and access off-market inventory.
+            The exclusive platform for Nigeria's leading real estate professionals. Track sales, manage referrals, and access off-market inventory.
           </p>
         </div>
       </div>
@@ -227,6 +227,3 @@ export const AgentPortal: React.FC = () => {
     </div>
   );
 };
-
-import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
