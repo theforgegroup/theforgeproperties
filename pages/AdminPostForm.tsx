@@ -18,7 +18,6 @@ export const AdminPostForm: React.FC = () => {
   const isEditing = !!id;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -86,7 +85,6 @@ export const AdminPostForm: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
     setError('');
     try {
       const resizedBase64 = await resizeImage(file, 1200, 630);
@@ -94,10 +92,11 @@ export const AdminPostForm: React.FC = () => {
       const fileName = `blog-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
-    } catch (err: any) {
-      setError(`Upload failed: ${err.message}.`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Upload failed: ${errorMsg}.`);
     } finally {
-      setIsUploading(false);
+      // Done
     }
   };
 
@@ -111,8 +110,9 @@ export const AdminPostForm: React.FC = () => {
       setFormData({ ...formData, category: newCat.name });
       setNewCategoryName('');
       setIsAddingCategory(false);
-    } catch (err: any) {
-      setError(`Failed to create category: ${err.message}. Ensure you have run the corrected SQL in Supabase.`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to create category: ${errorMsg}. Ensure you have run the corrected SQL in Supabase.`);
     }
   };
 
@@ -137,8 +137,9 @@ export const AdminPostForm: React.FC = () => {
       else await addPost(submissionData);
       setIsSuccess(true);
       setTimeout(() => navigate('/admin/blog'), 1200);
-    } catch (err: any) {
-      setError(err.message || "Failed to save post.");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg || "Failed to save post.");
     } finally {
       setIsSubmitting(false);
     }

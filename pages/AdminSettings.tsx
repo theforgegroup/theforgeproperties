@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 /* Added Landmark to imports */
-import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { SiteSettings, TeamMember } from '../types';
+import { SiteSettings } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
 
@@ -29,7 +29,7 @@ export const AdminSettings: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setMessage('Settings updated successfully!');
       setTimeout(() => setMessage(''), 3000);
-    } catch (_err) {
+    } catch {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -115,7 +115,7 @@ export const AdminSettings: React.FC = () => {
                         try {
                           const base64String = await resizeImage(file, 400, 400);
                           setFormData({...formData, logo: base64String});
-                        } catch (_err) {
+                        } catch {
                           // Silent error
                         }
                       }

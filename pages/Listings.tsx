@@ -28,7 +28,7 @@ export const Listings: React.FC = () => {
     });
   }, [filters, searchTerm, properties]);
 
-  const handleManualFilterChange = (key: keyof FilterCriteria, value: any) => {
+  const handleManualFilterChange = (key: keyof FilterCriteria, value: string | number | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 

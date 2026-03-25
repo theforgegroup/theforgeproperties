@@ -112,11 +112,12 @@ export const AdminPropertyForm: React.FC = () => {
         newImageUrls.push(publicUrl);
       }
       setFormData({ ...formData, images: newImageUrls });
-    } catch (err: any) {
-      if (err.message.includes('Bucket not found')) {
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (errorMsg.includes('Bucket not found')) {
         setError("Storage Error: 'property-images' bucket not found. Please create it in Supabase Storage and set it to PUBLIC.");
       } else {
-        setError(`Upload failed: ${err.message}`);
+        setError(`Upload failed: ${errorMsg}`);
       }
     } finally {
       setIsUploading(false);
@@ -144,8 +145,9 @@ export const AdminPropertyForm: React.FC = () => {
       else await addProperty(submissionData);
       setIsSuccess(true);
       setTimeout(() => navigate('/admin'), 1500);
-    } catch (err: any) {
-      setError(err.message || "Failed to save property.");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg || "Failed to save property.");
     } finally {
       setIsSubmitting(false);
     }

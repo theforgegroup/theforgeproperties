@@ -116,10 +116,11 @@ export const SEO: React.FC<SEOProps> = ({
 
     const combinedSchemaList = [baseOrgSchema];
     if (schema) {
-      if ((schema as any)["@graph"]) {
-        combinedSchemaList.push(...(schema as any)["@graph"]);
+      const schemaObj = schema as Record<string, unknown>;
+      if (schemaObj["@graph"] && Array.isArray(schemaObj["@graph"])) {
+        combinedSchemaList.push(...(schemaObj["@graph"] as Record<string, unknown>[]));
       } else {
-        combinedSchemaList.push(schema);
+        combinedSchemaList.push(schemaObj);
       }
     }
 

@@ -15,6 +15,33 @@ export const ListingDetails: React.FC = () => {
   
   const property = slug ? (getPropertyBySlug(slug) || getProperty(slug)) : undefined;
 
+  const handleSubmit = React.useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!property) return;
+    setSubmitStatus('submitting');
+    
+    try {
+      const newLead: Lead = {
+        id: Math.random().toString(36).substring(2, 15),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message || (formMode === 'offer' ? `I am interested in making an offer on ${property.title}` : `I would like to view ${property.title}`),
+        property_id: property.id,
+        property_title: property.title,
+        date: new Date().toISOString(),
+        status: 'New',
+        type: formMode === 'offer' ? 'Offer' : 'Viewing Request'
+      };
+      await addLead(newLead);
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', phone: '', message: '' });
+      setTimeout(() => setSubmitStatus('idle'), 3000);
+    } catch {
+      setSubmitStatus('idle');
+    }
+  }, [formData, formMode, property, addLead]);
+
   useEffect(() => {
     window.scrollTo(0,0);
   }, [slug]);
@@ -49,33 +76,6 @@ export const ListingDetails: React.FC = () => {
   const agentName = settings.listing_agent?.name || property?.agent?.name || 'The Forge Properties';
   const agentPhone = settings.listing_agent?.phone || property?.agent?.phone || settings.contact_phone;
   const agentImage = settings.listing_agent?.image || property?.agent?.image;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitStatus('submitting');
-    
-    const newLead: Lead = {
-      id: Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message || (formMode === 'offer' ? `I am interested in making an offer on ${property.title}` : `I would like to view ${property.title}`),
-      property_id: property.id,
-      property_title: property.title,
-      date: new Date().toISOString(),
-      status: 'New',
-      type: formMode === 'offer' ? 'Offer' : 'Viewing Request'
-    };
-    
-    try {
-      await addLead(newLead);
-      setSubmitStatus('success');
-      setFormData({ name: '', email: '', phone: '', message: '' });
-      setTimeout(() => setSubmitStatus('idle'), 3000);
-    } catch (error) {
-      setSubmitStatus('idle');
-    }
-  };
 
   const mapSearchQuery = encodeURIComponent(property.location);
   const mapEmbedUrl = `https://www.google.com/maps?q=${mapSearchQuery}&output=embed`;

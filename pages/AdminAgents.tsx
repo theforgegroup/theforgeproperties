@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, UserCheck, UserX, Award, Shield, Mail, Phone, ExternalLink } from 'lucide-react';
+import { Search, UserCheck, UserX, Award } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { Agent } from '../types';

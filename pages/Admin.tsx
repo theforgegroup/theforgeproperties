@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Trash2, Edit, Plus, Search, MapPin, Info } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, MapPin } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/AdminLayout';

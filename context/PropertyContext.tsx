@@ -1,4 +1,5 @@
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest, Neighborhood, Testimonial } from '../types';
 import { supabase } from '../lib/supabaseClient';

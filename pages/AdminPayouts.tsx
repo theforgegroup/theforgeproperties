@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Landmark, Check, X, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Check, X, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
-import { PayoutRequest } from '../types';
 
 export const AdminPayouts: React.FC = () => {
   const { payouts, updatePayoutStatus, settings } = useProperties();

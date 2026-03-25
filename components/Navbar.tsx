@@ -22,10 +22,10 @@ export const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    setTimeout(() => {
       setIsOpen(false);
-    }
-  }, [location, isOpen]);
+    }, 0);
+  }, [location.pathname]);
 
   const navLinks = [
     { name: 'Home', path: '/' },

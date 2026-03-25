@@ -45,7 +45,7 @@ export const getChatResponse = async (userMessage: string, inventory: Property[]
 
     return response.text || "I'm here to help. Could you please rephrase your request?";
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("The Forge AI Error:", error);
     return "Our concierge service is currently at capacity. Please reach out to our senior brokers at +234 810 613 3572 for immediate personalized service.";
   }

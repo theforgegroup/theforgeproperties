@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DollarSign, Home, Users, TrendingUp, Activity, MapPin, BarChart } from 'lucide-react';
+import { Activity, MapPin } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { ListingStatus } from '../types';
@@ -50,7 +50,7 @@ export const AdminAnalytics: React.FC = () => {
       displayTime: l.date
     })),
     ...properties.map(p => {
-      let date = Date.now();
+      let date = 1711403917000; // Fixed timestamp for initial render
       if (p.id.length > 10 && !isNaN(Number(p.id))) {
         date = Number(p.id);
       } 
