@@ -99,9 +99,10 @@ export const AdminSettings: React.FC = () => {
                   <button 
                     type="button" 
                     onClick={() => document.getElementById('logo-upload')?.click()}
-                    className="bg-white border border-slate-200 px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    disabled={isSaving}
+                    className="bg-white border border-slate-200 px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
-                    <Upload size={14} /> Upload Logo
+                    {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Upload Logo
                   </button>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest">Recommended: PNG or SVG with transparent background.</p>
                   <input 
@@ -112,11 +113,21 @@ export const AdminSettings: React.FC = () => {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        setIsSaving(true);
+                        setMessage('');
                         try {
                           const base64String = await resizeImage(file, 400, 400);
-                          setFormData({...formData, logo: base64String});
-                        } catch {
-                          // Silent error
+                          const { dataURLtoBlob } = await import('../utils/imageUtils');
+                          const { uploadImage } = await import('../lib/supabaseClient');
+                          const blob = dataURLtoBlob(base64String);
+                          const fileName = `logo-${Date.now()}.${file.name.split('.').pop()}`;
+                          const publicUrl = await uploadImage('site-assets', fileName, blob);
+                          setFormData({...formData, logo: publicUrl});
+                        } catch (err) {
+                          const errorMsg = err instanceof Error ? err.message : String(err);
+                          setMessage(`Logo upload failed: ${errorMsg}`);
+                        } finally {
+                          setIsSaving(false);
                         }
                       }
                     }} 

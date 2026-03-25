@@ -1,22 +1,42 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, X, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
 
 export const AdminPayouts: React.FC = () => {
   const { payouts, updatePayoutStatus, settings } = useProperties();
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleApprove = async (id: string) => {
     if(window.confirm("Mark this payout as completed and funds transferred?")) {
-      await updatePayoutStatus(id, 'Approved');
+      setIsUpdating(id);
+      setError(null);
+      try {
+        await updatePayoutStatus(id, 'Approved');
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to approve payout: ${errorMsg}`);
+      } finally {
+        setIsUpdating(null);
+      }
     }
   };
 
   const handleReject = async (id: string) => {
     const reason = prompt("Reason for rejection:");
     if(reason) {
-      await updatePayoutStatus(id, 'Rejected');
+      setIsUpdating(id);
+      setError(null);
+      try {
+        await updatePayoutStatus(id, 'Rejected');
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to reject payout: ${errorMsg}`);
+      } finally {
+        setIsUpdating(null);
+      }
     }
   };
 
@@ -30,6 +50,12 @@ export const AdminPayouts: React.FC = () => {
           <h1 className="text-3xl font-serif text-forge-navy font-bold mb-2">Financial Settlements</h1>
           <p className="text-slate-500">Review and authorize commission payout requests from the agent network.</p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 text-sm font-bold border border-red-200 flex items-center gap-2">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
@@ -81,8 +107,20 @@ export const AdminPayouts: React.FC = () => {
                          <td className="px-8 py-6 text-right">
                            {p.status === 'Pending' && (
                              <div className="flex justify-end gap-2">
-                               <button onClick={() => handleApprove(p.id)} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"><Check size={18} /></button>
-                               <button onClick={() => handleReject(p.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X size={18} /></button>
+                               <button 
+                                 onClick={() => handleApprove(p.id)} 
+                                 disabled={isUpdating === p.id}
+                                 className={`p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all ${isUpdating === p.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                               >
+                                 <Check size={18} />
+                               </button>
+                               <button 
+                                 onClick={() => handleReject(p.id)} 
+                                 disabled={isUpdating === p.id}
+                                 className={`p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all ${isUpdating === p.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                               >
+                                 <X size={18} />
+                               </button>
                              </div>
                            )}
                          </td>

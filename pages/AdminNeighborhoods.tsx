@@ -40,15 +40,24 @@ export const AdminNeighborhoods: React.FC = () => {
     }));
   };
 
+  const [error, setError] = useState('');
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
+      setError('');
       try {
         const base64String = await resizeImage(file, 800, 600);
-        setFormData(prev => ({ ...prev, image: base64String }));
+        const { dataURLtoBlob } = await import('../utils/imageUtils');
+        const { uploadImage } = await import('../lib/supabaseClient');
+        const blob = dataURLtoBlob(base64String);
+        const fileName = `neighborhood-${Date.now()}.${file.name.split('.').pop()}`;
+        const publicUrl = await uploadImage('neighborhood-images', fileName, blob);
+        setFormData(prev => ({ ...prev, image: publicUrl }));
       } catch (err) {
-        console.error('Failed to process image:', err);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Image upload failed: ${errorMsg}`);
       } finally {
         setIsUploading(false);
       }
@@ -58,15 +67,21 @@ export const AdminNeighborhoods: React.FC = () => {
   const handleSave = async () => {
     if (!formData.name || !formData.image) return;
     setIsSaving(true);
+    setError('');
     try {
       if (editingId) {
-        await updateNeighborhood(editingId, formData);
+        await updateNeighborhood({ ...formData, id: editingId } as Neighborhood);
       } else {
-        await addNeighborhood(formData as Omit<Neighborhood, 'id'>);
+        const newNeighborhood = {
+          ...formData,
+          id: Date.now().toString()
+        } as Neighborhood;
+        await addNeighborhood(newNeighborhood);
       }
       resetForm();
     } catch (err) {
-      console.error('Failed to save neighborhood:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to save neighborhood: ${errorMsg}`);
     } finally {
       setIsSaving(false);
     }
@@ -81,10 +96,12 @@ export const AdminNeighborhoods: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this neighborhood?')) {
+      setError('');
       try {
         await deleteNeighborhood(id);
       } catch (err) {
-        console.error('Failed to delete neighborhood:', err);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to delete neighborhood: ${errorMsg}`);
       }
     }
   };
@@ -93,6 +110,7 @@ export const AdminNeighborhoods: React.FC = () => {
     setFormData({ name: '', image: '', description: '', slug: '' });
     setEditingId(null);
     setIsAdding(false);
+    setError('');
   };
 
   return (
@@ -112,6 +130,12 @@ export const AdminNeighborhoods: React.FC = () => {
             </button>
           )}
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm border border-red-200 flex items-center gap-2">
+            <Info size={16} className="shrink-0" /> {error}
+          </div>
+        )}
 
         {isAdding && (
           <div className="bg-white rounded-sm shadow-xl border-t-4 border-forge-gold mb-12 overflow-hidden">

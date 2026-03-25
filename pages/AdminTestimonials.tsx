@@ -37,15 +37,24 @@ export const AdminTestimonials: React.FC = () => {
     is_verified: true
   });
 
+  const [error, setError] = useState('');
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
+      setError('');
       try {
         const base64String = await resizeImage(file, 400, 400);
-        setFormData(prev => ({ ...prev, client_photo: base64String }));
-      } catch (_err) {
-        console.error('Failed to process image:', _err);
+        const { dataURLtoBlob } = await import('../utils/imageUtils');
+        const { uploadImage } = await import('../lib/supabaseClient');
+        const blob = dataURLtoBlob(base64String);
+        const fileName = `client-${Date.now()}.${file.name.split('.').pop()}`;
+        const publicUrl = await uploadImage('testimonials', fileName, blob);
+        setFormData(prev => ({ ...prev, client_photo: publicUrl }));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Image upload failed: ${errorMsg}`);
       } finally {
         setIsUploading(false);
       }
@@ -55,6 +64,7 @@ export const AdminTestimonials: React.FC = () => {
   const handleSave = async () => {
     if (!formData.client_name || !formData.testimonial_text) return;
     setIsSaving(true);
+    setError('');
     try {
       const testimonialData = {
         ...formData,
@@ -68,8 +78,9 @@ export const AdminTestimonials: React.FC = () => {
         await addTestimonial(testimonialData);
       }
       resetForm();
-    } catch (_err) {
-      console.error('Failed to save testimonial:', _err);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to save testimonial: ${errorMsg}`);
     } finally {
       setIsSaving(false);
     }
@@ -84,10 +95,12 @@ export const AdminTestimonials: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
+      setError('');
       try {
         await deleteTestimonial(id);
-      } catch (_err) {
-        console.error('Failed to delete testimonial:', _err);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to delete testimonial: ${errorMsg}`);
       }
     }
   };
@@ -104,6 +117,7 @@ export const AdminTestimonials: React.FC = () => {
     });
     setEditingId(null);
     setIsAdding(false);
+    setError('');
   };
 
   return (
@@ -134,6 +148,12 @@ export const AdminTestimonials: React.FC = () => {
             )}
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded mb-6 text-sm border border-red-200 flex items-center gap-2">
+            <Quote size={16} className="shrink-0" /> {error}
+          </div>
+        )}
 
         {isAdding && (
           <div className="bg-white rounded-sm shadow-xl border-t-4 border-forge-gold mb-12 overflow-hidden">

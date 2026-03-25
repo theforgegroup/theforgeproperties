@@ -149,32 +149,38 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   const addNeighborhood = async (neighborhood: Neighborhood) => {
-    await supabase.from('neighborhoods').insert([neighborhood]);
+    const { error } = await supabase.from('neighborhoods').insert([neighborhood]);
+    if (error) throw error;
     setNeighborhoods(prev => [neighborhood, ...prev]);
   };
 
   const updateNeighborhood = async (updatedNeighborhood: Neighborhood) => {
-    await supabase.from('neighborhoods').update(updatedNeighborhood).eq('id', updatedNeighborhood.id);
+    const { error } = await supabase.from('neighborhoods').update(updatedNeighborhood).eq('id', updatedNeighborhood.id);
+    if (error) throw error;
     setNeighborhoods(prev => prev.map(n => n.id === updatedNeighborhood.id ? updatedNeighborhood : n));
   };
 
   const deleteNeighborhood = async (id: string) => {
-    await supabase.from('neighborhoods').delete().eq('id', id);
+    const { error } = await supabase.from('neighborhoods').delete().eq('id', id);
+    if (error) throw error;
     setNeighborhoods(prev => prev.filter(n => n.id !== id));
   };
 
   const addTestimonial = async (testimonial: Testimonial) => {
-    await supabase.from('testimonials').insert([testimonial]);
+    const { error } = await supabase.from('testimonials').insert([testimonial]);
+    if (error) throw error;
     setTestimonials(prev => [testimonial, ...prev]);
   };
 
   const updateTestimonial = async (updatedTestimonial: Testimonial) => {
-    await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
+    const { error } = await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
+    if (error) throw error;
     setTestimonials(prev => prev.map(t => t.id === updatedTestimonial.id ? updatedTestimonial : t));
   };
 
   const deleteTestimonial = async (id: string) => {
-    await supabase.from('testimonials').delete().eq('id', id);
+    const { error } = await supabase.from('testimonials').delete().eq('id', id);
+    if (error) throw error;
     setTestimonials(prev => prev.filter(t => t.id !== id));
   };
 
@@ -222,74 +228,88 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const getAgentPayouts = (agentId: string) => payouts.filter(p => p.agent_id === agentId);
 
   const requestPayout = async (payout: PayoutRequest) => {
-    await supabase.from('payout_requests').insert([payout]);
+    const { error } = await supabase.from('payout_requests').insert([payout]);
+    if (error) throw error;
     setPayouts(prev => [payout, ...prev]);
   };
 
   const updatePayoutStatus = async (id: string, status: PayoutRequest['status']) => {
-    await supabase.from('payout_requests').update({ status }).eq('id', id);
+    const { error } = await supabase.from('payout_requests').update({ status }).eq('id', id);
+    if (error) throw error;
     setPayouts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
   };
 
   const addSaleManually = async (sale: AgentSale) => {
-    await supabase.from('agent_sales').insert([sale]);
+    const { error } = await supabase.from('agent_sales').insert([sale]);
+    if (error) throw error;
     setSales(prev => [sale, ...prev]);
   };
 
   const updateSaleStatus = async (id: string, status: AgentSale['deal_status']) => {
-    await supabase.from('agent_sales').update({ deal_status: status }).eq('id', id);
+    const { error } = await supabase.from('agent_sales').update({ deal_status: status }).eq('id', id);
+    if (error) throw error;
     setSales(prev => prev.map(s => s.id === id ? { ...s, deal_status: status } : s));
   };
 
   const addProperty = async (property: Property) => {
-    await supabase.from('properties').insert([property]);
+    const { error } = await supabase.from('properties').insert([property]);
+    if (error) throw error;
     setProperties(prev => [property, ...prev]);
   };
 
   const updateProperty = async (updatedProperty: Property) => {
-    await supabase.from('properties').update(updatedProperty).eq('id', updatedProperty.id);
+    const { error } = await supabase.from('properties').update(updatedProperty).eq('id', updatedProperty.id);
+    if (error) throw error;
     setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
   };
 
   const deleteProperty = async (id: string) => {
-    await supabase.from('properties').delete().eq('id', id);
+    const { error } = await supabase.from('properties').delete().eq('id', id);
+    if (error) throw error;
     setProperties(prev => prev.filter(p => p.id !== id));
   };
 
   const addLead = async (lead: Lead) => {
-    await supabase.from('leads').insert([lead]);
+    const { error } = await supabase.from('leads').insert([lead]);
+    if (error) throw error;
     setLeads(prev => [lead, ...prev]);
   };
 
   const updateLeadStatus = async (id: string, status: Lead['status']) => {
-    await supabase.from('leads').update({ status }).eq('id', id);
+    const { error } = await supabase.from('leads').update({ status }).eq('id', id);
+    if (error) throw error;
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
 
   const addSubscriber = async (email: string) => {
     if (subscribers.some(s => s.email === email)) return;
     const newSubscriber: Subscriber = { id: Date.now().toString(), email, date: new Date().toISOString() };
-    await supabase.from('subscribers').insert([newSubscriber]);
+    const { error } = await supabase.from('subscribers').insert([newSubscriber]);
+    if (error) throw error;
     setSubscribers(prev => [newSubscriber, ...prev]);
   };
 
   const addPost = async (post: BlogPost) => {
-    await supabase.from('posts').insert([post]);
+    const { error } = await supabase.from('posts').insert([post]);
+    if (error) throw error;
     setPosts(prev => [post, ...prev]);
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
-    await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
+    const { error } = await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
+    if (error) throw error;
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
   };
 
   const deletePost = async (id: string) => {
-    await supabase.from('posts').delete().eq('id', id);
+    const { error } = await supabase.from('posts').delete().eq('id', id);
+    if (error) throw error;
     setPosts(prev => prev.filter(p => p.id !== id));
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
-    await supabase.from('site_settings').update(newSettings).eq('id', 1);
+    const { error } = await supabase.from('site_settings').update(newSettings).eq('id', 1);
+    if (error) throw error;
     setSettings(newSettings);
   };
 

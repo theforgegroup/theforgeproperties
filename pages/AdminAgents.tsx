@@ -8,9 +8,20 @@ import { Agent } from '../types';
 export const AdminAgents: React.FC = () => {
   const { agents, updateAgent } = useProperties();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleStatusUpdate = async (agent: Agent, newStatus: Agent['status']) => {
-    await updateAgent({ ...agent, status: newStatus });
+    setIsUpdating(agent.id);
+    setError(null);
+    try {
+      await updateAgent({ ...agent, status: newStatus });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to update agent status: ${errorMsg}`);
+    } finally {
+      setIsUpdating(null);
+    }
   };
 
   const filteredAgents = agents.filter(a => 
@@ -30,6 +41,12 @@ export const AdminAgents: React.FC = () => {
             <p className="text-slate-500">Manage, verify, and monitor your referral network performance.</p>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 text-sm font-bold border border-red-200 flex items-center gap-2">
+            <UserX size={16} /> {error}
+          </div>
+        )}
 
         {/* Top Performers */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -114,10 +131,24 @@ export const AdminAgents: React.FC = () => {
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2">
                         {a.status !== 'Active' && (
-                          <button onClick={() => handleStatusUpdate(a, 'Active')} title="Approve Agent" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"><UserCheck size={18} /></button>
+                          <button 
+                            onClick={() => handleStatusUpdate(a, 'Active')} 
+                            disabled={isUpdating === a.id}
+                            title="Approve Agent" 
+                            className={`p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all ${isUpdating === a.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <UserCheck size={18} />
+                          </button>
                         )}
                         {a.status !== 'Suspended' && (
-                          <button onClick={() => handleStatusUpdate(a, 'Suspended')} title="Suspend Agent" className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><UserX size={18} /></button>
+                          <button 
+                            onClick={() => handleStatusUpdate(a, 'Suspended')} 
+                            disabled={isUpdating === a.id}
+                            title="Suspend Agent" 
+                            className={`p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all ${isUpdating === a.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <UserX size={18} />
+                          </button>
                         )}
                       </div>
                     </td>
