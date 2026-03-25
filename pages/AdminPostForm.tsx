@@ -273,6 +273,26 @@ export const AdminPostForm: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 flex items-center gap-1"><Calendar size={12} /> Publish <b>immediately</b></span>
                 </div>
+                <div className="pt-2 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.featured || false} 
+                      onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-slate-700 font-medium">Featured Post</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.show_on_homepage || false} 
+                      onChange={(e) => setFormData({...formData, show_on_homepage: e.target.checked})}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-slate-700 font-medium">Show on Homepage</span>
+                  </label>
+                </div>
               </div>
               <div className="bg-slate-50 p-3 border-t border-slate-300 flex justify-end">
                 <button 

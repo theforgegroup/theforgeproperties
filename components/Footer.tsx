@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MapPin, Phone, Mail, Check, ShieldCheck } from 'lucide-react';
+import { Instagram, MapPin, Phone, Mail, Check, ArrowUp } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { useAuth } from '../context/AuthContext';
 
 const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
@@ -13,7 +12,6 @@ const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: 
 
 export const Footer: React.FC = () => {
   const { settings, addSubscriber } = useProperties();
-  const { isAuthenticated, userRole } = useAuth();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -27,79 +25,132 @@ export const Footer: React.FC = () => {
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="bg-forge-dark text-white pt-16 pb-8 border-t border-slate-800">
+    <footer className="bg-forge-navy text-white pt-24 pb-12 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-forge-gold to-transparent" />
+      
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
-          <div className="col-span-1">
-            <div className="flex flex-col mb-6">
-              <span className="text-2xl font-serif font-bold tracking-widest text-white">THE FORGE</span>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-forge-gold">Properties</span>
-            </div>
-            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-              A division of The Forge Group of Companies. We provide unparalleled real estate services for the world's most discerning clients.
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
+          {/* Brand Column */}
+          <div className="lg:col-span-4">
+            <Link to="/" className="flex flex-col mb-8 group">
+              {settings.logo ? (
+                <img src={settings.logo} alt="The Forge Properties" className="h-12 w-auto object-contain mb-2" />
+              ) : (
+                <>
+                  <span className="text-3xl font-bold tracking-tight text-white group-hover:text-forge-gold transition-colors">THE FORGE</span>
+                  <span className="text-xs uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
+                </>
+              )}
+            </Link>
+            <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-md">
+              Defining excellence in Nigerian luxury real estate. We provide unparalleled services for the world's most discerning clients and investors.
             </p>
-            <div className="flex space-x-4">
-              <a href="https://www.tiktok.com/@theforgegroup" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-forge-gold transition-colors"><TikTokIcon size={20} /></a>
-              <a href="https://www.instagram.com/theforgeproperties_" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-forge-gold transition-colors"><Instagram size={20} /></a>
+            <div className="flex space-x-6">
+              <a href="https://www.tiktok.com/@theforgegroup" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all"><TikTokIcon size={20} /></a>
+              <a href="https://www.instagram.com/theforgeproperties_" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all"><Instagram size={20} /></a>
             </div>
           </div>
 
-          <div className="col-span-1">
-            <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Explore</h3>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link to="/listings" className="hover:text-white transition-colors">Exclusive Listings</Link></li>
-              <li><Link to="/blog" className="hover:text-white transition-colors">Journal & Insights</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">The Team</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-              <li className="pt-2 border-t border-slate-800">
-                <Link 
-                  to={isAuthenticated && userRole === 'Agent' ? "/agent/dashboard" : "/agent/portal"} 
-                  className="text-forge-gold flex items-center gap-2 hover:text-white transition-colors group"
-                >
-                  <ShieldCheck size={16} className="group-hover:scale-110 transition-transform" />
-                  Realtor Portal
-                </Link>
-              </li>
-            </ul>
+          {/* Links Columns */}
+          <div className="lg:col-span-5 grid grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-white text-sm uppercase tracking-[0.2em] font-bold mb-8">Explore</h3>
+              <ul className="space-y-4 text-slate-400">
+                <li><Link to="/listings" className="hover:text-forge-gold transition-colors">Exclusive Listings</Link></li>
+                <li><Link to="/blog" className="hover:text-forge-gold transition-colors">Journal & Insights</Link></li>
+                <li><Link to="/about" className="hover:text-forge-gold transition-colors">About Us</Link></li>
+                <li><Link to="/contact" className="hover:text-forge-gold transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white text-sm uppercase tracking-[0.2em] font-bold mb-8">Services</h3>
+              <ul className="space-y-4 text-slate-400">
+                <li><Link to="/listings?type=land" className="hover:text-forge-gold transition-colors">Land Acquisition</Link></li>
+                <li><Link to="/listings?type=house" className="hover:text-forge-gold transition-colors">Luxury Homes</Link></li>
+                <li><Link to="/agent/portal" className="hover:text-forge-gold transition-colors">Agent Partnership</Link></li>
+                <li><Link to="/contact" className="hover:text-forge-gold transition-colors">Property Valuation</Link></li>
+              </ul>
+            </div>
           </div>
 
-          <div className="col-span-1">
-            <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Contact</h3>
-            <ul className="space-y-4 text-sm text-slate-400">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-forge-gold mt-1 shrink-0" />
-                <span className="whitespace-pre-line">{settings.address}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-forge-gold shrink-0" />
-                <span>{settings.contact_phone}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Mail size={18} className="text-forge-gold shrink-0 mt-1" />
-                <span className="break-all">{settings.contact_email}</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="col-span-1">
-            <h3 className="text-forge-gold text-sm uppercase tracking-widest font-bold mb-6">Newsletter</h3>
+          {/* Newsletter Column */}
+          <div className="lg:col-span-3">
+            <h3 className="text-white text-sm uppercase tracking-[0.2em] font-bold mb-8">Newsletter</h3>
+            <p className="text-slate-400 text-sm mb-6">Subscribe to receive exclusive property alerts and market insights.</p>
             {subscribed ? (
-              <div className="bg-green-900/30 border border-green-800 p-4 rounded text-green-400 text-sm flex items-center gap-2">
+              <div className="bg-forge-gold/10 border border-forge-gold/20 p-4 rounded-xl text-forge-gold text-sm flex items-center gap-2">
                 <Check size={16} /> Subscribed Successfully
               </div>
             ) : (
-              <form className="flex flex-col gap-2" onSubmit={handleSubscribe}>
-                <input type="email" required placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-800 border border-slate-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-forge-gold" />
-                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-xs tracking-widest py-3 hover:bg-white transition-colors">Subscribe</button>
+              <form className="flex flex-col gap-3" onSubmit={handleSubscribe}>
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="Email address" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  className="bg-white/5 border border-white/10 text-white px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-forge-gold transition-colors" 
+                />
+                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-xs tracking-widest py-4 rounded-xl hover:bg-white transition-all">Subscribe</button>
               </form>
             )}
           </div>
         </div>
-        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
-          <p>&copy; {new Date().getFullYear()} The Forge Group. All rights reserved.</p>
+
+        {/* Contact Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12 border-y border-white/5 mb-12">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Office</p>
+              <p className="text-sm text-slate-300">{settings.address}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold">
+              <Phone size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Call Us</p>
+              <p className="text-sm text-slate-300">{settings.contact_phone}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold">
+              <Mail size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Email</p>
+              <p className="text-sm text-slate-300">{settings.contact_email}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <p className="text-sm text-slate-500">
+            &copy; {new Date().getFullYear()} The Forge Group. All rights reserved.
+          </p>
+          <div className="flex items-center gap-8 text-sm text-slate-500">
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <button 
+              onClick={scrollToTop}
+              className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-forge-navy transition-all"
+            >
+              <ArrowUp size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </footer>
   );
 };
+

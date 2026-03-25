@@ -20,6 +20,8 @@ import { AdminBlog } from './pages/AdminBlog';
 import { AdminPostForm } from './pages/AdminPostForm';
 import { AdminAgents } from './pages/AdminAgents';
 import { AdminPayouts } from './pages/AdminPayouts';
+import { AdminNeighborhoods } from './pages/AdminNeighborhoods';
+import { AdminTestimonials } from './pages/AdminTestimonials';
 import { AgentPortal } from './pages/AgentPortal';
 import { AgentDashboard } from './pages/AgentDashboard';
 import { AIConcierge } from './components/AIConcierge';
@@ -90,6 +92,8 @@ const AppLayout: React.FC = () => {
           <Route path="/admin/agents" element={<ProtectedRoute role="Admin"><AdminAgents /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute role="Admin"><AdminPayouts /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute role="Admin"><AdminAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/neighborhoods" element={<ProtectedRoute role="Admin"><AdminNeighborhoods /></ProtectedRoute>} />
+          <Route path="/admin/testimonials" element={<ProtectedRoute role="Admin"><AdminTestimonials /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute role="Admin"><AdminSettings /></ProtectedRoute>} />
           <Route path="/admin/blog" element={<ProtectedRoute role="Admin"><AdminBlog /></ProtectedRoute>} />
           <Route path="/admin/blog/new" element={<ProtectedRoute role="Admin"><AdminPostForm /></ProtectedRoute>} />

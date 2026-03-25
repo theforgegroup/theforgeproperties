@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Search, BookOpen, Phone, User, Users } from 'lucide-react';
+import { Menu, X, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useProperties } from '../context/PropertyContext';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { isAuthenticated, userRole } = useAuth();
+  const { settings } = useProperties();
   const isHome = location.pathname === '/';
 
   useEffect(() => {
@@ -20,58 +22,74 @@ export const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setIsOpen(false);
-  }, [location]);
+    if (isOpen) {
+      setIsOpen(false);
+    }
+  }, [location, isOpen]);
 
   const navLinks = [
-    { name: 'Home', path: '/', icon: <Home size={18} /> },
-    { name: 'Listings', path: '/listings', icon: <Search size={18} /> },
-    { name: 'Blog', path: '/blog', icon: <BookOpen size={18} /> },
-    { name: 'Agent Portal', path: isAuthenticated && userRole === 'Agent' ? '/agent/dashboard' : '/agent/portal', icon: <Users size={18} /> },
-    { name: 'Contact', path: '/contact', icon: <Phone size={18} /> },
+    { name: 'Home', path: '/' },
+    { name: 'Listings', path: '/listings' },
+    { name: 'Blog', path: '/blog' },
+    { name: 'Agent Portal', path: isAuthenticated && userRole === 'Agent' ? '/agent/dashboard' : '/agent/portal' },
+    { name: 'Contact', path: '/contact' },
   ];
 
   return (
     <nav 
-      className={`fixed w-full z-[100] transition-all duration-300 ${
+      className={`fixed w-full z-[100] transition-all duration-500 ${
         scrolled || !isHome
-          ? 'bg-forge-navy/95 backdrop-blur-md text-white shadow-lg py-3' 
+          ? 'bg-white/80 backdrop-blur-xl text-forge-navy shadow-sm py-4' 
           : 'bg-transparent text-white py-6'
       }`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex flex-col group items-center">
-          <span className="text-2xl font-serif font-bold tracking-widest text-white group-hover:text-forge-gold transition-colors">
-            THE FORGE
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-forge-gold">Properties</span>
+          {settings.logo ? (
+            <img src={settings.logo} alt="The Forge Properties" className="h-10 w-auto object-contain" />
+          ) : (
+            <>
+              <span className={`text-2xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>
+                THE FORGE
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
+            </>
+          )}
         </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-8 items-center">
+        <div className="hidden lg:flex space-x-10 items-center">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
-              className={`text-[10px] font-bold uppercase tracking-widest hover:text-forge-gold transition-colors flex items-center gap-2 ${
-                location.pathname === link.path ? 'text-forge-gold' : 'text-slate-200'
+              className={`text-xs font-bold uppercase tracking-widest hover:text-forge-gold transition-all relative group ${
+                location.pathname === link.path 
+                  ? 'text-forge-gold' 
+                  : scrolled || !isHome ? 'text-forge-navy' : 'text-slate-200'
               }`}
             >
               {link.name}
+              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-forge-gold transition-all group-hover:w-full ${location.pathname === link.path ? 'w-full' : ''}`} />
             </Link>
           ))}
           <Link 
-            to="/listings"
-            className="border border-forge-gold text-forge-gold px-5 py-2 text-[10px] uppercase font-bold tracking-widest hover:bg-forge-gold hover:text-forge-navy transition-all duration-300"
+            to="/contact"
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs uppercase font-bold tracking-widest transition-all duration-300 ${
+              scrolled || !isHome
+                ? 'bg-forge-navy text-white hover:bg-forge-gold'
+                : 'bg-white text-forge-navy hover:bg-forge-gold hover:text-white'
+            }`}
           >
-            Find a Home
+            <MessageSquare size={16} />
+            Contact Us
           </Link>
         </div>
 
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden text-white hover:text-forge-gold transition-colors focus:outline-none"
+          className={`lg:hidden transition-colors focus:outline-none ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -79,21 +97,20 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div className={`md:hidden absolute top-full left-0 w-full bg-forge-navy border-t border-slate-800 shadow-xl overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="flex flex-col py-6 px-6 space-y-6 bg-forge-navy">
+      <div className={`lg:hidden absolute top-full left-0 w-full bg-white shadow-2xl overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="flex flex-col py-10 px-8 space-y-8 bg-white">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
-              className="flex items-center gap-4 text-slate-300 hover:text-forge-gold py-1 text-sm font-bold uppercase tracking-widest"
+              className="text-forge-navy hover:text-forge-gold text-lg font-bold uppercase tracking-widest transition-colors"
             >
-              <span className="text-forge-gold opacity-80">{link.icon}</span>
               {link.name}
             </Link>
           ))}
           <Link 
             to="/listings"
-            className="block text-center border border-forge-gold text-forge-gold px-5 py-4 text-xs uppercase tracking-widest font-bold"
+            className="block text-center bg-forge-navy text-white py-5 rounded-2xl text-sm uppercase tracking-widest font-bold hover:bg-forge-gold transition-colors"
           >
             Find a Home
           </Link>
@@ -102,3 +119,4 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
+

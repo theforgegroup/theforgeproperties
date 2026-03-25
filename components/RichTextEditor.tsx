@@ -64,34 +64,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     setIsCodeView(!isCodeView);
   };
 
-  const ToolbarButton = ({ 
-    icon: Icon, 
-    onClick,
-    title,
-    disabled = false,
-    active = false
-  }: { 
-    icon: any, 
-    onClick: () => void, 
-    title: string,
-    disabled?: boolean,
-    active?: boolean
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`p-2 rounded transition-colors ${
-        active ? 'bg-forge-gold text-forge-navy' : 
-        disabled ? 'text-slate-300 cursor-not-allowed' : 
-        'text-slate-600 hover:text-forge-navy hover:bg-slate-100'
-      }`}
-      title={title}
-    >
-      <Icon size={18} />
-    </button>
-  );
-
   return (
     <div className="border border-slate-200 rounded-sm overflow-hidden bg-white flex flex-col h-[600px] shadow-sm">
       {/* Toolbar */}
@@ -186,3 +158,31 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
     </div>
   );
 };
+
+const ToolbarButton = ({ 
+  icon: Icon, 
+  onClick,
+  title,
+  disabled = false,
+  active = false
+}: { 
+  icon: React.ElementType, 
+  onClick: () => void, 
+  title: string,
+  disabled?: boolean,
+  active?: boolean
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className={`p-2 rounded transition-colors ${
+      active ? 'bg-forge-gold text-forge-navy' : 
+      disabled ? 'text-slate-300 cursor-not-allowed' : 
+      'text-slate-600 hover:text-forge-navy hover:bg-slate-100'
+    }`}
+    title={title}
+  >
+    <Icon size={18} />
+  </button>
+);

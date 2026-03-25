@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 /* Added Landmark to imports */
-import { Save, Mail, Phone, MapPin, Upload, X, User, Loader2, AlertCircle, BadgeCheck, Plus, Database, Trash2, MessageCircle, Landmark } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings, TeamMember } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -10,13 +10,9 @@ export const AdminSettings: React.FC = () => {
   const { settings, updateSettings, seedDatabase } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   
-  const teamFileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const agentImageRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (settings) {
       setFormData(settings);
@@ -26,7 +22,6 @@ export const AdminSettings: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setError('');
     setMessage('');
 
     try {
@@ -34,8 +29,7 @@ export const AdminSettings: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setMessage('Settings updated successfully!');
       setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-      setError('Failed to save settings.');
+    } catch (_err) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -47,54 +41,6 @@ export const AdminSettings: React.FC = () => {
       setIsSeeding(true);
       await seedDatabase();
       setIsSeeding(false);
-    }
-  };
-
-  const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
-    const updatedMembers = [...(formData.team_members || [])];
-    if (updatedMembers[index]) {
-      updatedMembers[index] = { ...updatedMembers[index], [field]: value };
-      setFormData({ ...formData, team_members: updatedMembers });
-    }
-  };
-
-  const addMember = () => {
-    setFormData({
-      ...formData,
-      team_members: [...(formData.team_members || []), { name: '', role: '', image: '' }]
-    });
-  };
-
-  const removeMember = (index: number) => {
-    const updatedMembers = [...(formData.team_members || [])];
-    updatedMembers.splice(index, 1);
-    setFormData({ ...formData, team_members: updatedMembers });
-  };
-
-  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64String = await resizeImage(file);
-        handleMemberChange(index, 'image', base64String);
-      } catch (err) {
-        setError('Failed to process image.');
-      }
-    }
-  };
-
-  const handleAgentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64String = await resizeImage(file);
-        setFormData(prev => ({
-          ...prev,
-          listing_agent: { ...prev.listing_agent, image: base64String }
-        }));
-      } catch (err) {
-        setError('Failed to process agent image.');
-      }
     }
   };
 
@@ -123,6 +69,62 @@ export const AdminSettings: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
             
+            {/* Logo Upload Section */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="font-serif text-xl text-forge-navy font-bold mb-1">Brand Identity</h3>
+                <p className="text-slate-500 text-sm">Upload your company logo. Fallback is text-based logo.</p>
+              </div>
+              <div className="flex items-center gap-8">
+                <div className="w-32 h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden relative group">
+                  {formData.logo ? (
+                    <>
+                      <img src={formData.logo} alt="Logo Preview" className="max-w-full max-h-full object-contain p-2" />
+                      <button 
+                        type="button" 
+                        onClick={() => setFormData({...formData, logo: ''})}
+                        className="absolute inset-0 bg-forge-navy/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-slate-300 flex flex-col items-center gap-2">
+                      <Upload size={24} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">No Logo</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <button 
+                    type="button" 
+                    onClick={() => document.getElementById('logo-upload')?.click()}
+                    className="bg-white border border-slate-200 px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  >
+                    <Upload size={14} /> Upload Logo
+                  </button>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest">Recommended: PNG or SVG with transparent background.</p>
+                  <input 
+                    id="logo-upload"
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const base64String = await resizeImage(file, 400, 400);
+                          setFormData({...formData, logo: base64String});
+                        } catch (_err) {
+                          // Silent error
+                        }
+                      }
+                    }} 
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Agent Integration Settings */}
             <div className="space-y-6">
                <div className="pb-4 border-b border-slate-100">
@@ -173,7 +175,15 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 border-t">
+            <div className="flex justify-between items-center pt-6 border-t">
+              <button 
+                type="button"
+                onClick={handleSeed}
+                disabled={isSeeding}
+                className="text-forge-gold border border-forge-gold px-6 py-4 font-bold uppercase tracking-widest text-[10px] hover:bg-forge-gold hover:text-white transition-all flex items-center gap-2"
+              >
+                {isSeeding ? <Loader2 size={14} className="animate-spin" /> : <Database size={14} />} Initialize Demo Data
+              </button>
               <button type="submit" disabled={isSaving} className="bg-forge-navy text-white px-10 py-5 font-bold uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl hover:bg-forge-dark transition-all">
                 {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save All Changes
               </button>

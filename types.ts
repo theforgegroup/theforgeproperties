@@ -1,6 +1,9 @@
 
 
 export enum PropertyType {
+  LAND = 'Land',
+  HOUSE = 'House',
+  INVESTMENT = 'Investment',
   VILLA = 'Villa',
   APARTMENT = 'Apartment',
   PENTHOUSE = 'PENTHOUSE',
@@ -26,6 +29,14 @@ export interface FilterCriteria {
   location?: string;
 }
 
+export interface Neighborhood {
+  id: string;
+  name: string;
+  image: string;
+  description?: string;
+  slug: string;
+}
+
 export interface Property {
   id: string;
   slug: string;
@@ -46,6 +57,7 @@ export interface Property {
     phone: string;
   };
   featured?: boolean;
+  show_on_homepage?: boolean;
 }
 
 export interface Lead {
@@ -116,6 +128,8 @@ export interface BlogPost {
   status: 'Published' | 'Draft';
   meta_description?: string;
   keyphrase?: string;
+  featured?: boolean;
+  show_on_homepage?: boolean;
 }
 
 export interface TeamMember {
@@ -138,6 +152,19 @@ export interface SiteSettings {
   listing_agent: ListingAgent;
   whatsapp_group_link: string;
   min_payout_amount: number;
+  logo?: string;
+}
+
+export interface Testimonial {
+  id: string;
+  client_name: string;
+  client_photo?: string;
+  testimonial_text: string;
+  rating: number; // 1-5
+  property_type?: 'Land' | 'House' | 'Investment';
+  date?: string;
+  show_on_homepage: boolean;
+  is_verified?: boolean;
 }
 
 export interface ChatMessage {

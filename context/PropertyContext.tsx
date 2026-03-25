@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest } from '../types';
+import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest, Neighborhood, Testimonial } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface Category {
@@ -17,6 +17,8 @@ interface PropertyContextType {
   agents: Agent[];
   sales: AgentSale[];
   payouts: PayoutRequest[];
+  neighborhoods: Neighborhood[];
+  testimonials: Testimonial[];
   settings: SiteSettings;
   isLoading: boolean;
   addProperty: (property: Property) => Promise<void>;
@@ -34,6 +36,16 @@ interface PropertyContextType {
   getPost: (id: string) => BlogPost | undefined;
   getPostBySlug: (slug: string) => BlogPost | undefined;
   addCategory: (name: string) => Promise<Category>;
+  
+  // Neighborhood Methods
+  addNeighborhood: (neighborhood: Neighborhood) => Promise<void>;
+  updateNeighborhood: (neighborhood: Neighborhood) => Promise<void>;
+  deleteNeighborhood: (id: string) => Promise<void>;
+
+  // Testimonial Methods
+  addTestimonial: (testimonial: Testimonial) => Promise<void>;
+  updateTestimonial: (testimonial: Testimonial) => Promise<void>;
+  deleteTestimonial: (id: string) => Promise<void>;
   
   // Agent Methods
   addAgent: (agent: Partial<Agent>) => Promise<Agent>;
@@ -65,7 +77,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
     image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=200"
   },
   whatsapp_group_link: 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t',
-  min_payout_amount: 50000
+  min_payout_amount: 50000,
+  logo: ""
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -81,6 +94,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [agents, setAgents] = useState<Agent[]>([]);
   const [sales, setSales] = useState<AgentSale[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -111,6 +126,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { data: payoutsData } = await supabase.from('payout_requests').select('*');
       if (payoutsData) setPayouts(payoutsData);
 
+      const { data: neighborhoodsData } = await supabase.from('neighborhoods').select('*');
+      if (neighborhoodsData) setNeighborhoods(neighborhoodsData);
+
+      const { data: testimonialsData } = await supabase.from('testimonials').select('*');
+      if (testimonialsData) setTestimonials(testimonialsData);
+
       const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       if (settingsData) {
         setSettings({ ...DEFAULT_SETTINGS, ...settingsData });
@@ -125,6 +146,36 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     fetchData();
   }, []);
+
+  const addNeighborhood = async (neighborhood: Neighborhood) => {
+    await supabase.from('neighborhoods').insert([neighborhood]);
+    setNeighborhoods(prev => [neighborhood, ...prev]);
+  };
+
+  const updateNeighborhood = async (updatedNeighborhood: Neighborhood) => {
+    await supabase.from('neighborhoods').update(updatedNeighborhood).eq('id', updatedNeighborhood.id);
+    setNeighborhoods(prev => prev.map(n => n.id === updatedNeighborhood.id ? updatedNeighborhood : n));
+  };
+
+  const deleteNeighborhood = async (id: string) => {
+    await supabase.from('neighborhoods').delete().eq('id', id);
+    setNeighborhoods(prev => prev.filter(n => n.id !== id));
+  };
+
+  const addTestimonial = async (testimonial: Testimonial) => {
+    await supabase.from('testimonials').insert([testimonial]);
+    setTestimonials(prev => [testimonial, ...prev]);
+  };
+
+  const updateTestimonial = async (updatedTestimonial: Testimonial) => {
+    await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
+    setTestimonials(prev => prev.map(t => t.id === updatedTestimonial.id ? updatedTestimonial : t));
+  };
+
+  const deleteTestimonial = async (id: string) => {
+    await supabase.from('testimonials').delete().eq('id', id);
+    setTestimonials(prev => prev.filter(t => t.id !== id));
+  };
 
   const addCategory = async (name: string): Promise<Category> => {
     const newCat = { id: Date.now().toString(), name };
@@ -245,8 +296,44 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsLoading(true);
     try {
       await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
+      
+      const demoTestimonials: Testimonial[] = [
+        {
+          id: 'demo-1',
+          client_name: "Olawale Adeyemi",
+          testimonial_text: "The Forge Properties made my land acquisition in Ibeju-Lekki so seamless. Their transparency and documentation verification gave me total peace of mind.",
+          rating: 5,
+          property_type: 'Land',
+          show_on_homepage: true,
+          is_verified: true,
+          date: new Date().toISOString()
+        },
+        {
+          id: 'demo-2',
+          client_name: "Chidinma Okoro",
+          testimonial_text: "I found my dream home in Ajah through their platform. The AI search was surprisingly accurate, and the team was professional throughout the process.",
+          rating: 5,
+          property_type: 'House',
+          show_on_homepage: true,
+          is_verified: true,
+          date: new Date().toISOString()
+        },
+        {
+          id: 'demo-3',
+          client_name: "Tunde Bakare",
+          testimonial_text: "Excellent service. They don't just sell; they guide you on the best investment strategies. Highly recommended for anyone looking for verified properties.",
+          rating: 5,
+          property_type: 'Investment',
+          show_on_homepage: true,
+          is_verified: true,
+          date: new Date().toISOString()
+        }
+      ];
+
+      await supabase.from('testimonials').upsert(demoTestimonials);
+      
       await fetchData();
-      alert("System initialized.");
+      alert("System initialized with demo data.");
     } catch (err) {
       console.error(err);
     } finally {
@@ -256,11 +343,13 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   return (
     <PropertyContext.Provider value={{ 
-      properties, leads, subscribers, posts, categories, agents, sales, payouts, settings, isLoading,
+      properties, leads, subscribers, posts, categories, agents, sales, payouts, settings, neighborhoods, testimonials, isLoading,
       addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
       addLead, updateLeadStatus, addSubscriber, updateSettings,
       addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
       addCategory,
+      addNeighborhood, updateNeighborhood, deleteNeighborhood,
+      addTestimonial, updateTestimonial, deleteTestimonial,
       addAgent, updateAgent, getAgentSales, getAgentPayouts, requestPayout, updatePayoutStatus, addSaleManually, updateSaleStatus,
       seedDatabase
     }}>

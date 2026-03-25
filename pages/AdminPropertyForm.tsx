@@ -244,7 +244,7 @@ export const AdminPropertyForm: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 pt-2">
+                  <div className="flex flex-wrap items-center gap-6 pt-2">
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.featured ? 'bg-forge-gold' : 'bg-slate-200'}`}>
                         <div className={`absolute w-4 h-4 bg-white rounded-full transition-transform ${formData.featured ? 'translate-x-5' : 'translate-x-1'}`}></div>
@@ -253,7 +253,15 @@ export const AdminPropertyForm: React.FC = () => {
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Featured</span>
                     </label>
 
-                    <div className="flex-grow">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.show_on_homepage ? 'bg-forge-navy' : 'bg-slate-200'}`}>
+                        <div className={`absolute w-4 h-4 bg-white rounded-full transition-transform ${formData.show_on_homepage ? 'translate-x-5' : 'translate-x-1'}`}></div>
+                      </div>
+                      <input type="checkbox" name="show_on_homepage" checked={formData.show_on_homepage} onChange={(e) => setFormData({...formData, show_on_homepage: e.target.checked})} className="hidden" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Show on Homepage</span>
+                    </label>
+
+                    <div className="flex-grow min-w-[150px]">
                       <select name="status" value={formData.status} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-3 text-xs font-bold uppercase tracking-widest">
                         {Object.values(ListingStatus).map(s => <option key={s} value={s}>{s}</option>)}
                       </select>

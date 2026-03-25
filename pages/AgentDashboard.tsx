@@ -1,14 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, Users, DollarSign, Award, ArrowUpRight, Copy, Check, 
-  Wallet, PieChart, LayoutDashboard, LogOut, MessageSquare, Menu, X, 
-  ArrowRight, Landmark, CreditCard, History, MoreHorizontal
+  Wallet, LayoutDashboard, LogOut, MessageSquare, Menu, X, 
+  Landmark, History
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
-import { AgentSale, PayoutRequest } from '../types';
+import { PayoutRequest } from '../types';
+
+interface NavItemProps {
+  id: 'overview' | 'sales' | 'wallet' | 'referrals';
+  label: string;
+  icon: React.ElementType;
+}
+
+const NavItem: React.FC<NavItemProps & { activeTab: string; setActiveTab: (id: 'overview' | 'sales' | 'wallet' | 'referrals') => void; setIsSidebarOpen: (open: boolean) => void }> = ({ id, label, icon: Icon, activeTab, setActiveTab, setIsSidebarOpen }) => (
+  <button
+    onClick={() => {
+      setActiveTab(id);
+      setIsSidebarOpen(false);
+    }}
+    className={`
+      w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group
+      ${activeTab === id 
+        ? 'bg-forge-gold text-forge-navy shadow-xl shadow-forge-gold/20 translate-x-2' 
+        : 'text-slate-400 hover:text-white hover:bg-white/5'}
+    `}
+  >
+    <Icon size={20} className={`transition-transform duration-300 ${activeTab === id ? 'scale-110' : 'group-hover:scale-110'}`} />
+    <span className="text-xs uppercase tracking-widest font-bold">{label}</span>
+    {activeTab === id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-forge-navy" />}
+  </button>
+);
 
 export const AgentDashboard: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -21,10 +46,11 @@ export const AgentDashboard: React.FC = () => {
   const [payoutAmount, setPayoutAmount] = useState<string>('');
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [isWhatsAppDismissed, setIsWhatsAppDismissed] = useState(false);
+  const [payoutStatus, setPayoutStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   // Real Agent Data
-  const agentSales = getAgentSales(currentUser?.id) || [];
-  const agentPayouts = getAgentPayouts(currentUser?.id) || [];
+  const agentSales = getAgentSales(currentUser?.id || '') || [];
+  const agentPayouts = getAgentPayouts(currentUser?.id || '') || [];
   
   // Dynamic Stats
   const totalEarned = agentSales.reduce((sum, s) => sum + s.commission_amount, 0);
@@ -50,9 +76,14 @@ export const AgentDashboard: React.FC = () => {
   };
 
   const handlePayout = async () => {
+    if (!currentUser?.id) return;
+    
     const amount = parseFloat(payoutAmount);
     if (isNaN(amount) || amount < settings.min_payout_amount || amount > availableBal) {
-      alert(`Min payout is ₦${settings.min_payout_amount.toLocaleString()}. Max is your available balance.`);
+      setPayoutStatus({ 
+        type: 'error', 
+        message: `Min payout is ₦${settings.min_payout_amount.toLocaleString()}. Max is your available balance.` 
+      });
       return;
     }
 
@@ -65,25 +96,18 @@ export const AgentDashboard: React.FC = () => {
       date: new Date().toISOString()
     };
 
-    await requestPayout(payout);
-    setShowPayoutModal(false);
-    setPayoutAmount('');
-    alert("Payout request submitted successfully.");
+    try {
+      await requestPayout(payout);
+      setPayoutAmount('');
+      setPayoutStatus({ type: 'success', message: "Payout request submitted successfully." });
+      setTimeout(() => {
+        setShowPayoutModal(false);
+        setPayoutStatus(null);
+      }, 2000);
+    } catch {
+      setPayoutStatus({ type: 'error', message: "Failed to submit payout request. Please try again." });
+    }
   };
-
-  const NavItem = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
-    <button 
-      onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }}
-      className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-300 font-medium ${
-        activeTab === id 
-          ? 'bg-forge-gold text-forge-navy shadow-lg shadow-forge-gold/20' 
-          : 'text-slate-400 hover:text-white hover:bg-white/5'
-      }`}
-    >
-      <Icon size={20} />
-      <span>{label}</span>
-    </button>
-  );
 
   return (
     <div className="min-h-screen bg-forge-navy flex flex-col lg:flex-row overflow-hidden">
@@ -100,10 +124,10 @@ export const AgentDashboard: React.FC = () => {
           </div>
 
           <nav className="space-y-3 flex-grow">
-            <NavItem id="overview" label="Dashboard" icon={LayoutDashboard} />
-            <NavItem id="sales" label="Sales & Deals" icon={Landmark} />
-            <NavItem id="wallet" label="My Wallet" icon={Wallet} />
-            <NavItem id="referrals" label="Referral Lab" icon={Users} />
+            <NavItem id="overview" label="Dashboard" icon={LayoutDashboard} activeTab={activeTab} setActiveTab={setActiveTab} setIsSidebarOpen={setIsSidebarOpen} />
+            <NavItem id="sales" label="Sales & Deals" icon={Landmark} activeTab={activeTab} setActiveTab={setActiveTab} setIsSidebarOpen={setIsSidebarOpen} />
+            <NavItem id="wallet" label="My Wallet" icon={Wallet} activeTab={activeTab} setActiveTab={setActiveTab} setIsSidebarOpen={setIsSidebarOpen} />
+            <NavItem id="referrals" label="Referral Lab" icon={Users} activeTab={activeTab} setActiveTab={setActiveTab} setIsSidebarOpen={setIsSidebarOpen} />
           </nav>
 
           <div className="pt-8 border-t border-white/5">
@@ -429,6 +453,14 @@ export const AgentDashboard: React.FC = () => {
             <p className="text-slate-500 text-sm mb-8">Funds will be disbursed to your registered bank account.</p>
             
             <div className="space-y-6">
+              {payoutStatus && (
+                <div className={`p-4 rounded-xl text-xs font-bold text-center ${
+                  payoutStatus.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                }`}>
+                  {payoutStatus.message}
+                </div>
+              )}
+              
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Available: ₦{availableBal.toLocaleString()}</label>
                 <div className="relative">
@@ -438,7 +470,8 @@ export const AgentDashboard: React.FC = () => {
                     value={payoutAmount}
                     onChange={(e) => setPayoutAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-4 rounded-xl text-xl font-bold focus:border-forge-gold focus:outline-none"
+                    disabled={payoutStatus?.type === 'success'}
+                    className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-4 rounded-xl text-xl font-bold focus:border-forge-gold focus:outline-none disabled:opacity-50"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-2 italic">Minimum payout: ₦{settings.min_payout_amount.toLocaleString()}</p>
@@ -446,12 +479,16 @@ export const AgentDashboard: React.FC = () => {
 
               <button 
                 onClick={handlePayout}
-                className="w-full bg-forge-navy text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-xl"
+                disabled={payoutStatus?.type === 'success'}
+                className="w-full bg-forge-navy text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-xl disabled:bg-slate-300 disabled:cursor-not-allowed"
               >
-                Confirm Request
+                {payoutStatus?.type === 'success' ? 'Request Sent' : 'Confirm Request'}
               </button>
               <button 
-                onClick={() => setShowPayoutModal(false)}
+                onClick={() => {
+                  setShowPayoutModal(false);
+                  setPayoutStatus(null);
+                }}
                 className="w-full py-2 text-slate-400 font-bold uppercase tracking-widest text-[10px]"
               >
                 Cancel

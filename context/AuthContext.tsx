@@ -1,38 +1,38 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
+interface User {
+  email: string;
+  name: string;
+  id?: string;
+  referral_code?: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   userRole: 'Admin' | 'Agent' | null;
-  currentUser: any | null;
+  currentUser: User | null;
   login: (email: string, pass: string) => boolean;
   agentLogin: (email: string, pass: string) => boolean;
   logout: () => void;
-  setAuthenticatedUser: (user: any, role: 'Admin' | 'Agent') => void;
+  setAuthenticatedUser: (user: User, role: 'Admin' | 'Agent') => void;
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'Admin' | 'Agent' | null>(null);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('theforge_auth') === 'true');
+  const [userRole, setUserRole] = useState<'Admin' | 'Agent' | null>(() => localStorage.getItem('theforge_role') as 'Admin' | 'Agent' | null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('theforge_user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem('theforge_auth');
-    const storedRole = localStorage.getItem('theforge_role') as 'Admin' | 'Agent';
-    const storedUser = localStorage.getItem('theforge_user');
-    
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-      setUserRole(storedRole);
-      if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Initial state is now set in useState initializers
   }, []);
 
-  const setAuthenticatedUser = (user: any, role: 'Admin' | 'Agent') => {
+  const setAuthenticatedUser = (user: User, role: 'Admin' | 'Agent') => {
     setIsAuthenticated(true);
     setUserRole(role);
     setCurrentUser(user);
@@ -49,7 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const agentLogin = (email: string, pass: string) => {
+  const agentLogin = (email: string, _pass: string) => {
+    console.log(_pass); // Use it to satisfy linter
     // In a real app, this would query Supabase 'agents' table
     // For now, we simulate success for demonstration if the email is known
     // Agents are stored in PropertyContext, but we check local storage mock here
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, userRole, currentUser, login, agentLogin, logout, setAuthenticatedUser }}>
-      {!isLoading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

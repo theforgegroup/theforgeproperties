@@ -38,7 +38,7 @@ export const AIConcierge: React.FC = () => {
       const responseText = await getChatResponse(userMsg.text, properties);
       const aiMsg: ChatMessage = { role: 'model', text: responseText };
       setMessages(prev => [...prev, aiMsg]);
-    } catch (error) {
+    } catch (_error) {
       setMessages(prev => [...prev, { role: 'model', text: "I apologize, but I am unable to connect to the server at this moment." }]);
     } finally {
       setIsLoading(false);

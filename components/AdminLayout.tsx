@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck, MapPin, Quote } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminLayoutProps {
@@ -25,6 +25,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { path: '/admin/agents', label: 'Agents', icon: ShieldCheck },
     { path: '/admin/payouts', label: 'Payouts', icon: Wallet },
     { path: '/admin/blog', label: 'Blog', icon: BookOpen },
+    { path: '/admin/neighborhoods', label: 'Neighborhoods', icon: MapPin },
+    { path: '/admin/testimonials', label: 'Testimonials', icon: Quote },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/admin/settings', label: 'Settings', icon: Settings },
   ];
