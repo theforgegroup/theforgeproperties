@@ -112,14 +112,14 @@ export const Home: React.FC = () => {
       />
       
       {/* 1. HERO SECTION */}
-      <section className="relative h-[95vh] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[85vh] md:h-[95vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2600&auto=format&fit=crop" 
             alt="Luxury Property" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-forge-navy/40" />
+          <div className="absolute inset-0 bg-forge-navy/50" />
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center text-white">
@@ -129,60 +129,60 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             {settings.logo && (
-              <img src={settings.logo} alt="The Forge Properties" className="h-16 mx-auto mb-8 object-contain brightness-0 invert" />
+              <img src={settings.logo} alt="The Forge Properties" className="h-12 md:h-16 mx-auto mb-6 md:mb-8 object-contain brightness-0 invert" />
             )}
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6 tracking-tight leading-tight">
               Find Your Dream Property
             </h1>
-            <p className="text-xl md:text-2xl mb-12 max-w-2xl mx-auto text-slate-100 font-light">
+            <p className="text-lg md:text-2xl mb-8 md:mb-12 max-w-2xl mx-auto text-slate-100 font-light px-4">
               Helping you secure verified land, homes, and investment opportunities in Nigeria.
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-5xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl mb-12">
+            <div className="max-w-5xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl mb-8 md:mb-12">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                <div className="bg-white rounded-xl p-4 flex flex-col items-start text-forge-navy">
+                <div className="bg-white rounded-xl p-3 md:p-4 flex flex-col items-start text-forge-navy">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Location</span>
-                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer">
+                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer text-sm md:text-base">
                     <option>All Locations</option>
                     {neighborhoods.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
                   </select>
                 </div>
-                <div className="bg-white rounded-xl p-4 flex flex-col items-start text-forge-navy">
+                <div className="bg-white rounded-xl p-3 md:p-4 flex flex-col items-start text-forge-navy">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Property Type</span>
-                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer">
+                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer text-sm md:text-base">
                     <option>All Types</option>
                     <option>Land</option>
                     <option>House</option>
                     <option>Investment</option>
                   </select>
                 </div>
-                <div className="bg-white rounded-xl p-4 flex flex-col items-start text-forge-navy">
+                <div className="bg-white rounded-xl p-3 md:p-4 flex flex-col items-start text-forge-navy">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Budget</span>
-                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer">
+                  <select className="w-full bg-transparent font-medium focus:outline-none appearance-none cursor-pointer text-sm md:text-base">
                     <option>Any Budget</option>
                     <option>Under ₦50M</option>
                     <option>₦50M - ₦200M</option>
                     <option>₦200M+</option>
                   </select>
                 </div>
-                <button className="bg-forge-gold hover:bg-forge-goldLight text-forge-navy font-bold rounded-xl flex items-center justify-center gap-2 transition-all group h-full py-4 md:py-0">
+                <button className="bg-forge-gold hover:bg-forge-goldLight text-forge-navy font-bold rounded-xl flex items-center justify-center gap-2 transition-all group h-full py-4 md:py-0 w-full">
                   <Search size={20} />
                   <span>Search Properties</span>
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Link 
                 to="/listings" 
-                className="bg-white text-forge-navy px-10 py-4 rounded-xl font-bold hover:bg-forge-gold hover:text-white transition-all shadow-lg"
+                className="w-full sm:w-auto bg-white text-forge-navy px-10 py-4 rounded-xl font-bold hover:bg-forge-gold hover:text-white transition-all shadow-lg text-center"
               >
                 Explore Properties
               </Link>
               <Link 
                 to="/contact" 
-                className="bg-transparent border-2 border-white text-white px-10 py-4 rounded-xl font-bold hover:bg-white hover:text-forge-navy transition-all"
+                className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-10 py-4 rounded-xl font-bold hover:bg-white hover:text-forge-navy transition-all text-center"
               >
                 Book Inspection
               </Link>
@@ -192,16 +192,16 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 2. TRUST METRICS SECTION */}
-      <section className="py-12 bg-slate-50 border-y border-slate-100">
+      <section className="py-12 md:py-16 bg-slate-50 border-y border-slate-100">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {stats.map((stat, i) => (
-              <div key={i} className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-forge-gold/10 rounded-full flex items-center justify-center text-forge-gold mb-4">
-                  <stat.icon size={24} />
+              <div key={i} className="flex flex-col items-center text-center group">
+                <div className="w-14 h-14 bg-forge-gold/10 rounded-full flex items-center justify-center text-forge-gold mb-4 group-hover:scale-110 transition-transform">
+                  <stat.icon size={28} />
                 </div>
-                <span className="text-3xl font-bold text-forge-navy mb-1">{stat.value}</span>
-                <span className="text-xs uppercase tracking-widest text-slate-500 font-medium">{stat.label}</span>
+                <span className="text-3xl md:text-4xl font-bold text-forge-navy mb-1">{stat.value}</span>
+                <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-slate-500 font-bold">{stat.label}</span>
               </div>
             ))}
           </div>
@@ -209,19 +209,19 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 3. FEATURED PROPERTIES SECTION */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
-            <div>
-              <h2 className="text-4xl font-bold text-forge-navy mb-4">Featured Properties</h2>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 md:mb-16 gap-8">
+            <div className="text-center md:text-left">
+              <h2 className="text-3xl md:text-4xl font-bold text-forge-navy mb-4">Featured Properties</h2>
               <p className="text-slate-500">Hand-picked premium listings for your next big move.</p>
             </div>
-            <div className="flex bg-slate-100 p-1 rounded-xl">
+            <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
               {(['Land', 'House', 'Investment'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-8 py-2 rounded-lg text-sm font-bold transition-all ${
+                  className={`flex-1 md:flex-none px-6 md:px-8 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                     activeTab === tab 
                       ? 'bg-white text-forge-navy shadow-sm' 
                       : 'text-slate-500 hover:text-forge-navy'
@@ -233,13 +233,13 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {featuredProperties.length > 0 ? (
               featuredProperties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))
             ) : (
-              <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+              <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 px-6">
                 <p className="text-slate-400 font-serif italic text-lg">No featured {activeTab.toLowerCase()} listings available right now.</p>
                 <Link to="/listings" className="mt-4 inline-block text-forge-navy font-bold underline">Browse all listings</Link>
               </div>
@@ -258,25 +258,25 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 4. HOW IT WORKS SECTION */}
-      <section className="py-24 bg-forge-navy text-white overflow-hidden relative">
+      <section className="py-16 md:py-24 bg-forge-navy text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-forge-gold/5 skew-x-12 transform translate-x-1/4" />
         <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
+          <div className="text-center mb-12 md:mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
             <p className="text-slate-400">Your journey to property ownership in 4 simple steps.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 relative">
             {/* Connection Line */}
             <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-white/10 z-0" />
             
             {steps.map((step, i) => (
               <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-8 group-hover:bg-forge-gold group-hover:border-forge-gold transition-all duration-500">
-                  <step.icon size={32} className="text-forge-gold group-hover:text-forge-navy transition-colors" />
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-6 md:mb-8 group-hover:bg-forge-gold group-hover:border-forge-gold transition-all duration-500">
+                  <step.icon size={28} className="text-forge-gold group-hover:text-forge-navy transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold mb-4">{step.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+                <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">{step.title}</h3>
+                <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-[250px]">{step.description}</p>
               </div>
             ))}
           </div>
@@ -284,25 +284,25 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 5. VALUE PROPOSITION SECTION */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="relative order-2 lg:order-1">
               <img 
                 src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200" 
                 alt="Expert Guidance" 
-                className="rounded-3xl shadow-2xl"
+                className="rounded-3xl shadow-2xl w-full"
               />
-              <div className="absolute -bottom-8 -right-8 bg-forge-gold p-8 rounded-2xl shadow-xl hidden md:block">
-                <ShieldCheck size={48} className="text-forge-navy mb-4" />
-                <p className="text-forge-navy font-bold text-xl">100% Verified<br />Documentation</p>
+              <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 bg-forge-gold p-6 md:p-8 rounded-2xl shadow-xl hidden sm:block">
+                <ShieldCheck size={40} className="text-forge-navy mb-4" />
+                <p className="text-forge-navy font-bold text-lg md:text-xl">100% Verified<br />Documentation</p>
               </div>
             </div>
-            <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-forge-navy mb-8 leading-tight">
+            <div className="order-1 lg:order-2">
+              <h2 className="text-3xl md:text-5xl font-bold text-forge-navy mb-6 md:mb-8 leading-tight">
                 We Don’t Just Sell Property — We Guide You Right
               </h2>
-              <div className="space-y-6 mb-12">
+              <div className="space-y-6 mb-10 md:mb-12">
                 {[
                   { title: "Verified Properties", desc: "Every listing undergoes rigorous verification to ensure it's free from legal encumbrances." },
                   { title: "Proper Documentation", desc: "We handle all the paperwork, ensuring you get your C of O or Governor's Consent without stress." },
@@ -310,19 +310,19 @@ export const Home: React.FC = () => {
                   { title: "Investment Strategy", desc: "We help you identify high-yield opportunities for long-term wealth creation." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
-                    <div className="mt-1">
-                      <CheckCircle2 size={24} className="text-forge-gold" />
+                    <div className="mt-1 shrink-0">
+                      <CheckCircle2 size={20} className="text-forge-gold" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-forge-navy mb-1">{item.title}</h4>
-                      <p className="text-slate-500 text-sm">{item.desc}</p>
+                      <h4 className="font-bold text-forge-navy mb-1 text-base md:text-lg">{item.title}</h4>
+                      <p className="text-slate-500 text-xs md:text-sm">{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
               <Link 
                 to="/contact" 
-                className="inline-flex items-center gap-3 bg-forge-navy text-white px-10 py-5 rounded-xl font-bold hover:bg-forge-gold transition-all shadow-xl"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-forge-navy text-white px-10 py-4 md:py-5 rounded-xl font-bold hover:bg-forge-gold transition-all shadow-xl text-center"
               >
                 Speak to an Advisor <MessageSquare size={20} />
               </Link>
@@ -332,17 +332,17 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 6. TESTIMONIALS SECTION */}
-      <section className="py-24 bg-slate-50 overflow-hidden">
+      <section className="py-16 md:py-24 bg-slate-50 overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-forge-navy mb-4">What Our Clients Say</h2>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-forge-navy mb-4">What Our Clients Say</h2>
             <p className="text-slate-500">Trust is the foundation of every property we sell.</p>
           </div>
 
           <div className="max-w-4xl mx-auto relative">
             {homepageTestimonials.length > 0 ? (
               <>
-                <div className="relative h-[400px] md:h-[350px]">
+                <div className="relative min-h-[450px] md:min-h-[350px]">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={testimonialIndex}
@@ -351,10 +351,16 @@ export const Home: React.FC = () => {
                       exit={{ opacity: 0, x: -50 }}
                       transition={{ duration: 0.5, ease: "easeOut" }}
                       className="absolute inset-0"
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      onDragEnd={(_, info) => {
+                        if (info.offset.x < -50) nextTestimonial();
+                        else if (info.offset.x > 50) prevTestimonial();
+                      }}
                     >
-                      <div className="bg-white p-10 md:p-16 rounded-[3rem] shadow-xl border border-slate-100 flex flex-col md:flex-row items-center gap-10 h-full">
+                      <div className="bg-white p-8 md:p-16 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 flex flex-col md:flex-row items-center gap-8 md:gap-10 h-full">
                         <div className="relative shrink-0">
-                          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-forge-gold/20 shadow-lg">
+                          <div className="w-20 h-20 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-forge-gold/20 shadow-lg">
                             {homepageTestimonials[testimonialIndex].client_photo ? (
                               <img 
                                 src={homepageTestimonials[testimonialIndex].client_photo} 
@@ -362,36 +368,36 @@ export const Home: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-forge-navy text-3xl font-bold">
+                              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-forge-navy text-2xl md:text-3xl font-bold">
                                 {homepageTestimonials[testimonialIndex].client_name.charAt(0)}
                               </div>
                             )}
                           </div>
-                          <div className="absolute -bottom-2 -right-2 bg-forge-gold text-forge-navy p-2 rounded-full shadow-md">
-                            <Quote size={16} fill="currentColor" />
+                          <div className="absolute -bottom-1 -right-1 bg-forge-gold text-forge-navy p-2 rounded-full shadow-md">
+                            <Quote size={14} fill="currentColor" />
                           </div>
                         </div>
 
                         <div className="flex-grow text-center md:text-left">
-                          <div className="flex justify-center md:justify-start gap-1 mb-6">
+                          <div className="flex justify-center md:justify-start gap-1 mb-4 md:mb-6">
                             {[...Array(homepageTestimonials[testimonialIndex].rating)].map((_, i) => (
-                              <Star key={i} size={18} className="fill-forge-gold text-forge-gold" />
+                              <Star key={i} size={16} className="fill-forge-gold text-forge-gold" />
                             ))}
                           </div>
-                          <p className="text-lg md:text-xl text-slate-600 italic mb-8 leading-relaxed font-serif">
+                          <p className="text-base md:text-xl text-slate-600 italic mb-6 md:mb-8 leading-relaxed font-serif">
                             "{homepageTestimonials[testimonialIndex].testimonial_text}"
                           </p>
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                              <h4 className="text-xl font-bold text-forge-navy flex items-center justify-center md:justify-start gap-2">
+                              <h4 className="text-lg md:text-xl font-bold text-forge-navy flex items-center justify-center md:justify-start gap-2">
                                 {homepageTestimonials[testimonialIndex].client_name}
                                 {homepageTestimonials[testimonialIndex].is_verified && (
                                   <span className="bg-green-100 text-green-600 text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-full flex items-center gap-1">
-                                    <CheckCircle2 size={8} /> Verified Client
+                                    <CheckCircle2 size={8} /> Verified
                                   </span>
                                 )}
                               </h4>
-                              <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
                                 {homepageTestimonials[testimonialIndex].property_type || 'Property'} Owner
                               </p>
                             </div>
@@ -438,13 +444,11 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 7. LOCATION / NEIGHBORHOODS */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="flex justify-between items-end mb-16">
-            <div>
-              <h2 className="text-4xl font-bold text-forge-navy mb-4">Explore Neighborhoods</h2>
-              <p className="text-slate-500">Find the perfect location for your lifestyle and investment.</p>
-            </div>
+          <div className="text-center md:text-left mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-forge-navy mb-4">Explore Neighborhoods</h2>
+            <p className="text-slate-500">Find the perfect location for your lifestyle and investment.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -453,21 +457,22 @@ export const Home: React.FC = () => {
                 <Link 
                   key={loc.id} 
                   to={`/listings?location=${loc.name}`}
-                  className="group relative h-80 rounded-3xl overflow-hidden shadow-lg"
+                  className="group relative h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg"
                 >
                   <img 
                     src={loc.image} 
                     alt={loc.name} 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-forge-navy/90 via-transparent to-transparent" />
-                  <div className="absolute bottom-8 left-8">
-                    <h3 className="text-2xl font-bold text-white mb-1">{loc.name}</h3>
-                    <p className="text-forge-gold text-sm font-medium">
+                  <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">{loc.name}</h3>
+                    <p className="text-forge-gold text-xs md:text-sm font-bold uppercase tracking-widest">
                       {properties.filter(p => p.location.includes(loc.name)).length} Properties
                     </p>
                   </div>
-                  <div className="absolute top-8 right-8 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
                     <ArrowRight size={20} />
                   </div>
                 </Link>
@@ -477,19 +482,20 @@ export const Home: React.FC = () => {
                 <Link 
                   key={i} 
                   to={`/listings?location=${loc.name}`}
-                  className="group relative h-80 rounded-3xl overflow-hidden shadow-lg"
+                  className="group relative h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg"
                 >
                   <img 
                     src={loc.image} 
                     alt={loc.name} 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-forge-navy/90 via-transparent to-transparent" />
-                  <div className="absolute bottom-8 left-8">
-                    <h3 className="text-2xl font-bold text-white mb-1">{loc.name}</h3>
-                    <p className="text-forge-gold text-sm font-medium">{loc.count}</p>
+                  <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">{loc.name}</h3>
+                    <p className="text-forge-gold text-xs md:text-sm font-bold uppercase tracking-widest">{loc.count}</p>
                   </div>
-                  <div className="absolute top-8 right-8 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
                     <ArrowRight size={20} />
                   </div>
                 </Link>
@@ -549,46 +555,47 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 9. BLOG / INSIGHTS SECTION */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-4">
-            <div>
-              <h2 className="text-4xl font-bold text-forge-navy mb-4">Real Estate Insights</h2>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 md:mb-16 gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-3xl md:text-4xl font-bold text-forge-navy mb-4">Real Estate Insights</h2>
               <p className="text-slate-500">Stay informed with the latest market trends and investment tips.</p>
             </div>
-            <Link to="/blog" className="bg-slate-100 text-forge-navy px-8 py-3 rounded-xl font-bold hover:bg-forge-navy hover:text-white transition-all">
+            <Link to="/blog" className="w-full md:w-auto text-center bg-slate-100 text-forge-navy px-8 py-3 rounded-xl font-bold hover:bg-forge-navy hover:text-white transition-all">
               View All Articles
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {homepagePosts.length > 0 ? (
               homepagePosts.map((post) => (
                 <Link key={post.id} to={`/blog/${post.slug}`} className="group">
-                  <div className="aspect-[16/10] rounded-3xl overflow-hidden mb-6 shadow-md">
+                  <div className="aspect-[16/10] rounded-2xl md:rounded-3xl overflow-hidden mb-6 shadow-md">
                     <img 
                       src={post.cover_image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800"} 
                       alt={post.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      loading="lazy"
                     />
                   </div>
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-xs font-bold text-forge-gold uppercase tracking-widest">{post.category}</span>
-                    <span className="text-xs text-slate-400">{new Date(post.date).toLocaleDateString()}</span>
+                    <span className="text-[10px] font-bold text-forge-gold uppercase tracking-widest">{post.category}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">{new Date(post.date).toLocaleDateString()}</span>
                   </div>
-                  <h3 className="text-xl font-bold text-forge-navy mb-3 group-hover:text-forge-gold transition-colors line-clamp-2">
+                  <h3 className="text-lg md:text-xl font-bold text-forge-navy mb-3 group-hover:text-forge-gold transition-colors line-clamp-2 leading-tight">
                     {post.title}
                   </h3>
-                  <p className="text-slate-500 text-sm line-clamp-3 mb-6">
+                  <p className="text-slate-500 text-xs md:sm line-clamp-3 mb-6 leading-relaxed">
                     {post.excerpt}
                   </p>
-                  <span className="text-forge-navy font-bold text-sm flex items-center gap-2">
+                  <span className="text-forge-navy font-bold text-xs md:text-sm flex items-center gap-2">
                     Read More <ArrowRight size={16} />
                   </span>
                 </Link>
               ))
             ) : (
-              <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+              <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 px-6">
                 <p className="text-slate-400 font-serif italic text-lg">No blog posts available right now.</p>
                 <Link to="/blog" className="mt-4 inline-block text-forge-navy font-bold underline">Visit our blog</Link>
               </div>
@@ -598,35 +605,36 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 10. FINAL CTA SECTION */}
-      <section className="py-24 bg-white px-6">
+      <section className="py-16 md:py-24 bg-white px-6">
         <div className="container mx-auto">
-          <div className="bg-forge-navy rounded-[4rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="bg-forge-navy rounded-[2rem] md:rounded-[4rem] p-8 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
             <div className="absolute inset-0 opacity-10">
               <img 
                 src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000" 
                 className="w-full h-full object-cover" 
                 alt="Background"
+                loading="lazy"
               />
             </div>
             <div className="relative z-10 max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-6xl font-bold mb-8 leading-tight">
+              <h2 className="text-3xl md:text-6xl font-bold mb-6 md:mb-8 leading-tight">
                 Let’s Help You Own Property This Year
               </h2>
-              <p className="text-xl text-slate-400 mb-12">
+              <p className="text-base md:text-xl text-slate-400 mb-10 md:mb-12">
                 Join hundreds of happy homeowners and investors who trust The Forge Properties.
               </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
                 <Link 
                   to="/listings" 
-                  className="bg-forge-gold text-forge-navy px-10 py-5 rounded-2xl font-bold text-lg hover:bg-white transition-all shadow-xl"
+                  className="w-full sm:w-auto bg-forge-gold text-forge-navy px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-base md:text-lg hover:bg-white transition-all shadow-xl text-center"
                 >
                   Get Started
                 </Link>
                 <a 
-                  href={`https://wa.me/${settings.contact_phone.replace(/\D/g, '')}`}
+                  href={`https://wa.me/${settings.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent("Hello, I’m interested in a property I saw on your website.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-3"
+                  className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 text-white px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-base md:text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-3 text-center"
                 >
                   <MessageSquare size={24} />
                   Chat on WhatsApp

@@ -97,23 +97,32 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div className={`lg:hidden absolute top-full left-0 w-full bg-white shadow-2xl overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="flex flex-col py-10 px-8 space-y-8 bg-white">
-          {navLinks.map((link) => (
+      <div className={`lg:hidden fixed inset-0 top-[72px] w-full bg-white/95 backdrop-blur-2xl z-[90] transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
+        <div className="flex flex-col h-full py-12 px-8 space-y-8 overflow-y-auto">
+          {navLinks.map((link, index) => (
             <Link
               key={link.name}
               to={link.path}
-              className="text-forge-navy hover:text-forge-gold text-lg font-bold uppercase tracking-widest transition-colors"
+              className={`text-forge-navy hover:text-forge-gold text-2xl font-bold uppercase tracking-[0.2em] transition-all duration-300 transform ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}
+              style={{ transitionDelay: `${index * 100}ms` }}
+              onClick={() => setIsOpen(false)}
             >
               {link.name}
             </Link>
           ))}
-          <Link 
-            to="/listings"
-            className="block text-center bg-forge-navy text-white py-5 rounded-2xl text-sm uppercase tracking-widest font-bold hover:bg-forge-gold transition-colors"
-          >
-            Find a Home
-          </Link>
+          <div className={`pt-8 border-t border-slate-100 space-y-4 transform transition-all duration-500 delay-500 ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <Link 
+              to="/listings"
+              className="block w-full text-center bg-forge-navy text-white py-5 rounded-2xl text-sm uppercase tracking-widest font-bold hover:bg-forge-gold transition-all shadow-xl shadow-forge-navy/10"
+              onClick={() => setIsOpen(false)}
+            >
+              Find a Home
+            </Link>
+            <div className="flex justify-center gap-6 pt-8">
+              {/* Social placeholders or contact info */}
+              <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-bold">The Forge Properties</span>
+            </div>
+          </div>
         </div>
       </div>
     </nav>

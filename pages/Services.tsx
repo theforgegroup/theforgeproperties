@@ -28,38 +28,41 @@ export const Services: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
-      <div className="relative pt-32 pb-24 md:pt-40 md:pb-32 bg-slate-900 overflow-hidden">
+      <div className="relative pt-32 md:pt-48 pb-16 md:pb-32 bg-slate-900 overflow-hidden">
         <img 
           src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" 
           className="absolute inset-0 w-full h-full object-cover opacity-20"
           alt="Architecture"
+          loading="lazy"
         />
         <div className="relative z-10 container mx-auto px-6 text-center">
-           <span className="text-forge-gold text-xs uppercase tracking-[0.4em] font-bold mb-4 block animate-fade-in-up">What We Do</span>
-           <h1 className="text-4xl md:text-6xl font-serif text-white font-bold mb-6">The Art of Service</h1>
-           <p className="text-slate-400 max-w-2xl mx-auto text-lg">Comprehensive real estate solutions tailored to your unique needs.</p>
+           <span className="text-forge-gold text-[10px] md:text-xs uppercase tracking-[0.4em] font-bold mb-4 block animate-fade-in-up">What We Do</span>
+           <h1 className="text-3xl md:text-7xl font-bold text-white mb-6 leading-tight">The Art of Service</h1>
+           <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-xl font-medium leading-relaxed">Comprehensive real estate solutions tailored to your unique needs.</p>
         </div>
       </div>
 
       <div className="bg-white">
         {services.map((service, index) => (
-          <div key={index} className={`flex flex-col md:flex-row ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+          <div key={index} className={`flex flex-col lg:flex-row ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
             {/* Image Side */}
-            <div className="md:w-1/2 h-64 md:h-auto overflow-hidden group">
+            <div className="lg:w-1/2 h-64 md:h-96 lg:h-auto overflow-hidden group relative">
+              <div className="absolute inset-0 bg-forge-navy/10 z-10" />
               <img 
                 src={service.image} 
                 alt={service.title} 
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000"
+                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000"
+                loading="lazy"
               />
             </div>
             
             {/* Content Side */}
-            <div className="md:w-1/2 p-8 md:p-20 flex flex-col justify-center bg-white">
-              <span className="text-forge-gold text-5xl md:text-6xl font-serif opacity-20 mb-4 -ml-4">0{index + 1}</span>
-              <h3 className="text-2xl md:text-3xl font-serif text-forge-navy mb-6">{service.title}</h3>
-              <p className="text-slate-600 leading-relaxed text-lg mb-8">{service.desc}</p>
-              <button className="flex items-center gap-2 text-forge-navy font-bold uppercase tracking-widest text-xs hover:text-forge-gold transition-colors self-start group">
-                Learn More <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
+            <div className="lg:w-1/2 p-10 md:p-20 flex flex-col justify-center bg-white">
+              <span className="text-forge-gold text-5xl md:text-8xl font-bold opacity-10 mb-6 -ml-4 select-none">0{index + 1}</span>
+              <h3 className="text-2xl md:text-4xl font-bold text-forge-navy mb-6 leading-tight">{service.title}</h3>
+              <p className="text-slate-500 leading-relaxed text-sm md:text-lg mb-10 font-medium">{service.desc}</p>
+              <button className="flex items-center gap-3 text-forge-navy font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs hover:text-forge-gold transition-all self-start group/btn bg-slate-50 px-6 py-4 rounded-2xl">
+                Learn More <ArrowRight size={18} className="transform group-hover/btn:translate-x-2 transition-transform" />
               </button>
             </div>
           </div>

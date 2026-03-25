@@ -97,16 +97,16 @@ export const ListingDetails: React.FC = () => {
         </Link>
       </div>
 
-      <div className="h-[40vh] md:h-[60vh] bg-slate-900 relative overflow-hidden">
+      <div className="h-[45vh] md:h-[70vh] bg-slate-900 relative overflow-hidden">
         <img src={property.images[activeImage]} alt={property.title} className="w-full h-full object-cover opacity-90" />
         
         {property.images.length > 1 && (
-          <div className="absolute bottom-6 left-4 right-4 md:left-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          <div className="absolute bottom-6 left-0 w-full px-4 md:px-6 flex gap-3 overflow-x-auto pb-4 no-scrollbar snap-x">
             {property.images.map((img, idx) => (
               <button 
                 key={idx} 
                 onClick={() => setActiveImage(idx)}
-                className={`w-16 h-12 flex-shrink-0 border-2 transition-all ${activeImage === idx ? 'border-forge-gold scale-105 shadow-lg' : 'border-white/50 opacity-70 hover:opacity-100'}`}
+                className={`w-20 h-14 md:w-24 md:h-16 flex-shrink-0 border-2 transition-all rounded-xl overflow-hidden snap-center ${activeImage === idx ? 'border-forge-gold scale-105 shadow-2xl' : 'border-white/30 opacity-60 hover:opacity-100'}`}
               >
                 <img src={img} className="w-full h-full object-cover" />
               </button>
@@ -115,68 +115,84 @@ export const ListingDetails: React.FC = () => {
         )}
       </div>
 
-      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-16">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
           <div className="lg:w-2/3">
-            <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
-              <div>
-                <span className="text-forge-gold text-xs font-bold uppercase tracking-widest mb-2 block">{property.type}</span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-forge-navy font-bold mb-2 leading-tight">{property.title}</h1>
-                <div className="flex items-center text-slate-500">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
+              <div className="w-full">
+                <span className="text-forge-gold text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] mb-3 block">{property.type}</span>
+                <h1 className="text-3xl md:text-5xl font-bold text-forge-navy mb-4 leading-tight">{property.title}</h1>
+                <div className="flex items-center text-slate-500 font-medium">
                   <MapPin size={18} className="mr-2 text-forge-gold shrink-0" />
                   {property.location}
                 </div>
               </div>
-              <div className="text-left md:text-right">
-                <div className="text-2xl md:text-3xl text-forge-navy font-light">₦{property.price.toLocaleString()}</div>
+              <div className="w-full md:w-auto text-left md:text-right bg-slate-100 md:bg-transparent p-4 md:p-0 rounded-2xl">
+                <div className="text-3xl md:text-4xl text-forge-navy font-bold">₦{property.price.toLocaleString()}</div>
+                {property.status === 'For Rent' && <span className="text-sm text-slate-500 font-medium">per annum</span>}
               </div>
             </div>
 
-            <div className="flex gap-4 md:gap-8 border-y border-slate-200 py-6 mb-8 text-slate-600 overflow-x-auto no-scrollbar">
-               <div className="flex items-center gap-2 whitespace-nowrap">
-                 <Bed className="text-forge-gold" size={20} />
-                 <span className="font-bold text-forge-navy">{property.bedrooms}</span> Beds
+            <div className="grid grid-cols-3 gap-4 md:gap-10 border-y border-slate-100 py-8 mb-10 text-slate-600">
+               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 text-center md:text-left">
+                 <div className="w-10 h-10 rounded-full bg-forge-gold/10 flex items-center justify-center text-forge-gold mb-1 md:mb-0">
+                   <Bed size={20} />
+                 </div>
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Beds</p>
+                   <p className="font-bold text-forge-navy text-lg">{property.bedrooms}</p>
+                 </div>
                </div>
-               <div className="flex items-center gap-2 whitespace-nowrap">
-                 <Bath className="text-forge-gold" size={20} />
-                 <span className="font-bold text-forge-navy">{property.bathrooms}</span> Baths
+               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 text-center md:text-left">
+                 <div className="w-10 h-10 rounded-full bg-forge-gold/10 flex items-center justify-center text-forge-gold mb-1 md:mb-0">
+                   <Bath size={20} />
+                 </div>
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Baths</p>
+                   <p className="font-bold text-forge-navy text-lg">{property.bathrooms}</p>
+                 </div>
                </div>
-               <div className="flex items-center gap-2 whitespace-nowrap">
-                 <Move className="text-forge-gold" size={20} />
-                 <span className="font-bold text-forge-navy">{property.area_sq_ft.toLocaleString()}</span> Sq Ft
+               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 text-center md:text-left">
+                 <div className="w-10 h-10 rounded-full bg-forge-gold/10 flex items-center justify-center text-forge-gold mb-1 md:mb-0">
+                   <Move size={20} />
+                 </div>
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Area</p>
+                   <p className="font-bold text-forge-navy text-lg">{property.area_sq_ft.toLocaleString()}<span className="text-xs ml-1">ft²</span></p>
+                 </div>
                </div>
             </div>
 
             <div className="mb-12">
-              <h3 className="text-xl font-serif text-forge-navy mb-4">Description</h3>
-              <p className="text-slate-600 leading-relaxed text-base md:text-lg">{property.description}</p>
+              <h3 className="text-xl md:text-2xl font-bold text-forge-navy mb-6 uppercase tracking-widest">Description</h3>
+              <p className="text-slate-600 leading-relaxed text-base md:text-xl font-medium">{property.description}</p>
             </div>
 
             <div className="mb-12">
-              <h3 className="text-xl font-serif text-forge-navy mb-6">Key Features</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <h3 className="text-xl md:text-2xl font-bold text-forge-navy mb-6 uppercase tracking-widest">Key Features</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {property.features.map(feature => (
-                  <div key={feature} className="flex items-center gap-3 text-slate-600">
-                    <CheckCircle size={16} className="text-forge-gold shrink-0" />
-                    <span>{feature}</span>
+                  <div key={feature} className="flex items-center gap-4 text-slate-600 bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
+                    <CheckCircle size={20} className="text-forge-gold shrink-0" />
+                    <span className="font-medium">{feature}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mb-12">
-              <div className="flex justify-between items-end mb-6">
-                <h3 className="text-xl font-serif text-forge-navy">Location & Neighborhood</h3>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                <h3 className="text-xl md:text-2xl font-bold text-forge-navy uppercase tracking-widest">Location</h3>
                 <a 
                   href={mapExternalUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center gap-2 text-xs font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-colors"
+                  className="flex items-center gap-2 text-[10px] font-bold text-forge-gold uppercase tracking-[0.2em] hover:text-forge-navy transition-colors bg-forge-gold/10 px-4 py-2 rounded-full"
                 >
-                  View on Google Maps <ExternalLink size={14} />
+                  Open in Google Maps <ExternalLink size={14} />
                 </a>
               </div>
-              <div className="w-full h-80 bg-slate-200 rounded overflow-hidden border border-slate-200 shadow-sm">
+              <div className="w-full h-72 md:h-96 bg-slate-200 rounded-3xl overflow-hidden border border-slate-100 shadow-2xl shadow-slate-200/50">
                 <iframe
                   width="100%"
                   height="100%"
@@ -187,52 +203,54 @@ export const ListingDetails: React.FC = () => {
                   src={mapEmbedUrl}
                 ></iframe>
               </div>
-              <p className="text-xs text-slate-400 mt-3 italic">Map location is approximate based on address provided.</p>
+              <p className="text-[10px] text-slate-400 mt-4 italic font-medium">Map location is approximate based on address provided.</p>
             </div>
           </div>
 
           <div className="lg:w-1/3">
-             <div className="bg-white p-6 md:p-8 shadow-xl border-t-4 border-forge-gold lg:sticky lg:top-24">
-               <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+             <div className="bg-white p-6 md:p-10 shadow-2xl shadow-slate-200/50 border border-slate-100 rounded-3xl lg:sticky lg:top-24">
+               <div className="flex items-center gap-5 mb-8 border-b border-slate-50 pb-8">
                  {agentImage ? (
-                   <img src={agentImage} alt={agentName} className="w-16 h-16 rounded-full object-cover border border-slate-200" />
+                   <img src={agentImage} alt={agentName} className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-2 border-slate-50 shadow-lg" />
                  ) : (
-                   <div className="w-16 h-16 rounded-full bg-forge-navy flex items-center justify-center text-forge-gold shrink-0"><Headset size={28} /></div>
+                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-forge-navy flex items-center justify-center text-forge-gold shrink-0 shadow-lg"><Headset size={32} /></div>
                  )}
                  <div>
-                   <p className="text-slate-400 text-xs uppercase tracking-wider">Listing Agent</p>
-                   <h4 className="font-serif text-lg text-forge-navy leading-tight mb-1">{agentName}</h4>
-                   <p className="text-forge-gold text-sm font-bold">{agentPhone}</p>
+                   <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-bold mb-1">Listing Agent</p>
+                   <h4 className="text-xl font-bold text-forge-navy leading-tight mb-2">{agentName}</h4>
+                   <p className="text-forge-gold text-sm font-bold tracking-widest">{agentPhone}</p>
                  </div>
                </div>
 
                {/* Direct Call Button - tel: protocol */}
                <a 
                  href={`tel:${agentPhone}`} 
-                 className="w-full mb-6 bg-forge-gold text-forge-navy py-4 uppercase font-bold tracking-widest text-xs hover:bg-white border border-forge-gold transition-all flex items-center justify-center gap-3 shadow-lg group"
+                 className="w-full mb-8 bg-forge-gold text-forge-navy py-5 rounded-2xl uppercase font-bold tracking-[0.2em] text-[10px] hover:bg-forge-navy hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl shadow-forge-gold/20 group"
                >
-                 <Phone size={16} className="group-hover:animate-bounce" /> Call Agent Now
+                 <Phone size={18} className="group-hover:animate-bounce" /> Call Agent Now
                </a>
 
-               <div className="flex gap-2 mb-6">
-                 <button onClick={() => setFormMode('viewing')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'viewing' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Viewing</button>
-                 <button onClick={() => setFormMode('offer')} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${formMode === 'offer' ? 'bg-forge-navy text-white' : 'bg-slate-100 text-slate-500'}`}>Make Offer</button>
+               <div className="flex gap-3 mb-8 p-1.5 bg-slate-50 rounded-2xl">
+                 <button onClick={() => setFormMode('viewing')} className={`flex-1 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${formMode === 'viewing' ? 'bg-white text-forge-navy shadow-lg' : 'text-slate-400 hover:text-forge-navy'}`}>Viewing</button>
+                 <button onClick={() => setFormMode('offer')} className={`flex-1 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${formMode === 'offer' ? 'bg-white text-forge-navy shadow-lg' : 'text-slate-400 hover:text-forge-navy'}`}>Make Offer</button>
                </div>
 
-               <h3 className="text-lg font-serif text-forge-navy mb-4">{formMode === 'viewing' ? 'Schedule a Viewing' : 'Submit an Offer'}</h3>
+               <h3 className="text-lg md:text-xl font-bold text-forge-navy mb-6 uppercase tracking-widest">{formMode === 'viewing' ? 'Schedule a Viewing' : 'Submit an Offer'}</h3>
                
                {submitStatus === 'success' ? (
-                 <div className="bg-green-50 text-green-700 p-4 text-center rounded border border-green-200">
-                   <CheckCircle className="mx-auto mb-2 text-green-600" size={24} />
-                   <p className="font-bold">Request Sent!</p>
+                 <div className="bg-green-50 text-green-700 p-6 text-center rounded-2xl border border-green-100">
+                   <CheckCircle className="mx-auto mb-3 text-green-600" size={32} />
+                   <p className="font-bold uppercase tracking-widest text-xs">Request Sent Successfully</p>
                  </div>
                ) : (
                  <form className="space-y-4" onSubmit={handleSubmit}>
-                   <input type="text" placeholder="Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
-                   <input type="email" placeholder="Email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
-                   <input type="tel" placeholder="Phone" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none" />
-                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-4 uppercase font-bold tracking-widest text-xs hover:bg-forge-dark transition-all flex items-center justify-center gap-2 shadow-lg">
-                     {submitStatus === 'submitting' ? <Loader2 size={16} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={14} /> : <DollarSign size={14} />)}
+                   <div className="space-y-4">
+                     <input type="text" placeholder="Full Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none focus:bg-white transition-all font-medium" />
+                     <input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none focus:bg-white transition-all font-medium" />
+                     <input type="tel" placeholder="Phone Number" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none focus:bg-white transition-all font-medium" />
+                   </div>
+                   <button disabled={submitStatus === 'submitting'} className="w-full bg-forge-navy text-white py-5 rounded-2xl uppercase font-bold tracking-[0.2em] text-[10px] hover:bg-forge-gold hover:text-forge-navy transition-all flex items-center justify-center gap-3 shadow-xl shadow-forge-navy/20 mt-6 active:scale-95 disabled:opacity-50">
+                     {submitStatus === 'submitting' ? <Loader2 size={18} className="animate-spin" /> : (formMode === 'viewing' ? <Calendar size={18} /> : <DollarSign size={18} />)}
                      {submitStatus === 'submitting' ? 'Processing...' : (formMode === 'viewing' ? 'Request Viewing' : 'Submit Offer')}
                    </button>
                  </form>
