@@ -10,6 +10,7 @@ export const AdminSettings: React.FC = () => {
   const { settings, updateSettings, seedDatabase } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   
@@ -25,12 +26,17 @@ export const AdminSettings: React.FC = () => {
     setMessage('');
 
     try {
+      console.log('Attempting to save settings:', formData);
       await updateSettings(formData);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsError(false);
       setMessage('Settings updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      // Keep message visible longer for user to see
+      setTimeout(() => setMessage(''), 5000);
     } catch (err) {
+      console.error('Form submission error:', err);
       const errorMsg = err instanceof Error ? err.message : String(err);
+      setIsError(true);
       setMessage(`Save failed: ${errorMsg}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
@@ -102,7 +108,7 @@ export const AdminSettings: React.FC = () => {
 
         {message && (
           <div className={`p-4 rounded-xl mb-6 text-sm font-bold border flex items-center gap-2 ${
-            message.includes('failed') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'
+            isError ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'
           }`}>
             <BadgeCheck size={16} /> {message}
           </div>

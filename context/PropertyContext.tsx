@@ -308,9 +308,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
-    const { error } = await supabase.from('site_settings').upsert({ id: 1, ...newSettings });
-    if (error) throw error;
-    setSettings(newSettings);
+    try {
+      const { error } = await supabase.from('site_settings').upsert({ id: 1, ...newSettings });
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        throw error;
+      }
+      setSettings(newSettings);
+    } catch (err) {
+      console.error('updateSettings failed:', err);
+      throw err;
+    }
   };
 
   const seedDatabase = async () => {
