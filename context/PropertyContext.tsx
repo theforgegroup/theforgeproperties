@@ -308,7 +308,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
-    const { error } = await supabase.from('site_settings').update(newSettings).eq('id', 1);
+    const { error } = await supabase.from('site_settings').upsert({ id: 1, ...newSettings });
     if (error) throw error;
     setSettings(newSettings);
   };

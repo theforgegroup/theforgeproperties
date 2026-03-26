@@ -29,7 +29,9 @@ export const AdminSettings: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setMessage('Settings updated successfully!');
       setTimeout(() => setMessage(''), 3000);
-    } catch {
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setMessage(`Save failed: ${errorMsg}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -99,7 +101,9 @@ export const AdminSettings: React.FC = () => {
         </div>
 
         {message && (
-          <div className="bg-green-50 text-green-700 p-4 rounded-xl mb-6 text-sm font-bold border border-green-200 flex items-center gap-2">
+          <div className={`p-4 rounded-xl mb-6 text-sm font-bold border flex items-center gap-2 ${
+            message.includes('failed') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'
+          }`}>
             <BadgeCheck size={16} /> {message}
           </div>
         )}
