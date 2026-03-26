@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 /* Added Landmark to imports */
-import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2 } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2, Plus, X, User } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { SiteSettings } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
@@ -41,6 +41,44 @@ export const AdminSettings: React.FC = () => {
       setIsSeeding(true);
       await seedDatabase();
       setIsSeeding(false);
+    }
+  };
+
+  const handleAddTeamMember = () => {
+    setFormData({
+      ...formData,
+      team_members: [...(formData.team_members || []), { name: '', role: '', image: '' }]
+    });
+  };
+
+  const handleRemoveTeamMember = (index: number) => {
+    const newTeam = [...formData.team_members];
+    newTeam.splice(index, 1);
+    setFormData({ ...formData, team_members: newTeam });
+  };
+
+  const handleUpdateTeamMember = (index: number, field: string, value: string) => {
+    const newTeam = [...formData.team_members];
+    newTeam[index] = { ...newTeam[index], [field]: value };
+    setFormData({ ...formData, team_members: newTeam });
+  };
+
+  const handleTeamMemberImageUpload = async (index: number, file: File) => {
+    setIsSaving(true);
+    setMessage('');
+    try {
+      const base64String = await resizeImage(file, 400, 400);
+      const { dataURLtoBlob } = await import('../utils/imageUtils');
+      const { uploadImage } = await import('../lib/supabaseClient');
+      const blob = dataURLtoBlob(base64String);
+      const fileName = `team-${Date.now()}-${index}.${file.name.split('.').pop()}`;
+      const publicUrl = await uploadImage('site-assets', fileName, blob);
+      handleUpdateTeamMember(index, 'image', publicUrl);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setMessage(`Team member image upload failed: ${errorMsg}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -134,6 +172,104 @@ export const AdminSettings: React.FC = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Meet The Team Section */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100 flex justify-between items-end">
+                <div>
+                  <h3 className="font-serif text-xl text-forge-navy font-bold mb-1">Meet The Team</h3>
+                  <p className="text-slate-500 text-sm">Manage your company's leadership and team members.</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleAddTeamMember}
+                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-forge-navy text-white px-4 py-2 hover:bg-forge-dark transition-colors"
+                >
+                  <Plus size={14} /> Add Member
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {formData.team_members?.map((member, index) => (
+                  <div key={index} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 relative group">
+                    <button 
+                      type="button"
+                      onClick={() => handleRemoveTeamMember(index)}
+                      className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all z-10"
+                    >
+                      <X size={14} />
+                    </button>
+                    
+                    <div className="flex gap-6">
+                      <div className="w-24 h-24 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden relative group/img shrink-0">
+                        {member.image ? (
+                          <>
+                            <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              onClick={() => handleUpdateTeamMember(index, 'image', '')}
+                              className="absolute inset-0 bg-forge-navy/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="text-slate-300 flex flex-col items-center gap-1">
+                            <User size={24} />
+                            <button 
+                              type="button"
+                              onClick={() => document.getElementById(`team-upload-${index}`)?.click()}
+                              className="text-[8px] font-bold uppercase tracking-tight text-forge-gold hover:underline"
+                            >
+                              Upload
+                            </button>
+                          </div>
+                        )}
+                        <input 
+                          id={`team-upload-${index}`}
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleTeamMemberImageUpload(index, file);
+                          }} 
+                        />
+                      </div>
+                      
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Full Name</label>
+                          <input 
+                            type="text" 
+                            value={member.name} 
+                            onChange={(e) => handleUpdateTeamMember(index, 'name', e.target.value)}
+                            className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none"
+                            placeholder="e.g. Daniel Paul"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Role / Position</label>
+                          <input 
+                            type="text" 
+                            value={member.role} 
+                            onChange={(e) => handleUpdateTeamMember(index, 'role', e.target.value)}
+                            className="w-full bg-white border border-slate-200 p-3 text-sm focus:border-forge-gold focus:outline-none"
+                            placeholder="e.g. Co-Founder"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {(!formData.team_members || formData.team_members.length === 0) && (
+                <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                  <p className="text-slate-400 text-sm italic">No team members added yet.</p>
+                </div>
+              )}
             </div>
 
             {/* Agent Integration Settings */}

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { 
-  Plus, Trash2, Save, X, Upload, Loader2, Star, Quote, CheckCircle2, Database
+  Plus, Trash2, Edit2, Save, X, Upload, Loader2, Star, Quote, CheckCircle2, Database
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { Testimonial } from '../types';

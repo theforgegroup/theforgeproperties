@@ -28,6 +28,7 @@ import { AIConcierge } from './components/AIConcierge';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PropertyProvider, useProperties } from './context/PropertyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -113,14 +114,16 @@ const AppLayout: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <PropertyProvider>
-      <AuthProvider>
-        <Router>
-          <ScrollToTop />
-          <AppLayout />
-        </Router>
-      </AuthProvider>
-    </PropertyProvider>
+    <ErrorBoundary>
+      <PropertyProvider>
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <AppLayout />
+          </Router>
+        </AuthProvider>
+      </PropertyProvider>
+    </ErrorBoundary>
   );
 };
 
