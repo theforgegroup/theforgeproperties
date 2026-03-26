@@ -112,7 +112,7 @@ export const Home: React.FC = () => {
       />
       
       {/* 1. HERO SECTION */}
-      <section className="relative h-[85vh] md:h-[95vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen md:h-[95vh] flex items-center justify-center overflow-hidden py-20 md:py-0">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2600&auto=format&fit=crop" 
@@ -122,16 +122,16 @@ export const Home: React.FC = () => {
           <div className="absolute inset-0 bg-forge-navy/50" />
         </div>
         
-        <div className="relative z-10 container mx-auto px-6 text-center text-white">
+        <div className="relative z-10 container mx-auto px-6 text-center text-white pt-12 md:pt-0">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
             {settings.logo && (
-              <img src={settings.logo} alt="The Forge Properties" className="h-12 md:h-16 mx-auto mb-6 md:mb-8 object-contain brightness-0 invert" />
+              <img src={settings.logo} alt="The Forge Properties" className="h-10 md:h-16 mx-auto mb-8 md:mb-8 object-contain brightness-0 invert" />
             )}
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6 tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 md:mb-6 tracking-tight leading-tight">
               Find Your Dream Property
             </h1>
             <p className="text-lg md:text-2xl mb-8 md:mb-12 max-w-2xl mx-auto text-slate-100 font-light px-4">
@@ -192,7 +192,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 2. TRUST METRICS SECTION */}
-      <section className="py-12 md:py-16 bg-slate-50 border-y border-slate-100">
+      <section className="py-12 md:py-16 bg-slate-50 border-y border-slate-100 relative z-20">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {stats.map((stat, i) => (
