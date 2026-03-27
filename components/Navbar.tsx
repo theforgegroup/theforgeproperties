@@ -43,59 +43,73 @@ export const Navbar: React.FC = () => {
           : 'bg-transparent text-white py-6'
       }`}
     >
-      <div className="container mx-auto px-6 flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="flex flex-col group items-center">
-          {settings.logo ? (
-            <img src={settings.logo} alt="The Forge Properties" className="h-12 md:h-16 w-auto object-contain" fetchPriority="high" />
-          ) : isLoading ? (
-            <div className="h-12 w-32 animate-pulse bg-white/10 rounded" />
-          ) : (
-            <>
-              <span className={`text-2xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>
-                THE FORGE
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
-            </>
-          )}
-        </Link>
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-3 items-center lg:flex lg:justify-between">
+          {/* Mobile Left Spacer */}
+          <div className="lg:hidden w-10"></div>
 
-        {/* Desktop Menu */}
-        <div className="hidden lg:flex space-x-10 items-center">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={`text-xs font-bold uppercase tracking-widest hover:text-forge-gold transition-all relative group ${
-                location.pathname === link.path 
-                  ? 'text-forge-gold' 
-                  : scrolled || !isHome ? 'text-forge-navy' : 'text-slate-200'
+          {/* Logo - Centered on mobile, left-aligned on desktop */}
+          <div className="flex justify-center lg:justify-start">
+            <Link to="/" className="flex flex-col group items-center lg:items-start">
+              {settings.logo ? (
+                <img 
+                  src={settings.logo} 
+                  alt="The Forge Properties" 
+                  className="h-14 md:h-20 w-auto object-contain" 
+                  fetchpriority="high" 
+                />
+              ) : isLoading ? (
+                <div className="h-14 w-32 animate-pulse bg-white/10 rounded" />
+              ) : (
+                <>
+                  <span className={`text-2xl md:text-3xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>
+                    THE FORGE
+                  </span>
+                  <span className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
+                </>
+              )}
+            </Link>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden lg:flex space-x-10 items-center">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`text-xs font-bold uppercase tracking-widest hover:text-forge-gold transition-all relative group ${
+                  location.pathname === link.path 
+                    ? 'text-forge-gold' 
+                    : scrolled || !isHome ? 'text-forge-navy' : 'text-slate-200'
+                }`}
+              >
+                {link.name}
+                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-forge-gold transition-all group-hover:w-full ${location.pathname === link.path ? 'w-full' : ''}`} />
+              </Link>
+            ))}
+            <Link 
+              to="/contact"
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs uppercase font-bold tracking-widest transition-all duration-300 ${
+                scrolled || !isHome
+                  ? 'bg-forge-navy text-white hover:bg-forge-gold'
+                  : 'bg-white text-forge-navy hover:bg-forge-gold hover:text-white'
               }`}
             >
-              {link.name}
-              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-forge-gold transition-all group-hover:w-full ${location.pathname === link.path ? 'w-full' : ''}`} />
+              <MessageSquare size={16} />
+              Contact Us
             </Link>
-          ))}
-          <Link 
-            to="/contact"
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs uppercase font-bold tracking-widest transition-all duration-300 ${
-              scrolled || !isHome
-                ? 'bg-forge-navy text-white hover:bg-forge-gold'
-                : 'bg-white text-forge-navy hover:bg-forge-gold hover:text-white'
-            }`}
-          >
-            <MessageSquare size={16} />
-            Contact Us
-          </Link>
-        </div>
+          </div>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className={`lg:hidden transition-colors focus:outline-none ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+          {/* Mobile Menu Button */}
+          <div className="flex justify-end lg:hidden">
+            <button 
+              className={`transition-colors focus:outline-none ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {isOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Mobile Menu Dropdown */}
