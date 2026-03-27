@@ -47,9 +47,9 @@ export const Navbar: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="flex flex-col group items-center">
           {settings.logo ? (
-            <img src={settings.logo} alt="The Forge Properties" className="h-10 w-auto object-contain" />
+            <img src={settings.logo} alt="The Forge Properties" className="h-12 md:h-16 w-auto object-contain" fetchPriority="high" />
           ) : isLoading ? (
-            <div className="h-10 w-32 animate-pulse bg-white/10 rounded" />
+            <div className="h-12 w-32 animate-pulse bg-white/10 rounded" />
           ) : (
             <>
               <span className={`text-2xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>

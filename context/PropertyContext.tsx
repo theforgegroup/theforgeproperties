@@ -103,37 +103,43 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const { data: propsData } = await supabase.from('properties').select('*').order('id', { ascending: false });
+      // Fetch settings first or in parallel to prioritize logo
+      const [
+        { data: propsData },
+        { data: leadsData },
+        { data: subsData },
+        { data: postsData },
+        { data: catsData },
+        { data: agentsData },
+        { data: salesData },
+        { data: payoutsData },
+        { data: neighborhoodsData },
+        { data: testimonialsData },
+        { data: settingsData }
+      ] = await Promise.all([
+        supabase.from('properties').select('*').order('id', { ascending: false }),
+        supabase.from('leads').select('*').order('date', { ascending: false }),
+        supabase.from('subscribers').select('*'),
+        supabase.from('posts').select('*').order('date', { ascending: false }),
+        supabase.from('blog_categories').select('*'),
+        supabase.from('agents').select('*'),
+        supabase.from('agent_sales').select('*'),
+        supabase.from('payout_requests').select('*'),
+        supabase.from('neighborhoods').select('*'),
+        supabase.from('testimonials').select('*'),
+        supabase.from('site_settings').select('*').eq('id', 1).single()
+      ]);
+
       if (propsData) setProperties(propsData);
-
-      const { data: leadsData } = await supabase.from('leads').select('*').order('date', { ascending: false });
       if (leadsData) setLeads(leadsData);
-
-      const { data: subsData } = await supabase.from('subscribers').select('*');
       if (subsData) setSubscribers(subsData);
-
-      const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false });
       if (postsData) setPosts(postsData);
-
-      const { data: catsData } = await supabase.from('blog_categories').select('*');
       if (catsData && catsData.length > 0) setCategories(catsData);
-
-      const { data: agentsData } = await supabase.from('agents').select('*');
       if (agentsData) setAgents(agentsData);
-
-      const { data: salesData } = await supabase.from('agent_sales').select('*');
       if (salesData) setSales(salesData);
-
-      const { data: payoutsData } = await supabase.from('payout_requests').select('*');
       if (payoutsData) setPayouts(payoutsData);
-
-      const { data: neighborhoodsData } = await supabase.from('neighborhoods').select('*');
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData);
-
-      const { data: testimonialsData } = await supabase.from('testimonials').select('*');
       if (testimonialsData) setTestimonials(testimonialsData);
-
-      const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).single();
       if (settingsData) {
         setSettings({ ...DEFAULT_SETTINGS, ...settingsData });
       }
