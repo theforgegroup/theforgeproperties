@@ -11,7 +11,7 @@ const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: 
 );
 
 export const Footer: React.FC = () => {
-  const { settings, addSubscriber } = useProperties();
+  const { settings, addSubscriber, isLoading } = useProperties();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -40,6 +40,8 @@ export const Footer: React.FC = () => {
             <Link to="/" className="flex flex-col mb-6 md:mb-8 group items-center lg:items-start">
               {settings.logo ? (
                 <img src={settings.logo} alt="The Forge Properties" className="h-10 md:h-12 w-auto object-contain mb-2" />
+              ) : isLoading ? (
+                <div className="h-10 w-32 animate-pulse bg-white/5 rounded" />
               ) : (
                 <>
                   <span className="text-2xl md:text-3xl font-bold tracking-tight text-white group-hover:text-forge-gold transition-colors">THE FORGE</span>

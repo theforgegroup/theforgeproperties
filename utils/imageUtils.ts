@@ -2,7 +2,7 @@
 /**
  * Resizes and compresses an image file to a base64 string.
  */
-export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> => {
+export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -29,7 +29,8 @@ export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200, quali
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
+            // Use image/png to preserve transparency
+            resolve(canvas.toDataURL('image/png'));
         } else {
             reject(new Error("Could not get canvas context"));
         }

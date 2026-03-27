@@ -128,9 +128,6 @@ export const Home: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {settings.logo && (
-              <img src={settings.logo} alt="The Forge Properties" className="h-10 md:h-16 mx-auto mb-8 md:mb-8 object-contain" />
-            )}
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 md:mb-6 tracking-tight leading-tight">
               Find Your Dream Property
             </h1>

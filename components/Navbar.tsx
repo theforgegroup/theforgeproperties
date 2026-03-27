@@ -10,7 +10,7 @@ export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { isAuthenticated, userRole } = useAuth();
-  const { settings } = useProperties();
+  const { settings, isLoading } = useProperties();
   const isHome = location.pathname === '/';
 
   useEffect(() => {
@@ -48,6 +48,8 @@ export const Navbar: React.FC = () => {
         <Link to="/" className="flex flex-col group items-center">
           {settings.logo ? (
             <img src={settings.logo} alt="The Forge Properties" className="h-10 w-auto object-contain" />
+          ) : isLoading ? (
+            <div className="h-10 w-32 animate-pulse bg-white/10 rounded" />
           ) : (
             <>
               <span className={`text-2xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>
