@@ -55,11 +55,11 @@ export const Navbar: React.FC = () => {
                 <img 
                   src={settings.logo} 
                   alt="The Forge Properties" 
-                  className="h-14 md:h-20 w-auto object-contain" 
+                  className="h-20 md:h-28 w-auto object-contain" 
                   fetchpriority="high" 
                 />
               ) : isLoading ? (
-                <div className="h-14 w-32 animate-pulse bg-white/10 rounded" />
+                <div className="h-20 w-32 animate-pulse bg-white/10 rounded" />
               ) : (
                 <>
                   <span className={`text-2xl md:text-3xl font-bold tracking-tight transition-colors ${scrolled || !isHome ? 'text-forge-navy' : 'text-white'}`}>
