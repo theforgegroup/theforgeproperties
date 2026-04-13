@@ -146,6 +146,7 @@ export interface ListingAgent {
 
 export interface SiteSettings {
   contact_email: string;
+  contact_email_2?: string;
   contact_phone: string;
   address: string;
   team_members: TeamMember[];

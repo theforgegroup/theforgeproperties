@@ -65,6 +65,7 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 
 const DEFAULT_SETTINGS: SiteSettings = {
   contact_email: 'theforgeproperties@gmail.com',
+  contact_email_2: 'info@theforgeproperties.com',
   contact_phone: '+234 810 613 3572',
   address: 'Silverland Estate, Sangotedo, Ajah, Lagos, Nigeria',
   team_members: [

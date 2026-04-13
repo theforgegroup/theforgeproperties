@@ -77,6 +77,9 @@ export const Contact: React.FC = () => {
                    <div>
                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Email</p>
                      <p className="text-base md:text-xl leading-relaxed font-medium break-all">{settings.contact_email}</p>
+                     {settings.contact_email_2 && (
+                       <p className="text-base md:text-xl leading-relaxed font-medium break-all mt-1">{settings.contact_email_2}</p>
+                     )}
                    </div>
                  </div>
                  

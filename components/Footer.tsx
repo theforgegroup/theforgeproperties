@@ -124,15 +124,18 @@ export const Footer: React.FC = () => {
               <p className="text-sm text-slate-300 font-medium group-hover:text-forge-gold transition-colors">{settings.contact_phone}</p>
             </div>
           </a>
-          <a href={`mailto:${settings.contact_email}`} className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left group">
+          <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left group">
             <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all">
               <Mail size={20} />
             </div>
             <div>
               <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Email</p>
-              <p className="text-sm text-slate-300 font-medium group-hover:text-forge-gold transition-colors">{settings.contact_email}</p>
+              <a href={`mailto:${settings.contact_email}`} className="text-sm text-slate-300 font-medium hover:text-forge-gold transition-colors block">{settings.contact_email}</a>
+              {settings.contact_email_2 && (
+                <a href={`mailto:${settings.contact_email_2}`} className="text-sm text-slate-300 font-medium hover:text-forge-gold transition-colors block mt-1">{settings.contact_email_2}</a>
+              )}
             </div>
-          </a>
+          </div>
         </div>
 
         {/* Bottom Bar */}
