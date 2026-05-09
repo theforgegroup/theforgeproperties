@@ -19,7 +19,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           <img 
             src={property.images[0]} 
             alt={property.title} 
-            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             loading="lazy"
           />
         </Link>

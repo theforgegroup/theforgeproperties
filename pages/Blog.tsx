@@ -30,11 +30,11 @@ export const Blog: React.FC = () => {
                  <article key={post.id} className="flex flex-col group">
                    <Link to={postUrl} className="block overflow-hidden mb-6 rounded-2xl md:rounded-3xl shadow-xl shadow-slate-200/50">
                      {post.cover_image ? (
-                        <div className="aspect-[16/10] overflow-hidden">
-                          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                        <div className="aspect-[3/2] overflow-hidden">
+                          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                         </div>
                      ) : (
-                       <div className="aspect-[16/10] bg-slate-100 flex items-center justify-center text-slate-300"><span className="text-[10px] uppercase tracking-widest font-bold">No Image</span></div>
+                       <div className="aspect-[3/2] bg-slate-100 flex items-center justify-center text-slate-300"><span className="text-[10px] uppercase tracking-widest font-bold">No Image</span></div>
                      )}
                    </Link>
                    <div className="flex items-center gap-4 text-[10px] md:text-xs text-slate-400 uppercase tracking-[0.2em] mb-4 font-bold">
