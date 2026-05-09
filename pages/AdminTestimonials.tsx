@@ -52,8 +52,9 @@ export const AdminTestimonials: React.FC = () => {
         const fileName = `client-${Date.now()}.${file.name.split('.').pop()}`;
         const publicUrl = await uploadImage('testimonials', fileName, blob);
         setFormData(prev => ({ ...prev, client_photo: publicUrl }));
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
+      } catch (err: any) {
+        console.error('Image upload error:', err);
+        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         setError(`Image upload failed: ${errorMsg}`);
       } finally {
         setIsUploading(false);
@@ -78,8 +79,9 @@ export const AdminTestimonials: React.FC = () => {
         await addTestimonial(testimonialData);
       }
       resetForm();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Testimonial save error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(`Failed to save testimonial: ${errorMsg}`);
     } finally {
       setIsSaving(false);
@@ -98,8 +100,9 @@ export const AdminTestimonials: React.FC = () => {
       setError('');
       try {
         await deleteTestimonial(id);
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
+      } catch (err: any) {
+        console.error('Testimonial delete error:', err);
+        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         setError(`Failed to delete testimonial: ${errorMsg}`);
       }
     }

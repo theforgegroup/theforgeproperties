@@ -104,8 +104,10 @@ export const AgentDashboard: React.FC = () => {
         setShowPayoutModal(false);
         setPayoutStatus(null);
       }, 2000);
-    } catch {
-      setPayoutStatus({ type: 'error', message: "Failed to submit payout request. Please try again." });
+    } catch (err: any) {
+      console.error('Payout request error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      setPayoutStatus({ type: 'error', message: `Failed to submit payout request: ${errorMsg}` });
     }
   };
 

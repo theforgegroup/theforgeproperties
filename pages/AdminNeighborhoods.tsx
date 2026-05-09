@@ -55,8 +55,9 @@ export const AdminNeighborhoods: React.FC = () => {
         const fileName = `neighborhood-${Date.now()}.${file.name.split('.').pop()}`;
         const publicUrl = await uploadImage('neighborhood-images', fileName, blob);
         setFormData(prev => ({ ...prev, image: publicUrl }));
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
+      } catch (err: any) {
+        console.error('Image upload error:', err);
+        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         setError(`Image upload failed: ${errorMsg}`);
       } finally {
         setIsUploading(false);
@@ -79,8 +80,9 @@ export const AdminNeighborhoods: React.FC = () => {
         await addNeighborhood(newNeighborhood);
       }
       resetForm();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Neighborhood save error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(`Failed to save neighborhood: ${errorMsg}`);
     } finally {
       setIsSaving(false);
@@ -99,8 +101,9 @@ export const AdminNeighborhoods: React.FC = () => {
       setError('');
       try {
         await deleteNeighborhood(id);
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
+      } catch (err: any) {
+        console.error('Neighborhood delete error:', err);
+        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         setError(`Failed to delete neighborhood: ${errorMsg}`);
       }
     }

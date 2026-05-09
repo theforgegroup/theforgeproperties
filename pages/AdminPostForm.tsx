@@ -92,8 +92,9 @@ export const AdminPostForm: React.FC = () => {
       const fileName = `blog-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const publicUrl = await uploadImage('blog-images', fileName, blob);
       setFormData({ ...formData, cover_image: publicUrl });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Cover upload error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(`Upload failed: ${errorMsg}.`);
     } finally {
       // Done
@@ -110,8 +111,9 @@ export const AdminPostForm: React.FC = () => {
       setFormData({ ...formData, category: newCat.name });
       setNewCategoryName('');
       setIsAddingCategory(false);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Category creation error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(`Failed to create category: ${errorMsg}. Ensure you have run the corrected SQL in Supabase.`);
     }
   };
@@ -137,8 +139,9 @@ export const AdminPostForm: React.FC = () => {
       else await addPost(submissionData);
       setIsSuccess(true);
       setTimeout(() => navigate('/admin/blog'), 1200);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Post save error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(errorMsg || "Failed to save post.");
     } finally {
       setIsSubmitting(false);

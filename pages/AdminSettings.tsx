@@ -33,9 +33,9 @@ export const AdminSettings: React.FC = () => {
       setMessage('Settings updated successfully!');
       // Keep message visible longer for user to see
       setTimeout(() => setMessage(''), 5000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Form submission error:', err);
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setIsError(true);
       setMessage(`Save failed: ${errorMsg}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -82,8 +82,9 @@ export const AdminSettings: React.FC = () => {
       const fileName = `team-${Date.now()}-${index}.${file.name.split('.').pop()}`;
       const publicUrl = await uploadImage('site-assets', fileName, blob);
       handleUpdateTeamMember(index, 'image', publicUrl);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Team member image upload error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setMessage(`Team member image upload failed: ${errorMsg}`);
     } finally {
       setIsSaving(false);
@@ -171,8 +172,9 @@ export const AdminSettings: React.FC = () => {
                           const fileName = `logo-${Date.now()}.${file.name.split('.').pop()}`;
                           const publicUrl = await uploadImage('site-assets', fileName, blob);
                           setFormData({...formData, logo: publicUrl});
-                        } catch (err) {
-                          const errorMsg = err instanceof Error ? err.message : String(err);
+                        } catch (err: any) {
+                          console.error('Logo upload error:', err);
+                          const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
                           setMessage(`Logo upload failed: ${errorMsg}`);
                         } finally {
                           setIsSaving(false);

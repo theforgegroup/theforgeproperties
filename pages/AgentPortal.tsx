@@ -44,8 +44,9 @@ export const AgentPortal: React.FC = () => {
     try {
       await addAgent({ name, email, phone });
       setMode('success');
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setError(errorMsg || 'Signup failed. Please try again.');
     } finally {
       setIsLoading(false);
