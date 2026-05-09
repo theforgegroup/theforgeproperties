@@ -3,6 +3,7 @@ import {
   Plus, Trash2, Edit2, Save, X, Upload, Loader2, Star, Quote, CheckCircle2, Database
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { Testimonial } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
@@ -52,10 +53,9 @@ export const AdminTestimonials: React.FC = () => {
         const fileName = `client-${Date.now()}.${file.name.split('.').pop()}`;
         const publicUrl = await uploadImage('testimonials', fileName, blob);
         setFormData(prev => ({ ...prev, client_photo: publicUrl }));
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Image upload error:', err);
-        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-        setError(`Image upload failed: ${errorMsg}`);
+        setError(`Image upload failed: ${extractErrorMessage(err)}`);
       } finally {
         setIsUploading(false);
       }
@@ -79,10 +79,9 @@ export const AdminTestimonials: React.FC = () => {
         await addTestimonial(testimonialData);
       }
       resetForm();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Testimonial save error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setError(`Failed to save testimonial: ${errorMsg}`);
+      setError(`Failed to save testimonial: ${extractErrorMessage(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -100,10 +99,9 @@ export const AdminTestimonials: React.FC = () => {
       setError('');
       try {
         await deleteTestimonial(id);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Testimonial delete error:', err);
-        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-        setError(`Failed to delete testimonial: ${errorMsg}`);
+        setError(`Failed to delete testimonial: ${extractErrorMessage(err)}`);
       }
     }
   };

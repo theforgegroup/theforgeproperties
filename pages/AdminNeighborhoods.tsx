@@ -4,6 +4,7 @@ import {
   Plus, Trash2, Edit2, Save, X, Upload, Loader2, MapPin, Globe, Info
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { Neighborhood } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
@@ -55,10 +56,9 @@ export const AdminNeighborhoods: React.FC = () => {
         const fileName = `neighborhood-${Date.now()}.${file.name.split('.').pop()}`;
         const publicUrl = await uploadImage('neighborhood-images', fileName, blob);
         setFormData(prev => ({ ...prev, image: publicUrl }));
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Image upload error:', err);
-        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-        setError(`Image upload failed: ${errorMsg}`);
+        setError(`Image upload failed: ${extractErrorMessage(err)}`);
       } finally {
         setIsUploading(false);
       }
@@ -80,10 +80,9 @@ export const AdminNeighborhoods: React.FC = () => {
         await addNeighborhood(newNeighborhood);
       }
       resetForm();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Neighborhood save error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setError(`Failed to save neighborhood: ${errorMsg}`);
+      setError(`Failed to save neighborhood: ${extractErrorMessage(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -101,10 +100,9 @@ export const AdminNeighborhoods: React.FC = () => {
       setError('');
       try {
         await deleteNeighborhood(id);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Neighborhood delete error:', err);
-        const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-        setError(`Failed to delete neighborhood: ${errorMsg}`);
+        setError(`Failed to delete neighborhood: ${extractErrorMessage(err)}`);
       }
     }
   };

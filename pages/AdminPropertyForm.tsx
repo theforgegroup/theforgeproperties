@@ -5,6 +5,7 @@ import {
   ArrowLeft, Save, X, Upload, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { Property, PropertyType, ListingStatus } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage, dataURLtoBlob } from '../utils/imageUtils';
@@ -112,9 +113,9 @@ export const AdminPropertyForm: React.FC = () => {
         newImageUrls.push(publicUrl);
       }
       setFormData({ ...formData, images: newImageUrls });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Image upload error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      const errorMsg = extractErrorMessage(err);
       if (errorMsg.includes('Bucket not found')) {
         setError("Storage Error: 'property-images' bucket not found. Please create it in Supabase Storage and set it to PUBLIC.");
       } else {
@@ -146,10 +147,9 @@ export const AdminPropertyForm: React.FC = () => {
       else await addProperty(submissionData);
       setIsSuccess(true);
       setTimeout(() => navigate('/admin'), 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Property save error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setError(errorMsg || "Failed to save property.");
+      setError(extractErrorMessage(err, 'Failed to save property.'));
     } finally {
       setIsSubmitting(false);
     }

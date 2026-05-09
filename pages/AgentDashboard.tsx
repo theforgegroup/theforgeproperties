@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { PayoutRequest } from '../types';
 
 interface NavItemProps {
@@ -104,10 +105,9 @@ export const AgentDashboard: React.FC = () => {
         setShowPayoutModal(false);
         setPayoutStatus(null);
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Payout request error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setPayoutStatus({ type: 'error', message: `Failed to submit payout request: ${errorMsg}` });
+      setPayoutStatus({ type: 'error', message: `Failed to submit payout request: ${extractErrorMessage(err)}` });
     }
   };
 

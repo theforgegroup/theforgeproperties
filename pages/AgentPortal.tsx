@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 
 export const AgentPortal: React.FC = () => {
@@ -44,10 +45,9 @@ export const AgentPortal: React.FC = () => {
     try {
       await addAgent({ name, email, phone });
       setMode('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Signup error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setError(errorMsg || 'Signup failed. Please try again.');
+      setError(extractErrorMessage(err, 'Signup failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }

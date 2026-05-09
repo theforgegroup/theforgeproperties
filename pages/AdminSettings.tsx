@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 /* Added Landmark to imports */
 import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2, Plus, X, User } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
+import { extractErrorMessage } from '../utils/errorUtils';
 import { SiteSettings } from '../types';
 import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
@@ -33,11 +34,10 @@ export const AdminSettings: React.FC = () => {
       setMessage('Settings updated successfully!');
       // Keep message visible longer for user to see
       setTimeout(() => setMessage(''), 5000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Form submission error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       setIsError(true);
-      setMessage(`Save failed: ${errorMsg}`);
+      setMessage(`Save failed: ${extractErrorMessage(err)}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -82,10 +82,10 @@ export const AdminSettings: React.FC = () => {
       const fileName = `team-${Date.now()}-${index}.${file.name.split('.').pop()}`;
       const publicUrl = await uploadImage('site-assets', fileName, blob);
       handleUpdateTeamMember(index, 'image', publicUrl);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Team member image upload error:', err);
-      const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setMessage(`Team member image upload failed: ${errorMsg}`);
+      setIsError(true);
+      setMessage(`Team member image upload failed: ${extractErrorMessage(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -172,10 +172,10 @@ export const AdminSettings: React.FC = () => {
                           const fileName = `logo-${Date.now()}.${file.name.split('.').pop()}`;
                           const publicUrl = await uploadImage('site-assets', fileName, blob);
                           setFormData({...formData, logo: publicUrl});
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                           console.error('Logo upload error:', err);
-                          const errorMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-                          setMessage(`Logo upload failed: ${errorMsg}`);
+                          setIsError(true);
+                          setMessage(`Logo upload failed: ${extractErrorMessage(err)}`);
                         } finally {
                           setIsSaving(false);
                         }

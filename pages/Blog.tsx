@@ -25,7 +25,7 @@ export const Blog: React.FC = () => {
          {publishedPosts.length > 0 ? (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-16">
              {publishedPosts.map(post => {
-               const postUrl = `/blog/${post.slug || post.id}`;
+               const postUrl = `/blog/${post.slug}`;
                return (
                  <article key={post.id} className="flex flex-col group">
                    <Link to={postUrl} className="block overflow-hidden mb-6 rounded-2xl md:rounded-3xl shadow-xl shadow-slate-200/50">

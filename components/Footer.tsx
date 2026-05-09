@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-4 text-center lg:text-left">
             <Link to="/" className="flex flex-col mb-6 md:mb-8 group items-center lg:items-start">
               {settings.logo ? (
-                <img src={settings.logo} alt="The Forge Properties" className="h-24 md:h-32 w-auto object-contain mb-2" />
+                <img src={settings.logo} alt="The Forge Properties" className="h-28 md:h-40 w-auto object-contain mb-2" />
               ) : isLoading ? (
                 <div className="h-24 w-32 animate-pulse bg-white/5 rounded" />
               ) : (

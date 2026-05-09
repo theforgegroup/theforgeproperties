@@ -1,35 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Primary High-Priority Pages -->
+  <!-- Main Pages -->
   <url>
     <loc>https://theforgeproperties.com/</loc>
-    <lastmod>2025-05-22</lastmod>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://theforgeproperties.com/listings</loc>
-    <lastmod>2025-05-22</lastmod>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://theforgeproperties.com/blog</loc>
-    <lastmod>2025-05-22</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-05-09</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Secondary Pages -->
   <url>
     <loc>https://theforgeproperties.com/about</loc>
-    <lastmod>2025-05-22</lastmod>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://theforgeproperties.com/contact</loc>
-    <lastmod>2025-05-22</lastmod>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://theforgeproperties.com/agent/portal</loc>
+    <lastmod>2026-05-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Dynamic Content Note: 
+       Individual listings and blog posts are accessed via search-engine friendly slugs.
+       E.g. /blog/market-insights-2026
+       E.g. /listings/luxury-mansion-maitama
+  -->
 </urlset>

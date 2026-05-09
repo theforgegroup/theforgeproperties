@@ -9,7 +9,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const listingUrl = `/listings/${property.slug || property.id}`;
+  const listingUrl = `/listings/${property.slug}`;
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`;
   
   return (

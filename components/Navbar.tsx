@@ -55,8 +55,8 @@ export const Navbar: React.FC = () => {
                 <img 
                   src={settings.logo} 
                   alt="The Forge Properties" 
-                  className="h-20 md:h-28 w-auto object-contain" 
-                  fetchpriority="high" 
+                  className="h-24 md:h-36 w-auto object-contain" 
+                  fetchPriority="high" 
                 />
               ) : isLoading ? (
                 <div className="h-20 w-32 animate-pulse bg-white/10 rounded" />

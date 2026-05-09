@@ -27,6 +27,8 @@ interface PropertyContextType {
   deleteProperty: (id: string) => Promise<void>;
   getProperty: (id: string) => Property | undefined;
   getPropertyBySlug: (slug: string) => Property | undefined;
+  getPost: (id: string) => BlogPost | undefined;
+  getPostBySlug: (slug: string) => BlogPost | undefined;
   addLead: (lead: Lead) => Promise<void>;
   updateLeadStatus: (id: string, status: Lead['status']) => Promise<void>;
   addSubscriber: (email: string) => Promise<void>;
@@ -34,8 +36,6 @@ interface PropertyContextType {
   addPost: (post: BlogPost) => Promise<void>;
   updatePost: (post: BlogPost) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
-  getPost: (id: string) => BlogPost | undefined;
-  getPostBySlug: (slug: string) => BlogPost | undefined;
   addCategory: (name: string) => Promise<Category>;
   
   // Neighborhood Methods
@@ -296,15 +296,31 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setSubscribers(prev => [newSubscriber, ...prev]);
   };
 
+  const getPost = (id: string) => posts.find(p => p.id === id || p.slug === id);
+  const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug || p.id === slug);
+  const getProperty = (id: string) => properties.find(p => p.id === id || p.slug === id);
+  const getPropertyBySlug = (slug: string) => properties.find(p => p.slug === slug || p.id === slug);
+
   const addPost = async (post: BlogPost) => {
-    const { error } = await supabase.from('posts').insert([post]);
-    if (error) throw error;
-    setPosts(prev => [post, ...prev]);
+    // Ensure slug is clean before sending
+    const cleanPost = {
+      ...post,
+      slug: post.slug || post.id // fallback but ideally generated in form
+    };
+    const { error } = await supabase.from('posts').insert([cleanPost]);
+    if (error) {
+      console.error('Supabase addPost error:', error);
+      throw error;
+    }
+    setPosts(prev => [cleanPost, ...prev]);
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
     const { error } = await supabase.from('posts').update(updatedPost).eq('id', updatedPost.id);
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase updatePost error:', error);
+      throw error;
+    }
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
   };
 
@@ -380,9 +396,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <PropertyContext.Provider value={{ 
       properties, leads, subscribers, posts, categories, agents, sales, payouts, settings, neighborhoods, testimonials, isLoading,
-      addProperty, updateProperty, deleteProperty, getProperty: (id) => properties.find(p => p.id === id), getPropertyBySlug: (slug) => properties.find(p => p.slug === slug),
+      addProperty, updateProperty, deleteProperty, getProperty, getPropertyBySlug,
       addLead, updateLeadStatus, addSubscriber, updateSettings,
-      addPost, updatePost, deletePost, getPost: (id) => posts.find(p => p.id === id), getPostBySlug: (slug) => posts.find(p => p.slug === slug),
+      addPost, updatePost, deletePost, getPost, getPostBySlug,
       addCategory,
       addNeighborhood, updateNeighborhood, deleteNeighborhood,
       addTestimonial, updateTestimonial, deleteTestimonial,

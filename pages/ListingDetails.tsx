@@ -43,8 +43,12 @@ export const ListingDetails: React.FC = () => {
   }, [formData, formMode, property, addLead]);
 
   useEffect(() => {
-    window.scrollTo(0,0);
-  }, [slug]);
+    // Redirect ID-based URLs to Clean Slug URLs for SEO
+    if (property && slug === property.id && property.slug && property.slug !== property.id) {
+       window.history.replaceState(null, '', `/listings/${property.slug}`);
+    }
+    window.scrollTo(0, 0);
+  }, [slug, property]);
 
   if (isLoading) {
     return (

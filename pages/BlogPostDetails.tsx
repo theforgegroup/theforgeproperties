@@ -12,8 +12,13 @@ export const BlogPostDetails: React.FC = () => {
   const post = slug ? (getPostBySlug(slug) || getPost(slug)) : undefined;
 
   useEffect(() => {
+    // If we found a post but via its ID instead of its clean slug,
+    // redirect to the clean URL for SEO purposes.
+    if (post && slug === post.id && post.slug && post.slug !== post.id) {
+      window.history.replaceState(null, '', `/blog/${post.slug}`);
+    }
     window.scrollTo(0, 0);
-  }, [slug]);
+  }, [slug, post]);
 
   if (!post) {
     return (
