@@ -64,9 +64,14 @@ export const BlogPostDetails: React.FC = () => {
       </div>
 
       {post.cover_image && (
-        <div className="w-full h-[40vh] md:h-[70vh] overflow-hidden relative">
-          <div className="absolute inset-0 bg-forge-navy/10 z-10" />
-          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+        <div className="container mx-auto px-6 max-w-6xl mb-12 md:mb-16">
+          <div className="rounded-2xl md:rounded-[40px] overflow-hidden shadow-2xl shadow-slate-200/60 bg-slate-50 border border-slate-100/50">
+            <img 
+              src={post.cover_image} 
+              alt={post.title} 
+              className="w-full h-auto block object-contain mx-auto" 
+            />
+          </div>
         </div>
       )}
 
