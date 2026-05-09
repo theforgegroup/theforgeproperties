@@ -39,8 +39,8 @@ export const Navbar: React.FC = () => {
     <nav 
       className={`fixed w-full z-[100] transition-all duration-500 ${
         scrolled || !isHome
-          ? 'bg-white/80 backdrop-blur-xl text-forge-navy shadow-sm py-4' 
-          : 'bg-transparent text-white py-6'
+          ? 'bg-white/80 backdrop-blur-xl text-forge-navy shadow-sm py-3' 
+          : 'bg-transparent text-white py-4'
       }`}
     >
       <div className="container mx-auto px-6">
@@ -55,7 +55,7 @@ export const Navbar: React.FC = () => {
                 <img 
                   src={settings.logo} 
                   alt="The Forge Properties" 
-                  className="h-24 md:h-36 w-auto object-contain" 
+                  className="h-16 md:h-24 w-auto object-contain" 
                   fetchPriority="high" 
                 />
               ) : isLoading ? (
@@ -113,7 +113,7 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div className={`lg:hidden fixed inset-0 top-[72px] w-full bg-white/95 backdrop-blur-2xl z-[90] transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
+      <div className={`lg:hidden fixed inset-0 top-[88px] w-full bg-white/95 backdrop-blur-2xl z-[90] transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
         <div className="flex flex-col h-full py-12 px-8 space-y-8 overflow-y-auto">
           {navLinks.map((link, index) => (
             <Link
