@@ -142,7 +142,19 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData);
       if (testimonialsData) setTestimonials(testimonialsData);
       if (settingsData) {
-        setSettings({ ...DEFAULT_SETTINGS, ...settingsData });
+        let contact_email = settingsData.contact_email || '';
+        let contact_email_2 = '';
+        if (contact_email.includes(';')) {
+          const parts = contact_email.split(';');
+          contact_email = parts[0]?.trim() || '';
+          contact_email_2 = parts[1]?.trim() || '';
+        }
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          ...settingsData,
+          contact_email,
+          contact_email_2
+        });
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -332,7 +344,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const updateSettings = async (newSettings: SiteSettings) => {
     try {
-      const { error } = await supabase.from('site_settings').upsert({ id: 1, ...newSettings });
+      const { contact_email_2, ...payload } = newSettings;
+      const dbPayload: Partial<SiteSettings> & { id?: number } = { ...payload };
+      
+      if (contact_email_2 && contact_email_2.trim()) {
+        dbPayload.contact_email = `${newSettings.contact_email || ''};${contact_email_2.trim()}`;
+      }
+
+      const { error } = await supabase.from('site_settings').upsert({ id: 1, ...dbPayload });
       if (error) {
         console.error('Supabase upsert error:', error);
         throw error;
@@ -347,7 +366,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const seedDatabase = async () => {
     setIsLoading(true);
     try {
-      await supabase.from('site_settings').upsert({ id: 1, ...DEFAULT_SETTINGS });
+      const { contact_email_2, ...seedPayload } = DEFAULT_SETTINGS;
+      const dbPayload: Partial<SiteSettings> & { id?: number } = { ...seedPayload };
+      
+      if (contact_email_2 && contact_email_2.trim()) {
+        dbPayload.contact_email = `${DEFAULT_SETTINGS.contact_email || ''};${contact_email_2.trim()}`;
+      }
+
+      await supabase.from('site_settings').upsert({ id: 1, ...dbPayload });
       
       const demoTestimonials: Testimonial[] = [
         {
