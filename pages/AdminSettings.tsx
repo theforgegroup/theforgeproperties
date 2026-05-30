@@ -8,18 +8,20 @@ import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
 
 export const AdminSettings: React.FC = () => {
-  const { settings, updateSettings, seedDatabase } = useProperties();
+  const { settings, updateSettings, seedDatabase, isLoading } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   
   useEffect(() => {
-    if (settings) {
+    if (settings && !isLoading && !isInitialized) {
       setFormData(settings);
+      setIsInitialized(true);
     }
-  }, [settings]);
+  }, [settings, isLoading, isInitialized]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
