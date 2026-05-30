@@ -38,15 +38,31 @@ async function startServer() {
       // Decode URL parameter in case it contains %20 or other encoded characters
       const cleanSlug = decodeURIComponent(slug);
       
-      // Fetch post by slug or ID
-      const { data: post, error } = await supabase
+      // Fetch post by slug first, with fallback to ID
+      const { data: initialPost, error } = await supabase
         .from('posts')
         .select('*')
-        .or(`slug.eq."${cleanSlug}",id.eq."${cleanSlug}"`)
+        .eq('slug', cleanSlug)
         .maybeSingle();
 
+      let post = initialPost;
+
       if (error) {
-        console.error('Supabase query error:', error);
+        console.error('Supabase query error (slug):', error);
+      }
+
+      if (!post) {
+        const { data: fallbackPost, error: fallbackError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('id', cleanSlug)
+          .maybeSingle();
+
+        if (fallbackError) {
+          console.error('Supabase query error (id):', fallbackError);
+        } else if (fallbackPost) {
+          post = fallbackPost;
+        }
       }
 
       if (post) {
