@@ -7,7 +7,7 @@ import { SEO } from '../components/SEO';
 
 export const BlogPostDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getPostBySlug, getPost } = useProperties();
+  const { getPostBySlug, getPost, isLoading } = useProperties();
   
   const post = slug ? (getPostBySlug(slug) || getPost(slug)) : undefined;
 
@@ -19,6 +19,20 @@ export const BlogPostDetails: React.FC = () => {
     }
     window.scrollTo(0, 0);
   }, [slug, post]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-forge-navy pt-20">
+        <SEO title="Loading..." />
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-12 h-12 border-4 border-forge-gold border-t-slate-800 rounded-full animate-spin"></div>
+          <p className="text-slate-300 font-medium text-sm tracking-widest uppercase animate-pulse">
+            Loading Journal...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
