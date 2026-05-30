@@ -18,6 +18,7 @@ const escapeHtml = (text: string): string => {
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', true);
   const PORT = 3000;
 
   const supabaseUrl = 'https://amoqzkmzoclsyhuigazo.supabase.co';
@@ -33,7 +34,7 @@ async function startServer() {
   }
 
   // Helper to dynamically modify index.html for metadata previews
-  const getDynamicHtml = async (originalHtml: string, slug: string) => {
+  const getDynamicHtml = async (originalHtml: string, slug: string, reqUrl: string) => {
     try {
       // Decode URL parameter in case it contains %20 or other encoded characters
       const cleanSlug = decodeURIComponent(slug);
@@ -93,7 +94,10 @@ async function startServer() {
         html = injectMeta(html, 'og:image', imageVal, 'property');
         html = injectMeta(html, 'og:image:secure_url', imageVal, 'property');
         html = injectMeta(html, 'og:type', 'article', 'property');
-        html = injectMeta(html, 'og:url', `https://theforgeproperties.com/blog/${slug}`, 'property');
+        html = injectMeta(html, 'og:url', reqUrl, 'property');
+        html = injectMeta(html, 'og:site_name', 'The Forge Properties', 'property');
+        html = injectMeta(html, 'og:image:width', '1200', 'property');
+        html = injectMeta(html, 'og:image:height', '630', 'property');
         html = injectMeta(html, 'twitter:card', 'summary_large_image');
         html = injectMeta(html, 'twitter:title', escapeHtml(post.title));
         html = injectMeta(html, 'twitter:description', descriptionVal);
@@ -116,17 +120,18 @@ async function startServer() {
   app.get('/blog/:slug', async (req, res, next) => {
     try {
       const slug = req.params.slug;
+      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
       if (process.env.NODE_ENV !== 'production' && vite) {
         const template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         // Apply Vite HTML transforms if in development
         const transformedTemplate = await vite.transformIndexHtml(req.originalUrl, template);
-        const dynamicHtml = await getDynamicHtml(transformedTemplate, slug);
+        const dynamicHtml = await getDynamicHtml(transformedTemplate, slug, fullUrl);
         return res.status(200).set({ 'Content-Type': 'text/html' }).end(dynamicHtml);
       } else {
         const distIndex = path.join(process.cwd(), 'dist', 'index.html');
         if (fs.existsSync(distIndex)) {
           const template = fs.readFileSync(distIndex, 'utf-8');
-          const dynamicHtml = await getDynamicHtml(template, slug);
+          const dynamicHtml = await getDynamicHtml(template, slug, fullUrl);
           return res.status(200).set({ 'Content-Type': 'text/html' }).end(dynamicHtml);
         }
       }
