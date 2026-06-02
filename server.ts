@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 import { createServer as createViteServer, ViteDevServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
@@ -368,6 +369,7 @@ async function startServer() {
       }
 
       const cleanLead = {
+        id: crypto.randomUUID(),
         name,
         email: email || '',
         phone: phone || '',
