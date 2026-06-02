@@ -193,9 +193,37 @@ async function startServer() {
         parts: [{ text: message }]
       });
 
+      // Gemini strictly requires:
+      // 1. First turn must be 'user'
+      // 2. Roles must alternate strictly between 'user' and 'model'
+      const sanitizedContents: { role: string; parts: { text: string }[] }[] = [];
+      for (const turn of formattedContents) {
+        if (sanitizedContents.length === 0) {
+          if (turn.role === 'user') {
+            sanitizedContents.push(turn);
+          }
+        } else {
+          const lastTurn = sanitizedContents[sanitizedContents.length - 1];
+          if (lastTurn.role !== turn.role) {
+            sanitizedContents.push(turn);
+          } else {
+            // Merge same-role adjacent messages to ensure no content is dropped
+            lastTurn.parts.push(...turn.parts);
+          }
+        }
+      }
+
+      // Fallback guarantees at least the current query is sent if history is empty or filtered
+      if (sanitizedContents.length === 0) {
+        sanitizedContents.push({
+          role: 'user',
+          parts: [{ text: message }]
+        });
+      }
+
       const response = await ai.models.generateContent({
         model: 'gemini-3.5-flash',
-        contents: formattedContents,
+        contents: sanitizedContents,
         config: {
           systemInstruction,
           temperature: 0.7,
