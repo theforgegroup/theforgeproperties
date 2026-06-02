@@ -124,7 +124,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Message is required' });
       }
 
-      const apiKey = (process.env.API_KEY || "").trim();
+      const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || "").trim();
       if (!apiKey || apiKey === "undefined") {
         return res.json({
           response: "I'm currently undergoing a brief update. Please reach out directly to theforgeproperties@gmail.com or call +234 810 613 3572 for immediate support!"

@@ -7,7 +7,7 @@ import { Property } from "../types";
  */
 export const getChatResponse = async (userMessage: string, inventory: Property[]): Promise<string> => {
   // Ensure the key exists and is not just a placeholder
-  const apiKey = (process.env.API_KEY || "").trim();
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || "").trim();
 
   if (!apiKey || apiKey === "undefined") {
     console.error("The Forge AI: API_KEY is missing from the environment.");

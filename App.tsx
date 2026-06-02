@@ -58,6 +58,7 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAgentDashboardRoute = location.pathname.startsWith('/agent/dashboard');
+  const isBlogRoute = location.pathname.startsWith('/blog');
 
   useEffect(() => {
     const agentImage = settings?.listing_agent?.image;
@@ -107,7 +108,7 @@ const AppLayout: React.FC = () => {
       </main>
 
       {!isAdminRoute && !isAgentDashboardRoute && <Footer />}
-      {!isAdminRoute && !isAgentDashboardRoute && <AIConcierge />}
+      {!isAdminRoute && !isAgentDashboardRoute && !isBlogRoute && <AIConcierge />}
     </div>
   );
 };
