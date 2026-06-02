@@ -1,13 +1,12 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { createServer as createViteServer, ViteDevServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
 
 const escapeHtml = (text: string): string => {
   return String(text)
@@ -398,7 +397,7 @@ async function startServer() {
       const slug = req.params.slug;
       const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
       if (process.env.NODE_ENV !== 'production' && vite) {
-        const template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        const template = fs.readFileSync(devIndexHtmlPath, 'utf-8');
         // Apply Vite HTML transforms if in development
         const transformedTemplate = await vite.transformIndexHtml(req.originalUrl, template);
         const dynamicHtml = await getDynamicHtml(transformedTemplate, slug, fullUrl);
