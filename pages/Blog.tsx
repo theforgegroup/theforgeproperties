@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
 import { ArrowRight } from 'lucide-react';
+import { BlogLandAssistant } from '../components/BlogLandAssistant';
 
 export const Blog: React.FC = () => {
   const { posts } = useProperties();
@@ -62,6 +63,7 @@ export const Blog: React.FC = () => {
            </div>
          )}
       </div>
+      <BlogLandAssistant />
     </div>
   );
 };

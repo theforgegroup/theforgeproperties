@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
 import { User, ArrowLeft, Share2, Calendar } from 'lucide-react';
 import { SEO } from '../components/SEO';
+import { BlogLandAssistant } from '../components/BlogLandAssistant';
 
 export const BlogPostDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -135,6 +136,7 @@ export const BlogPostDetails: React.FC = () => {
           .vertical-text { display: none; }
         }
       `}</style>
+      <BlogLandAssistant />
     </div>
   );
 };

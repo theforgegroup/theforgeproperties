@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 /* Added Landmark to imports */
-import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2, Plus, X, User } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2, Plus, X, User, Bot, Sparkles } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { SiteSettings } from '../types';
@@ -313,6 +313,81 @@ export const AdminSettings: React.FC = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* AI Assistant Configuration Settings */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="font-serif text-xl text-forge-navy font-bold mb-1 flex items-center gap-2">
+                  <Bot className="text-forge-gold" size={24} /> AI Land Enquiry Assistant
+                </h3>
+                <p className="text-slate-500 text-sm">Configure the AI-powered popup and floating action button experiences on the Blog.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">Blog Popup Feature</label>
+                  <p className="text-slate-505 text-xs mb-3 font-medium">Display an enquiry popup 5-10s after pages load under /blog.</p>
+                  <label className="inline-flex items-center cursor-pointer gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+                    <input 
+                      type="checkbox" 
+                      checked={!!formData.ai_popup_enabled} 
+                      onChange={(e) => setFormData({...formData, ai_popup_enabled: e.target.checked})} 
+                      className="rounded text-forge-gold focus:ring-forge-gold h-4 w-4 text-forge-navy"
+                    />
+                    <span className="text-sm font-bold text-slate-700">Enable Blog Popup</span>
+                  </label>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">Floating AI Help Button</label>
+                  <p className="text-slate-505 text-xs mb-3 font-medium">Display the "Ask Forge AI / AI Help" fixed button on blog pages.</p>
+                  <label className="inline-flex items-center cursor-pointer gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+                    <input 
+                      type="checkbox" 
+                      checked={!!formData.ai_floating_button_enabled} 
+                      onChange={(e) => setFormData({...formData, ai_floating_button_enabled: e.target.checked})} 
+                      className="rounded text-forge-gold focus:ring-forge-gold h-4 w-4 text-forge-navy"
+                    />
+                    <span className="text-sm font-bold text-slate-700">Enable Floating Button</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.ai_popup_enabled && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2"><Sparkles size={14} className="text-forge-gold" /> Popup Headline</label>
+                    <input 
+                      type="text" 
+                      value={formData.ai_popup_headline || ''} 
+                      onChange={(e) => setFormData({...formData, ai_popup_headline: e.target.value})} 
+                      className="w-full bg-slate-50 border p-4 text-sm focus:border-forge-gold focus:outline-none" 
+                      placeholder="e.g. Have Questions About Land or Property Investment?"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2"><Sparkles size={14} className="text-forge-gold" /> CTA Button Text</label>
+                    <input 
+                      type="text" 
+                      value={formData.ai_popup_cta || ''} 
+                      onChange={(e) => setFormData({...formData, ai_popup_cta: e.target.value})} 
+                      className="w-full bg-slate-50 border p-4 text-sm focus:border-forge-gold focus:outline-none" 
+                      placeholder="e.g. Ask The Forge AI"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Popup Body Text</label>
+                    <textarea 
+                      value={formData.ai_popup_body || ''} 
+                      onChange={(e) => setFormData({...formData, ai_popup_body: e.target.value})} 
+                      rows={3} 
+                      className="w-full bg-slate-50 border p-4 text-sm resize-none focus:border-forge-gold focus:outline-none" 
+                      placeholder="Enter the message detail here..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Standard Settings Restored and Unified... */}

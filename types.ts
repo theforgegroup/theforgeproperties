@@ -142,6 +142,11 @@ export interface ListingAgent {
   name: string;
   phone: string;
   image: string;
+  ai_popup_enabled?: boolean;
+  ai_popup_headline?: string;
+  ai_popup_body?: string;
+  ai_popup_cta?: string;
+  ai_floating_button_enabled?: boolean;
 }
 
 export interface SiteSettings {
@@ -154,6 +159,11 @@ export interface SiteSettings {
   whatsapp_group_link: string;
   min_payout_amount: number;
   logo?: string;
+  ai_popup_enabled?: boolean;
+  ai_popup_headline?: string;
+  ai_popup_body?: string;
+  ai_popup_cta?: string;
+  ai_floating_button_enabled?: boolean;
 }
 
 export interface Testimonial {

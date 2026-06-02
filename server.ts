@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer, ViteDevServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI } from '@google/genai';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -114,6 +115,130 @@ async function startServer() {
   // API Routes or other server-side triggers go here
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  app.post('/api/ai/chat', express.json(), async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      const apiKey = (process.env.API_KEY || "").trim();
+      if (!apiKey || apiKey === "undefined") {
+        return res.json({
+          response: "I'm currently undergoing a brief update. Please reach out directly to theforgeproperties@gmail.com or call +234 810 613 3572 for immediate support!"
+        });
+      }
+
+      // Initialize GoogleGenAI with the recommended User-Agent for modern @google/genai calls
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      // Fetch dynamic active listings context to make the AI extremely smart about actual products!
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('*')
+        .limit(6);
+
+      const inventoryStr = (properties || []).map(p => 
+        `- **${p.title}**: Located in ${p.location}, price: ₦${Number(p.price).toLocaleString()}, Type: ${p.type}, Status: ${p.status}`
+      ).join('\n');
+
+      const systemInstruction = `You are "The Forge AI Land Enquiry Assistant" — an elite real estate documentation, land titles, and property investment expert for "The Forge Properties" in Nigeria.
+      
+      Your goal is to provide sophisticated, authoritative, and helpful answers to visitors looking to invest in properties, buy land, or understand titles in Nigeria (e.g., C of O, Governor's Consent, Gazette, Excision, Deed of Assignment, Survey Plan, Governor's Consent resale rules, and land verification).
+
+      Tone Guidelines:
+      - Sophisticated, highly professional, warm, yet elite.
+      - Use clear Nigerian real estate terminology, but keep it accessible.
+      - Never sound desperate or robotic. Be objective and reassuring.
+
+      Inventory Content (Only mention these if the user is interested in properties or ready to invest):
+      ${inventoryStr || "We have luxury properties & premium plots available in Lagos (such as Sangotedo, Ajah, Lekki, and Ibeju-Lekki)."}
+
+      Nigerian Documentation Cheat Sheet:
+      1. C of O (Certificate of Occupancy): Highest document certifying 99 years of ownership from the State Government.
+      2. Governor's Consent: Needed whenever a land with an existing C of O is resold. Validates the transfer legally.
+      3. Excision: The portion of general land officially released by state governments to rural communities, rendering it excision-secure for private buyers.
+      4. Gazette: Official gazetted book publishing excision. Legally superb.
+      5. Free from Acquisition: Land that has been surveyed and found not to be earmarked for future government infrastructure.
+
+      Response Rules:
+      - Provide useful answers using clear markdown list points and bolding where appropriate.
+      - Do not overwhelm; keep replies engaging and elegant (typically under 120 words).
+      - If they need physical viewing, land inspection, surveyor verification, or custom callback, warmly encourage them of their option to submit a Consultation Request directly in this assistant widget anytime.`;
+
+      // Build chat contents from history
+      const formattedContents = [];
+      
+      if (history && Array.isArray(history)) {
+        for (const turn of history) {
+          formattedContents.push({
+            role: turn.role === 'user' ? 'user' : 'model',
+            parts: [{ text: turn.text }]
+          });
+        }
+      }
+      
+      // Append current user message
+      formattedContents.push({
+        role: 'user',
+        parts: [{ text: message }]
+      });
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: formattedContents,
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+        }
+      });
+
+      const reply = response.text || "I'm here to support your real estate questions. Could you please rephrase?";
+      res.json({ response: reply });
+
+    } catch (err) {
+      console.error('AI Chat Assistant Error:', err);
+      res.status(500).json({ error: 'Failed to process assistant request' });
+    }
+  });
+
+  app.post('/api/ai/leads', express.json(), async (req, res) => {
+    try {
+      const { name, email, phone, message } = req.body;
+      if (!name || (!email && !phone)) {
+        return res.status(400).json({ error: 'Name and either email or phone is required' });
+      }
+
+      const cleanLead = {
+        name,
+        email: email || '',
+        phone: phone || '',
+        message: message || 'AI Assistant callback consultation request',
+        date: new Date().toISOString(),
+        status: 'New',
+        type: 'General Inquiry'
+      };
+
+      const { data, error } = await supabase.from('leads').insert([cleanLead]).select();
+      if (error) {
+        console.error('Supabase lead insert error:', error);
+        throw error;
+      }
+
+      res.json({ success: true, lead: data?.[0] });
+    } catch (err) {
+      console.error('AI Lead Submission Error:', err);
+      res.status(500).json({ error: 'Failed to submit high-intent lead' });
+    }
   });
 
   // Intercept the /blog/:slug routes specifically for dynamic content injection

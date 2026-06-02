@@ -80,7 +80,12 @@ const DEFAULT_SETTINGS: SiteSettings = {
   },
   whatsapp_group_link: 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t',
   min_payout_amount: 50000,
-  logo: ""
+  logo: "",
+  ai_popup_enabled: true,
+  ai_popup_headline: "Have Questions About Land or Property Investment?",
+  ai_popup_body: "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
+  ai_popup_cta: "Ask The Forge AI",
+  ai_floating_button_enabled: true,
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -149,11 +154,28 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
           contact_email = parts[0]?.trim() || '';
           contact_email_2 = parts[1]?.trim() || '';
         }
+
+        // Unpack AI settings from listing_agent jsonb
+        const {
+          ai_popup_enabled = true,
+          ai_popup_headline = "Have Questions About Land or Property Investment?",
+          ai_popup_body = "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
+          ai_popup_cta = "Ask The Forge AI",
+          ai_floating_button_enabled = true,
+          ...cleanListingAgent
+        } = settingsData.listing_agent || {};
+
         setSettings({
           ...DEFAULT_SETTINGS,
           ...settingsData,
           contact_email,
-          contact_email_2
+          contact_email_2,
+          listing_agent: cleanListingAgent,
+          ai_popup_enabled,
+          ai_popup_headline,
+          ai_popup_body,
+          ai_popup_cta,
+          ai_floating_button_enabled
         });
       }
     } catch (error) {
@@ -346,6 +368,23 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const { contact_email_2, ...payload } = newSettings;
       const dbPayload: Partial<SiteSettings> & { id?: number } = { ...payload };
+
+      // Pack AI settings into listing_agent jsonb object for database storage
+      dbPayload.listing_agent = {
+        ...(newSettings.listing_agent || {}),
+        ai_popup_enabled: newSettings.ai_popup_enabled,
+        ai_popup_headline: newSettings.ai_popup_headline,
+        ai_popup_body: newSettings.ai_popup_body,
+        ai_popup_cta: newSettings.ai_popup_cta,
+        ai_floating_button_enabled: newSettings.ai_floating_button_enabled,
+      };
+
+      // Delete these custom settings from dbPayload since they are virtual top-level fields not present in postgres DB columns
+      delete dbPayload.ai_popup_enabled;
+      delete dbPayload.ai_popup_headline;
+      delete dbPayload.ai_popup_body;
+      delete dbPayload.ai_popup_cta;
+      delete dbPayload.ai_floating_button_enabled;
       
       if (contact_email_2 && contact_email_2.trim()) {
         dbPayload.contact_email = `${newSettings.contact_email || ''};${contact_email_2.trim()}`;
