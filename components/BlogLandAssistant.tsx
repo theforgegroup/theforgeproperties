@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useProperties } from '../context/PropertyContext';
 import { Bot, X, Sparkles, Send, Phone, Mail, User, Shield, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI } from '@google/genai';
 
 export const BlogLandAssistant: React.FC = () => {
-  const { settings } = useProperties();
+  const { settings, addLead } = useProperties();
   
   // Controls configurations loaded from global context
   const aiPopupEnabled = settings.ai_popup_enabled !== false;
@@ -83,6 +84,10 @@ export const BlogLandAssistant: React.FC = () => {
     setMessages(updatedMessages);
     setIsTyping(true);
 
+    let reply = "";
+    let serverSuccess = false;
+
+    // 1. Try backend POST first
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -93,24 +98,106 @@ export const BlogLandAssistant: React.FC = () => {
         })
       });
 
-      const data = await response.json();
-      if (data.response) {
-        setMessages(prev => [...prev, { role: 'model', text: data.response }]);
-        
-        // Trigger lead capture occasionally (every 2 user questions)
-        const nextCount = userQuestionCount + 1;
-        setUserQuestionCount(nextCount);
-        if (nextCount > 0 && nextCount % 2 === 0) {
-          setShowLeadPrompt(true);
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.response) {
+            reply = data.response;
+            serverSuccess = true;
+          }
         }
-      } else {
-        setMessages(prev => [...prev, { role: 'model', text: "I'm having trouble retrieving details right now, but our primary brokers are always available via whatsapp or phone!" }]);
       }
-    } catch {
-      setMessages(prev => [...prev, { role: 'model', text: "Connection error. Our concierge brokers are live at +234 810 613 3572 to provide direct advice immediately." }]);
-    } finally {
-      setIsTyping(false);
+    } catch (backendErr) {
+      console.warn("Backend chat failed, trying client fallback:", backendErr);
     }
+
+    // 2. Client-side Fallback using @google/genai directly
+    if (!serverSuccess) {
+      try {
+        const apiKey = (
+          (typeof process !== 'undefined' && process?.env?.GEMINI_API_KEY) ||
+          (typeof process !== 'undefined' && process?.env?.API_KEY) ||
+          import.meta.env.VITE_GEMINI_API_KEY ||
+          import.meta.env.VITE_API_KEY ||
+          ""
+        ).trim();
+
+        if (!apiKey || apiKey === "undefined") {
+          throw new Error("No Gemini API key available on client side.");
+        }
+
+        const ai = new GoogleGenAI({ apiKey });
+
+        const historyTurns = updatedMessages.slice(0, -1).map(turn => ({
+          role: turn.role === 'user' ? 'user' : 'model',
+          parts: [{ text: turn.text }]
+        }));
+
+        historyTurns.push({
+          role: 'user',
+          parts: [{ text }]
+        });
+
+        const sanitizedContents = [];
+        for (const turn of historyTurns) {
+          if (sanitizedContents.length === 0) {
+            if (turn.role === 'user') sanitizedContents.push(turn);
+          } else {
+            const lastTurn = sanitizedContents[sanitizedContents.length - 1];
+            if (lastTurn.role !== turn.role) {
+              sanitizedContents.push(turn);
+            } else {
+              lastTurn.parts.push(...turn.parts);
+            }
+          }
+        }
+
+        if (sanitizedContents.length === 0) {
+          sanitizedContents.push({
+            role: 'user',
+            parts: [{ text }]
+          });
+        }
+
+        const systemInstruction = `You are "The Forge AI Land Enquiry Assistant" — an elite real estate documentation, land titles, and property investment expert for "The Forge Properties" in Nigeria.
+        
+        Your goal is to provide sophisticated, authoritative, and helpful answers concerning land titles and registrations (C of O, Governor's Consent, Gazette, Excision, Deed of Assignment).
+        
+        Tone Guidelines:
+        - Sophisticated, highly professional, warm, yet elite.
+        - Respond using clear list. Markdown points look excellent.
+        - Keep answers elegantly brief (typically under 110 words).`;
+
+        const responseObj = await ai.models.generateContent({
+          model: 'gemini-3.5-flash',
+          contents: sanitizedContents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+          }
+        });
+
+        reply = responseObj.text || "";
+      } catch (clientErr) {
+        console.error("Client fallback chat failed:", clientErr);
+      }
+    }
+
+    if (reply) {
+      setMessages(prev => [...prev, { role: 'model', text: reply }]);
+      
+      // Trigger lead capture occasionally (every 2 user questions)
+      const nextCount = userQuestionCount + 1;
+      setUserQuestionCount(nextCount);
+      if (nextCount > 0 && nextCount % 2 === 0) {
+        setShowLeadPrompt(true);
+      }
+    } else {
+      setMessages(prev => [...prev, { role: 'model', text: "Connection error. Our concierge brokers are live at +234 810 613 3572 to provide direct advice immediately." }]);
+    }
+    
+    setIsTyping(false);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -127,6 +214,9 @@ export const BlogLandAssistant: React.FC = () => {
     setLeadSubmitting(true);
     setLeadErr('');
 
+    let submittedSuccessfully = false;
+
+    // 1. Try backend POST first
     try {
       const response = await fetch('/api/ai/leads', {
         method: 'POST',
@@ -139,25 +229,53 @@ export const BlogLandAssistant: React.FC = () => {
         })
       });
 
-      const data = await response.json();
-      if (data.success) {
-        setLeadSubmitted(true);
-        setTimeout(() => {
-          setShowConsultForm(false);
-          setLeadSubmitted(false);
-          setLeadName('');
-          setLeadPhone('');
-          setLeadEmail('');
-          setLeadMsg('');
-        }, 4000);
-      } else {
-        setLeadErr('Submission failed. Please try again or click the WhatsApp action link.');
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.success) {
+            submittedSuccessfully = true;
+          }
+        }
       }
-    } catch {
-      setLeadErr('Network timeout. Please contact our main office directly.');
-    } finally {
-      setLeadSubmitting(false);
+    } catch (backendErr) {
+      console.warn("Backend lead submission failed, trying direct client insert:", backendErr);
     }
+
+    // 2. Fallback to direct client-side DB insert
+    if (!submittedSuccessfully) {
+      try {
+        const fallbackLead = {
+          id: Math.random().toString(36).substring(2, 11) + '-' + Math.random().toString(36).substring(2, 11),
+          name: leadName,
+          email: leadEmail || '',
+          phone: leadPhone || '',
+          message: leadMsg || 'Requested professional land document verification / custom callback from Blog Assistant',
+          date: new Date().toISOString(),
+          status: 'New' as const,
+          type: 'General Inquiry' as const
+        };
+        await addLead(fallbackLead);
+        submittedSuccessfully = true;
+      } catch (clientErr) {
+        console.error("Direct client-side lead insert failed:", clientErr);
+      }
+    }
+
+    if (submittedSuccessfully) {
+      setLeadSubmitted(true);
+      setTimeout(() => {
+        setShowConsultForm(false);
+        setLeadSubmitted(false);
+        setLeadName('');
+        setLeadPhone('');
+        setLeadEmail('');
+        setLeadMsg('');
+      }, 4000);
+    } else {
+      setLeadErr('Submission failed. Please contact our main office directly or try via WhatsApp.');
+    }
+    setLeadSubmitting(false);
   };
 
   const suggestions = [
