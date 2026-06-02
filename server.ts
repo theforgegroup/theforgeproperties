@@ -142,14 +142,23 @@ async function startServer() {
       });
 
       // Fetch dynamic active listings context to make the AI extremely smart about actual products!
-      const { data: properties } = await supabase
-        .from('properties')
-        .select('*')
-        .limit(6);
-
-      const inventoryStr = (properties || []).map(p => 
-        `- **${p.title}**: Located in ${p.location}, price: ₦${Number(p.price).toLocaleString()}, Type: ${p.type}, Status: ${p.status}`
-      ).join('\n');
+      let inventoryStr = "We have luxury properties & premium plots available in Lagos (such as Sangotedo, Ajah, Lekki, and Ibeju-Lekki).";
+      try {
+        const { data: properties, error: dbError } = await supabase
+          .from('properties')
+          .select('*')
+          .limit(6);
+        
+        if (dbError) {
+          console.error("Supabase properties query error for chat:", dbError);
+        } else if (properties && properties.length > 0) {
+          inventoryStr = properties.map(p => 
+            `- **${p.title}**: Located in ${p.location}, price: ₦${Number(p.price).toLocaleString()}, Type: ${p.type}, Status: ${p.status}`
+          ).join('\n');
+        }
+      } catch (dbErr) {
+        console.error("Failed to fetch properties from Supabase for AI context:", dbErr);
+      }
 
       const systemInstruction = `You are "The Forge AI Land Enquiry Assistant" — an elite real estate documentation, land titles, and property investment expert for "The Forge Properties" in Nigeria.
       
@@ -161,7 +170,7 @@ async function startServer() {
       - Never sound desperate or robotic. Be objective and reassuring.
 
       Inventory Content (Only mention these if the user is interested in properties or ready to invest):
-      ${inventoryStr || "We have luxury properties & premium plots available in Lagos (such as Sangotedo, Ajah, Lekki, and Ibeju-Lekki)."}
+      ${inventoryStr}
 
       Nigerian Documentation Cheat Sheet:
       1. C of O (Certificate of Occupancy): Highest document certifying 99 years of ownership from the State Government.
@@ -236,6 +245,118 @@ async function startServer() {
     } catch (err) {
       console.error('AI Chat Assistant Error:', err);
       res.status(500).json({ error: 'Failed to process assistant request' });
+    }
+  });
+
+  app.post('/api/ai/concierge', express.json(), async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || "").trim();
+      if (!apiKey || apiKey === "undefined") {
+        return res.json({
+          response: "Our concierge brokers are live at +234 810 613 3572 to provide direct advice immediately."
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      // Fetch dynamic active listings context safely
+      let inventoryStr = "We have luxury properties & premium plots available in Lagos (such as Sangotedo, Ajah, Lekki, and Ibeju-Lekki).";
+      try {
+        const { data: properties, error: dbError } = await supabase
+          .from('properties')
+          .select('*')
+          .limit(8);
+        
+        if (dbError) {
+          console.error("Supabase properties query error for concierge:", dbError);
+        } else if (properties && properties.length > 0) {
+          inventoryStr = properties.map(p => 
+            `- **${p.title}**: Located in ${p.location}, price: ₦${Number(p.price).toLocaleString()}, Type: ${p.type}, Status: ${p.status}`
+          ).join('\n');
+        }
+      } catch (dbErr) {
+        console.error("Failed to fetch properties for concierge:", dbErr);
+      }
+
+      const systemInstruction = `You are 'The Forge AI', the elite digital concierge for 'The Forge Properties' Nigeria.
+      
+      Your goal is to provide sophisticated, helpful, and exclusive service. Assist clients with searching for luxury real estate, villas, land acquisitions, and premium homes.
+      
+      Tone: Sophisticated, highly professional, elite, and exclusive.
+      
+      Available Properties Context:
+      ${inventoryStr}
+
+      Response Rules:
+      - If a matching property exists in context, highlight its features elegantly.
+      - If no match, warmly refer them to theforgeproperties@gmail.com or recommend contacting our senior brokers directly at +234 810 613 3572.
+      - Keep responses under 75 words.`;
+
+      const formattedContents = [];
+      if (history && Array.isArray(history)) {
+        for (const turn of history) {
+          formattedContents.push({
+            role: turn.role === 'user' ? 'user' : 'model',
+            parts: [{ text: turn.text }]
+          });
+        }
+      }
+
+      formattedContents.push({
+        role: 'user',
+        parts: [{ text: message }]
+      });
+
+      const sanitizedContents: { role: string; parts: { text: string }[] }[] = [];
+      for (const turn of formattedContents) {
+        if (sanitizedContents.length === 0) {
+          if (turn.role === 'user') {
+            sanitizedContents.push(turn);
+          }
+        } else {
+          const lastTurn = sanitizedContents[sanitizedContents.length - 1];
+          if (lastTurn.role !== turn.role) {
+            sanitizedContents.push(turn);
+          } else {
+            lastTurn.parts.push(...turn.parts);
+          }
+        }
+      }
+
+      if (sanitizedContents.length === 0) {
+        sanitizedContents.push({
+          role: 'user',
+          parts: [{ text: message }]
+        });
+      }
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: sanitizedContents,
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+        }
+      });
+
+      const reply = response.text || "I'm here to support your real estate questions. Could you please rephrase?";
+      res.json({ response: reply });
+
+    } catch (err) {
+      console.error('Concierge Assistant Error:', err);
+      res.status(500).json({ error: 'Failed to process concierge request' });
     }
   });
 

@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, Bot } from 'lucide-react';
 import { getChatResponse } from '../services/geminiService';
 import { ChatMessage } from '../types';
-import { useProperties } from '../context/PropertyContext';
 
 export const AIConcierge: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,9 +12,6 @@ export const AIConcierge: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Get real-time properties from context
-  const { properties } = useProperties();
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -34,8 +30,8 @@ export const AIConcierge: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Pass the current property list to the AI
-      const responseText = await getChatResponse(userMsg.text, properties);
+      // Pass the current conversation history to the AI
+      const responseText = await getChatResponse(userMsg.text, messages);
       const aiMsg: ChatMessage = { role: 'model', text: responseText };
       setMessages(prev => [...prev, aiMsg]);
     } catch {

@@ -1,52 +1,29 @@
-import { GoogleGenAI } from "@google/genai";
-import { Property } from "../types";
+import { ChatMessage } from "../types";
 
 /**
  * The Forge AI Concierge Service
- * Manages real-time interactions with the Gemini Pro model.
+ * Proxies calls to the secure backend `/api/ai/concierge` to perform chat generations.
  */
-export const getChatResponse = async (userMessage: string, inventory: Property[]): Promise<string> => {
-  // Ensure the key exists and is not just a placeholder
-  const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || "").trim();
-
-  if (!apiKey || apiKey === "undefined") {
-    console.error("The Forge AI: API_KEY is missing from the environment.");
-    return "I am currently undergoing scheduled maintenance. Please contact our office directly at theforgeproperties@gmail.com for immediate assistance.";
-  }
-
+export const getChatResponse = async (userMessage: string, history: ChatMessage[] = []): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: apiKey });
-
-    // Prepare slim property context for RAG
-    const context = inventory.slice(0, 8).map(p => ({
-      name: p.title,
-      loc: p.location,
-      price: `₦${p.price.toLocaleString()}`,
-      type: p.type
-    }));
-
-    const systemInstruction = `You are 'The Forge AI', the elite digital concierge for 'The Forge Properties' Nigeria. 
-    Tone: Sophisticated, helpful, and exclusive.
-    Context: ${JSON.stringify(context)}. 
-    
-    Response Rules:
-    - If a matching property exists in context, highlight it.
-    - If no match, refer them to theforgeproperties@gmail.com.
-    - Keep responses under 60 words.`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: userMessage }] }],
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
+    const response = await fetch('/api/ai/concierge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userMessage,
+        history: history
+      })
     });
 
-    return response.text || "I'm here to help. Could you please rephrase your request?";
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response || "Our concierge brokers are live at +234 810 613 3572 to provide direct advice immediately.";
 
   } catch (error) {
     console.error("The Forge AI Error:", error);
-    return "Our concierge service is currently at capacity. Please reach out to our senior brokers at +234 810 613 3572 for immediate personalized service.";
+    return "Our concierge brokers are live at +234 810 613 3572 to provide direct advice immediately.";
   }
 };
