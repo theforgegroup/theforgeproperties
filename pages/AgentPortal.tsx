@@ -71,28 +71,6 @@ export const AgentPortal: React.FC = () => {
           profile_photo: foundAgent.profile_photo || ''
         }, 'Agent');
         navigate('/agent/dashboard');
-      } else if (email.trim().toLowerCase() === 'agent@company.com' || email.trim().toLowerCase() === 'realtor@company.com') {
-        // Automatic approved agent fallback for easy preview evaluation
-        setAuthenticatedUser({
-          id: 'agent-123',
-          name: 'Premium Realtor',
-          email: email,
-          phone: '+234 810 613 3572',
-          status: 'Active',
-          referral_code: 'DANIEL2847',
-          location: 'Lagos, Nigeria',
-          total_sales: 3,
-          total_commission: 15400000, // stored in Naira as a responsive frontend state but shown properly
-          available_balance: 7800000,
-          pending_balance: 1500000,
-          total_clicks: 124,
-          total_leads: 8,
-          bio: 'Gold-level accredited sales partner specializing in high-yield Lekki investments.',
-          bank_name: 'Guaranty Trust Bank',
-          account_number: '0123456789',
-          account_name: 'PRIME LUXURY SERVICES'
-        }, 'Agent');
-        navigate('/agent/dashboard');
       } else {
         setError('No agent found with this email, or incorrect credentials.');
         setIsLoading(false);
@@ -346,10 +324,7 @@ export const AgentPortal: React.FC = () => {
               )}
 
               {mode === 'login' && (
-                <div className="flex justify-between items-center pt-1">
-                  <div className="text-[10px] text-slate-400">
-                    Test access: <span className="text-forge-gold font-bold">realtor@company.com</span>
-                  </div>
+                <div className="flex justify-end items-center pt-1">
                   <button type="button" onClick={() => alert("Please contact corporate admin to reset your credentials.")} className="text-[10px] font-bold text-forge-gold uppercase tracking-widest hover:underline">Forgot Password?</button>
                 </div>
               )}
