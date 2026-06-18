@@ -68,7 +68,7 @@ export const register = async (req: Request, res: Response) => {
         emailExists = true;
       }
       if (supFetchErr) {
-        console.error('Supabase check email error returned:', supFetchErr);
+        console.error('Supabase check email error returned:', JSON.stringify(supFetchErr, null, 2));
       }
     } catch (e) {
       console.error('Supabase check email error caught:', e);
@@ -122,7 +122,7 @@ export const register = async (req: Request, res: Response) => {
         }]);
 
       if (supInsertErr) {
-         console.error('Supabase insert failed:', supInsertErr);
+         console.error('Supabase insert failed:', JSON.stringify(supInsertErr, null, 2));
       } else {
          console.log('Successfully registered agent on Supabase agents table!');
       }
@@ -176,12 +176,13 @@ export const register = async (req: Request, res: Response) => {
           referred_by,
           email_verified,
           email_verification_token,
+          password,
           created_at,
           updated_at
         ) VALUES (
           $1, $2, $3, $4, $5, $6,
           'realtor', 'pending',
-          $7, $8, FALSE, $9,
+          $7, $8, FALSE, $9, $10,
           NOW(), NOW()
         ) RETURNING 
           id, full_name, email, phone, 
@@ -196,7 +197,8 @@ export const register = async (req: Request, res: Response) => {
           password_hash,
           newReferralCode,
           referred_by,
-          email_verification_token
+          email_verification_token,
+          password
         ]
       );
       if (result && result.rows && result.rows[0]) {

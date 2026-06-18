@@ -8,6 +8,7 @@ import { GoogleGenAI } from '@google/genai';
 import pg from 'pg';
 import multer from 'multer';
 import { authRouter } from './routes/auth';
+import db from './config/database';
 
 const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
 
@@ -86,6 +87,21 @@ async function runMigrations() {
       Object.assign(client, {}); // satisfaction for TS linting
       await client.query(`
         ALTER TABLE agents ADD COLUMN IF NOT EXISTS profile_photo TEXT;
+      `);
+
+      // ALTER users to add all other agent specific columns
+      await client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS total_sales INT DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS total_commission NUMERIC DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS available_balance NUMERIC DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_balance NUMERIC DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS total_clicks INT DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS total_leads INT DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_code TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_name TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS account_name TEXT;
       `);
 
       // Create profile_photo_history
@@ -325,6 +341,137 @@ async function startServer() {
   });
 
   app.use('/api/auth', express.json(), authRouter);
+
+  // Return all realtors from PostgreSQL users table mapped as Agent objects
+  app.get('/api/agents', async (req, res) => {
+    try {
+      const result = await db.query(
+        "SELECT id, full_name, email, phone, state, status, referral_code, password, total_sales, total_commission, available_balance, pending_balance, total_clicks, total_leads, bank_name, account_number, account_name, bio, profile_photo, created_at FROM users WHERE role = 'realtor'"
+      );
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const agents = result.rows.map((row: any) => ({
+        id: row.id,
+        name: row.full_name,
+        email: row.email,
+        phone: row.phone,
+        location: row.state,
+        status: row.status ? (row.status.charAt(0).toUpperCase() + row.status.slice(1)) : 'Pending',
+        referral_code: row.referral_code,
+        password: row.password || '',
+        total_sales: parseInt(row.total_sales) || 0,
+        total_commission: parseFloat(row.total_commission) || 0,
+        available_balance: parseFloat(row.available_balance) || 0,
+        pending_balance: parseFloat(row.pending_balance) || 0,
+        total_clicks: parseInt(row.total_clicks) || 0,
+        total_leads: parseInt(row.total_leads) || 0,
+        bank_name: row.bank_name || '',
+        account_number: row.account_number || '',
+        account_name: row.account_name || '',
+        bio: row.bio || '',
+        profile_photo: row.profile_photo || '',
+        date_joined: row.created_at
+      }));
+      
+      res.json(agents);
+    } catch (e) {
+      console.error('Fetch agents error:', e);
+      res.status(500).json({ error: 'Failed to fetch agents' });
+    }
+  });
+
+  // Create new realtor in PostgreSQL users table
+  app.post('/api/agents', express.json(), async (req, res) => {
+    try {
+      const { id, name, email, phone, location, referral_code, status, password, bank_name, account_number, account_name, bio, profile_photo } = req.body;
+      
+      const pgStatus = status ? status.toLowerCase() : 'pending';
+      
+      await db.query(`
+        INSERT INTO users (
+          id, full_name, email, phone, state, role, status, referral_code, password,
+          total_sales, total_commission, available_balance, pending_balance, total_clicks, total_leads,
+          bank_name, account_number, account_name, bio, profile_photo, created_at, updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, 'realtor', $6, $7, $8,
+          0, 0, 0, 0, 0, 0,
+          $9, $10, $11, $12, $13, NOW(), NOW()
+        )
+      `, [
+        id || Date.now().toString(),
+        name || '',
+        (email || '').toLowerCase().trim(),
+        phone || '',
+        location || '',
+        pgStatus,
+        referral_code || `FORGE${Math.floor(Math.random() * 9000) + 1000}`,
+        password || '',
+        bank_name || null,
+        account_number || null,
+        account_name || null,
+        bio || null,
+        profile_photo || null
+      ]);
+      
+      res.json({ success: true });
+    } catch (e) {
+      console.error('Create agent error:', e);
+      res.status(500).json({ error: 'Failed to create agent' });
+    }
+  });
+
+  // Update realtors fields in PostgreSQL users table
+  app.put('/api/agents/:id', express.json(), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, phone, location, status, total_sales, total_commission, available_balance, pending_balance, total_clicks, total_leads, bank_name, account_number, account_name, bio, profile_photo } = req.body;
+      
+      const pgStatus = status ? status.toLowerCase() : undefined;
+
+      await db.query(`
+        UPDATE users SET
+          full_name = COALESCE($1, full_name),
+          phone = COALESCE($2, phone),
+          state = COALESCE($3, state),
+          status = COALESCE($4, status),
+          total_sales = COALESCE($5, total_sales),
+          total_commission = COALESCE($6, total_commission),
+          available_balance = COALESCE($7, available_balance),
+          pending_balance = COALESCE($8, pending_balance),
+          total_clicks = COALESCE($9, total_clicks),
+          total_leads = COALESCE($10, total_leads),
+          bank_name = COALESCE($11, bank_name),
+          account_number = COALESCE($12, account_number),
+          account_name = COALESCE($13, account_name),
+          bio = COALESCE($14, bio),
+          profile_photo = COALESCE($15, profile_photo),
+          updated_at = NOW()
+        WHERE id = $16
+      `, [
+        name || null,
+        phone || null,
+        location || null,
+        pgStatus || null,
+        total_sales !== undefined ? Number(total_sales) : null,
+        total_commission !== undefined ? Number(total_commission) : null,
+        available_balance !== undefined ? Number(available_balance) : null,
+        pending_balance !== undefined ? Number(pending_balance) : null,
+        total_clicks !== undefined ? Number(total_clicks) : null,
+        total_leads !== undefined ? Number(total_leads) : null,
+        bank_name || null,
+        account_number || null,
+        account_name || null,
+        bio || null,
+        profile_photo || null,
+        id
+      ]);
+      
+      res.json({ success: true });
+    } catch (e) {
+      console.error('Update agent error:', e);
+      res.status(500).json({ error: 'Failed to update agent' });
+    }
+  });
 
   app.post('/api/ai/chat', express.json(), async (req, res) => {
     try {

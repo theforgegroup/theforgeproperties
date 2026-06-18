@@ -107,27 +107,24 @@ export const query = async (text: string, params?: unknown[]) => {
   const normalizedText = text.replace(/\s+/g, ' ').trim().toLowerCase();
   const db = loadMockDb();
 
-  // 1. SELECT WHERE email = $1
-  if (normalizedText.includes('select') && normalizedText.includes('users') && normalizedText.includes('email = $1')) {
-    const emailToFind = (params && params[0] ? String(params[0]).toLowerCase().trim() : '');
-    const found = db.users.filter(u => u.email.toLowerCase() === emailToFind);
+  // 1. SELECT queries
+  if (normalizedText.includes('select') && normalizedText.includes('users')) {
+    let found = db.users;
+    if (normalizedText.includes("role = 'realtor'")) {
+      found = found.filter(u => u.role === 'realtor');
+    } else if (normalizedText.includes('email = $1')) {
+      const emailToFind = (params && params[0] ? String(params[0]).toLowerCase().trim() : '');
+      found = found.filter(u => u.email.toLowerCase() === emailToFind);
+    } else if (normalizedText.includes('referral_code = $1')) {
+      const codeToFind = (params && params[0] ? String(params[0]).toUpperCase().trim() : '');
+      found = found.filter(u => u.referral_code.toUpperCase() === codeToFind);
+    } else if (normalizedText.includes('role') && (normalizedText.includes('admin') || normalizedText.includes('manager') || normalizedText.includes('support'))) {
+      found = found.filter(u => ['admin', 'manager', 'support'].includes(u.role));
+    }
     return { rows: found };
   }
 
-  // 2. SELECT WHERE referral_code = $1
-  if (normalizedText.includes('select') && normalizedText.includes('users') && normalizedText.includes('referral_code = $1')) {
-    const codeToFind = (params && params[0] ? String(params[0]).toUpperCase().trim() : '');
-    const found = db.users.filter(u => u.referral_code.toUpperCase() === codeToFind);
-    return { rows: found };
-  }
-
-  // 3. SELECT WHERE role IN ('admin', 'manager', 'support') or general admin lookup
-  if (normalizedText.includes('select') && normalizedText.includes('users') && (normalizedText.includes('role') || normalizedText.includes('admin'))) {
-    const foundAdmin = db.users.filter(u => ['admin', 'manager', 'support'].includes(u.role));
-    return { rows: foundAdmin };
-  }
-
-  // 4. INSERT INTO users
+  // 2. INSERT INTO users
   if (normalizedText.includes('insert into users')) {
     const safeParams = params || [];
     const newUser = {
@@ -143,6 +140,13 @@ export const query = async (text: string, params?: unknown[]) => {
       referred_by: safeParams[7] ? String(safeParams[7]) : null,
       email_verified: false,
       email_verification_token: String(safeParams[8] || ''),
+      password: safeParams[9] ? String(safeParams[9]) : '',
+      total_sales: 0,
+      total_commission: 0,
+      available_balance: 0,
+      pending_balance: 0,
+      total_clicks: 0,
+      total_leads: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -167,7 +171,39 @@ export const query = async (text: string, params?: unknown[]) => {
     };
   }
 
-  // 5. INSERT INTO notifications
+  // 3. UPDATE users
+  if (normalizedText.includes('update users')) {
+    const safeParams = params || [];
+    // ID is index 15 in user-agent update query
+    const idToUpdate = String(safeParams[15] || '');
+    const userIndex = db.users.findIndex(u => u.id === idToUpdate);
+    if (userIndex !== -1) {
+      const u = db.users[userIndex];
+      if (safeParams[0] !== undefined && safeParams[0] !== null) u.full_name = String(safeParams[0]);
+      if (safeParams[1] !== undefined && safeParams[1] !== null) u.phone = String(safeParams[1]);
+      if (safeParams[2] !== undefined && safeParams[2] !== null) u.state = String(safeParams[2]);
+      if (safeParams[3] !== undefined && safeParams[3] !== null) u.status = String(safeParams[3]);
+      if (safeParams[4] !== undefined && safeParams[4] !== null) u.total_sales = Number(safeParams[4]);
+      if (safeParams[5] !== undefined && safeParams[5] !== null) u.total_commission = Number(safeParams[5]);
+      if (safeParams[6] !== undefined && safeParams[6] !== null) u.available_balance = Number(safeParams[6]);
+      if (safeParams[7] !== undefined && safeParams[7] !== null) u.pending_balance = Number(safeParams[7]);
+      if (safeParams[8] !== undefined && safeParams[8] !== null) u.total_clicks = Number(safeParams[8]);
+      if (safeParams[9] !== undefined && safeParams[9] !== null) u.total_leads = Number(safeParams[9]);
+      const uRecord = u as unknown as Record<string, unknown>;
+      if (safeParams[10] !== undefined && safeParams[10] !== null) uRecord.bank_name = String(safeParams[10]);
+      if (safeParams[11] !== undefined && safeParams[11] !== null) uRecord.account_number = String(safeParams[11]);
+      if (safeParams[12] !== undefined && safeParams[12] !== null) uRecord.account_name = String(safeParams[12]);
+      if (safeParams[13] !== undefined && safeParams[13] !== null) uRecord.bio = String(safeParams[13]);
+      if (safeParams[14] !== undefined && safeParams[14] !== null) uRecord.profile_photo = String(safeParams[14]);
+      u.updated_at = new Date().toISOString();
+      db.users[userIndex] = u;
+      saveMockDb(db);
+      console.log("[MOCK DB] Successfully updated user agent:", u.email);
+    }
+    return { rows: [] };
+  }
+
+  // 4. INSERT INTO notifications
   if (normalizedText.includes('insert into notifications')) {
     // Return empty success structure for mockup
     console.log("[MOCK DB] Skipped layout execution for bulk notifications insertion.");

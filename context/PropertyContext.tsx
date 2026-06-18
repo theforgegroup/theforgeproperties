@@ -116,7 +116,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         { data: subsData },
         { data: postsData },
         { data: catsData },
-        { data: agentsData },
+        agentsList,
         { data: salesData },
         { data: payoutsData },
         { data: neighborhoodsData },
@@ -128,7 +128,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         supabase.from('subscribers').select('*'),
         supabase.from('posts').select('*').order('date', { ascending: false }),
         supabase.from('blog_categories').select('*'),
-        supabase.from('agents').select('*'),
+        fetch('/api/agents').then(res => res.ok ? res.json() : []).catch(err => { console.error('Error fetching agents:', err); return []; }),
         supabase.from('agent_sales').select('*'),
         supabase.from('payout_requests').select('*'),
         supabase.from('neighborhoods').select('*'),
@@ -141,7 +141,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (subsData) setSubscribers(subsData);
       if (postsData) setPosts(postsData);
       if (catsData && catsData.length > 0) setCategories(catsData);
-      if (agentsData) setAgents(agentsData);
+      if (agentsList) setAgents(agentsList);
       if (salesData) setSales(salesData);
       if (payoutsData) setPayouts(payoutsData);
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData);
@@ -251,17 +251,29 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       total_leads: 0
     } as Agent;
     
-    const { error } = await supabase.from('agents').insert([newAgent]);
-    if (error) {
-      setAgents(prev => [...prev, newAgent]);
-      return newAgent;
+    try {
+      await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAgent)
+      });
+    } catch (err) {
+      console.error('Error adding agent:', err);
     }
     setAgents(prev => [...prev, newAgent]);
     return newAgent;
   };
 
   const updateAgent = async (agent: Agent) => {
-    await supabase.from('agents').update(agent).eq('id', agent.id);
+    try {
+      await fetch(`/api/agents/${agent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(agent)
+      });
+    } catch (err) {
+      console.error('Error updating agent:', err);
+    }
     setAgents(prev => prev.map(a => a.id === agent.id ? agent : a));
   };
 
