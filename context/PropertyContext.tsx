@@ -414,43 +414,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       await supabase.from('site_settings').upsert({ id: 1, ...dbPayload });
       
-      const demoTestimonials: Testimonial[] = [
-        {
-          id: 'demo-1',
-          client_name: "Olawale Adeyemi",
-          testimonial_text: "The Forge Properties made my land acquisition in Ibeju-Lekki so seamless. Their transparency and documentation verification gave me total peace of mind.",
-          rating: 5,
-          property_type: 'Land',
-          show_on_homepage: true,
-          is_verified: true,
-          date: new Date().toISOString()
-        },
-        {
-          id: 'demo-2',
-          client_name: "Chidinma Okoro",
-          testimonial_text: "I found my dream home in Ajah through their platform. The AI search was surprisingly accurate, and the team was professional throughout the process.",
-          rating: 5,
-          property_type: 'House',
-          show_on_homepage: true,
-          is_verified: true,
-          date: new Date().toISOString()
-        },
-        {
-          id: 'demo-3',
-          client_name: "Tunde Bakare",
-          testimonial_text: "Excellent service. They don't just sell; they guide you on the best investment strategies. Highly recommended for anyone looking for verified properties.",
-          rating: 5,
-          property_type: 'Investment',
-          show_on_homepage: true,
-          is_verified: true,
-          date: new Date().toISOString()
-        }
-      ];
-
-      await supabase.from('testimonials').upsert(demoTestimonials);
-      
       await fetchData();
-      alert("System initialized with demo data.");
+      alert("System initialized with clean site settings.");
     } catch (err) {
       console.error(err);
     } finally {

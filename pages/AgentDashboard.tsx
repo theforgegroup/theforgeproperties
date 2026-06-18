@@ -142,7 +142,7 @@ export const AgentDashboard: React.FC = () => {
   const [selectedPropertyDetails, setSelectedPropertyDetails] = useState<Property | null>(null);
   const [downloadCounts, setDownloadCounts] = useState<Record<string, number>>(() => {
     const raw = localStorage.getItem('tfp_downloads');
-    return raw ? JSON.parse(raw) : { brand_kit: 18, flyer_fb: 4, caption: 12 };
+    return raw ? JSON.parse(raw) : { brand_kit: 0, flyer_fb: 0, caption: 0 };
   });
 
   const [readAnnouncements, setReadAnnouncements] = useState<string[]>(() => {
@@ -152,25 +152,13 @@ export const AgentDashboard: React.FC = () => {
 
   const [watchedVideos, setWatchedVideos] = useState<string[]>(() => {
     const raw = localStorage.getItem('tfp_watched_videos');
-    return raw ? JSON.parse(raw) : ['guide-video-1'];
+    return raw ? JSON.parse(raw) : [];
   });
 
   const [localTickets, setLocalTickets] = useState<SupportTicket[]>(() => {
     const raw = localStorage.getItem('tfp_agent_tickets');
     if (raw) return JSON.parse(raw);
-    return [
-      {
-        id: 'TKT-8241',
-        date: new Date(Date.now() - 48 * 3600 * 1000).toLocaleDateString(),
-        subject: 'Commision query for Silverland Phase 2 sale',
-        category: 'Commission',
-        message: 'Could you please verify if the sale for Olawale Adeyemi is recorded successfully on your side? Checked the earnings portal but it seems under pending review.',
-        status: 'In Progress',
-        replies: [
-          { sender: 'Admin Support', message: 'Hello, 우리는 Olawale\'s payment is undergoing clearing. We expect payment status update tomorrow afternoon. Keep selling!', date: 'Yesterday' }
-        ]
-      }
-    ];
+    return [];
   });
 
   // Property Filters states
