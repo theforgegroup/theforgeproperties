@@ -97,10 +97,58 @@ export const register = async (req: Request, res: Response) => {
     );
     const newReferralCode = `${firstName}${randomDigits}`;
 
-    // Write newly registered agent to Supabase agents-table so that frontend and admin panels can immediately read it
-    console.log('Writing newly registered agent to Supabase agents-table...');
+    // Check if referred_by exists
+    let referred_by = null;
     try {
-      const { error: supInsertErr } = await supabase
+      if (referral_code) {
+        const referrer = await db.query(
+          `SELECT id FROM users WHERE referral_code = $1`,
+          [referral_code.toUpperCase().trim()]
+        );
+        if (referrer && referrer.rows && referrer.rows.length > 0) {
+          referred_by = referrer.rows[0].id;
+        }
+      }
+    } catch (e) {
+      console.error('Postgres find referrer error:', e);
+    }
+
+    // Generate email verification token
+    const email_verification_token = uuidv4();
+
+    // Write newly registered agent to Supabase so that they are found on the database
+    console.log('Writing newly registered agent to Supabase tables users and agents...');
+    try {
+      const { error: supUserErr } = await supabase
+        .from('users')
+        .insert([{
+          id: id,
+          full_name: full_name.trim(),
+          email: email.toLowerCase().trim(),
+          phone: phone.trim(),
+          state: state.trim(),
+          role: 'realtor',
+          status: 'pending',
+          referral_code: newReferralCode,
+          password_hash: password_hash,
+          referred_by: referred_by,
+          email_verified: false,
+          email_verification_token: email_verification_token,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+
+      if (supUserErr) {
+         console.error('Supabase users insert failed:', JSON.stringify(supUserErr, null, 2));
+      } else {
+         console.log('Successfully registered agent on Supabase users table!');
+      }
+    } catch (e) {
+      console.error('Supabase users registration error caught:', e);
+    }
+
+    try {
+      const { error: supAgentErr } = await supabase
         .from('agents')
         .insert([{
           id: id,
@@ -121,33 +169,14 @@ export const register = async (req: Request, res: Response) => {
           referred_by_code: referral_code || null
         }]);
 
-      if (supInsertErr) {
-         console.error('Supabase insert failed:', JSON.stringify(supInsertErr, null, 2));
+      if (supAgentErr) {
+         console.error('Supabase agents insert failed:', JSON.stringify(supAgentErr, null, 2));
       } else {
          console.log('Successfully registered agent on Supabase agents table!');
       }
     } catch (e) {
       console.error('Supabase agent registration error caught:', e);
     }
-
-    // Check if referred_by exists
-    let referred_by = null;
-    try {
-      if (referral_code) {
-        const referrer = await db.query(
-          `SELECT id FROM users WHERE referral_code = $1`,
-          [referral_code.toUpperCase().trim()]
-        );
-        if (referrer && referrer.rows && referrer.rows.length > 0) {
-          referred_by = referrer.rows[0].id;
-        }
-      }
-    } catch (e) {
-      console.error('Postgres find referrer error:', e);
-    }
-
-    // Generate email verification token
-    const email_verification_token = uuidv4();
 
     // Insert new user to PostgreSQL
     let newUser = {
