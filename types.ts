@@ -87,6 +87,14 @@ export interface Agent {
   pending_balance: number;
   total_clicks: number;
   total_leads: number;
+  location?: string;
+  password?: string;
+  referred_by_code?: string;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
+  bio?: string;
+  profile_photo?: string;
 }
 
 export interface AgentSale {

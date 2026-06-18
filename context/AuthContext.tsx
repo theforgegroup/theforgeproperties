@@ -3,10 +3,27 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 interface User {
+  id?: string;
   email: string;
   name: string;
-  id?: string;
+  phone?: string;
   referral_code?: string;
+  status?: 'Pending' | 'Active' | 'Suspended';
+  date_joined?: string;
+  total_sales?: number;
+  total_commission?: number;
+  available_balance?: number;
+  pending_balance?: number;
+  total_clicks?: number;
+  total_leads?: number;
+  location?: string;
+  password?: string;
+  referred_by_code?: string;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
+  bio?: string;
+  profile_photo?: string;
 }
 
 interface AuthContextType {

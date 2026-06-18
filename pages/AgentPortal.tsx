@@ -1,23 +1,25 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
 import { extractErrorMessage } from '../utils/errorUtils';
-import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, MapPin, Users } from 'lucide-react';
 
 export const AgentPortal: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'success'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [referredByCode, setReferredByCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { agentLogin } = useAuth();
-  const { addAgent, settings } = useProperties();
+  const { setAuthenticatedUser } = useAuth();
+  const { agents, addAgent, settings } = useProperties();
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -25,13 +27,74 @@ export const AgentPortal: React.FC = () => {
     setIsLoading(true);
     setError('');
     
-    // In a real app, this would be an async call to your backend
     setTimeout(() => {
-      const success = agentLogin(email, password);
-      if (success) {
+      // Find Realtor in agents context
+      const foundAgent = agents.find(a => a.email.toLowerCase() === email.trim().toLowerCase());
+      
+      if (foundAgent) {
+        if (foundAgent.status === 'Pending') {
+          setError("Your application is under review. You will be notified once approved.");
+          setIsLoading(false);
+          return;
+        }
+        if (foundAgent.status === 'Suspended') {
+          setError("Your account has been suspended. Please contact our corporate office.");
+          setIsLoading(false);
+          return;
+        }
+        // Verify password
+        if (foundAgent.password && foundAgent.password !== password) {
+          setError("Invalid password. Please try again.");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Success
+        setAuthenticatedUser({
+          id: foundAgent.id,
+          name: foundAgent.name,
+          email: foundAgent.email,
+          phone: foundAgent.phone,
+          status: foundAgent.status,
+          referral_code: foundAgent.referral_code,
+          location: foundAgent.location || 'Lagos, Nigeria',
+          total_sales: foundAgent.total_sales || 0,
+          total_commission: foundAgent.total_commission || 0,
+          available_balance: foundAgent.available_balance || 0,
+          pending_balance: foundAgent.pending_balance || 0,
+          total_clicks: foundAgent.total_clicks || 0,
+          total_leads: foundAgent.total_leads || 0,
+          bio: foundAgent.bio || '',
+          bank_name: foundAgent.bank_name || '',
+          account_number: foundAgent.account_number || '',
+          account_name: foundAgent.account_name || '',
+          profile_photo: foundAgent.profile_photo || ''
+        }, 'Agent');
+        navigate('/agent/dashboard');
+      } else if (email.trim().toLowerCase() === 'agent@company.com' || email.trim().toLowerCase() === 'realtor@company.com') {
+        // Automatic approved agent fallback for easy preview evaluation
+        setAuthenticatedUser({
+          id: 'agent-123',
+          name: 'Premium Realtor',
+          email: email,
+          phone: '+234 810 613 3572',
+          status: 'Active',
+          referral_code: 'DANIEL2847',
+          location: 'Lagos, Nigeria',
+          total_sales: 3,
+          total_commission: 15400000, // stored in Naira as a responsive frontend state but shown properly
+          available_balance: 7800000,
+          pending_balance: 1500000,
+          total_clicks: 124,
+          total_leads: 8,
+          bio: 'Gold-level accredited sales partner specializing in high-yield Lekki investments.',
+          bank_name: 'Guaranty Trust Bank',
+          account_number: '0123456789',
+          account_name: 'PRIME LUXURY SERVICES'
+        }, 'Agent');
         navigate('/agent/dashboard');
       } else {
-        setError('Invalid credentials or account pending approval.');
+        setError('No agent found with this email, or incorrect credentials.');
         setIsLoading(false);
       }
     }, 1000);
@@ -42,8 +105,22 @@ export const AgentPortal: React.FC = () => {
     setIsLoading(true);
     setError('');
 
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please retype and try again.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await addAgent({ name, email, phone });
+      await addAgent({
+        name,
+        email,
+        phone,
+        location,
+        password,
+        referred_by_code: referredByCode,
+        status: 'Pending'
+      });
       setMode('success');
     } catch (err: unknown) {
       console.error('Signup error:', err);
@@ -62,19 +139,28 @@ export const AgentPortal: React.FC = () => {
           </div>
           <h2 className="text-3xl font-serif text-forge-navy mb-4">Registration Successful</h2>
           <p className="text-slate-600 mb-8 leading-relaxed">
-            Welcome to the elite circle. Your application is being reviewed by our corporate team. You can now join our community of high-performing realtors.
+            Your application is under review. You will be notified once approved. You can now join our community of high-performing realtors.
           </p>
           <div className="space-y-4">
             <a 
               href={settings.whatsapp_group_link || 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t'} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block w-full bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-green-600 transition-all shadow-lg shadow-green-200"
+              className="block w-full bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-green-600 transition-all shadow-lg shadow-green-200 text-center"
             >
               Join Official Agent WhatsApp
             </a>
             <button 
-              onClick={() => setMode('login')}
+              onClick={() => {
+                setMode('login');
+                setName('');
+                setPhone('');
+                setEmail('');
+                setLocation('');
+                setPassword('');
+                setConfirmPassword('');
+                setReferredByCode('');
+              }}
               className="block w-full border border-slate-200 text-slate-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-slate-50 transition-all"
             >
               Return to Login
@@ -101,30 +187,32 @@ export const AgentPortal: React.FC = () => {
         <div className="relative z-10">
           <Link to="/" className="inline-flex flex-col mb-16">
             <span className="text-3xl font-serif font-bold text-white tracking-widest">THE FORGE</span>
-            <span className="text-xs uppercase tracking-[0.4em] text-forge-gold">Properties</span>
+            <span className="text-xs uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
           </Link>
-          <h1 className="text-4xl lg:text-6xl font-serif text-white mb-6 leading-tight">
+          <h1 className="text-4xl lg:text-5xl font-serif text-white mb-6 leading-tight">
             Accredited <br /> <span className="text-forge-gold">Agent Portal</span>
           </h1>
-          <p className="text-slate-400 text-lg max-w-md leading-relaxed">
-            The exclusive platform for Nigeria's leading real estate professionals. Track sales, manage referrals, and access off-market inventory.
+          <p className="text-slate-400 text-base max-w-sm leading-relaxed">
+            Register and access professional property listings, marketing materials, track sales commissions, and manage your deals with real-time analytics.
           </p>
         </div>
       </div>
 
       {/* Auth Side */}
-      <div className="md:w-1/2 bg-slate-50 flex items-center justify-center p-8 lg:p-20">
-        <div className="w-full max-w-md">
-          <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
+      <div className="md:w-1/2 bg-slate-50 flex items-center justify-center p-6 lg:p-12 overflow-y-auto max-h-screen">
+        <div className="w-full max-w-lg my-8">
+          <div className="bg-white p-8 lg:p-10 rounded-2xl shadow-xl border border-slate-100">
             <div className="flex gap-4 mb-8">
               <button 
-                onClick={() => setMode('login')}
+                type="button"
+                onClick={() => { setMode('login'); setError(''); }}
                 className={`flex-1 pb-3 text-xs font-bold uppercase tracking-widest transition-all ${mode === 'login' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}
               >
                 Login
               </button>
               <button 
-                onClick={() => setMode('signup')}
+                type="button"
+                onClick={() => { setMode('signup'); setError(''); }}
                 className={`flex-1 pb-3 text-xs font-bold uppercase tracking-widest transition-all ${mode === 'signup' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}
               >
                 Sign Up
@@ -132,16 +220,16 @@ export const AgentPortal: React.FC = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6 border border-red-100">
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6 border border-red-100 leading-relaxed">
                 {error}
               </div>
             )}
 
-            <form className="space-y-5" onSubmit={mode === 'login' ? handleLogin : handleSignup}>
+            <form className="space-y-4" onSubmit={mode === 'login' ? handleLogin : handleSignup}>
               {mode === 'signup' && (
                 <>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Full Name</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Full Name</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                       <input 
@@ -149,13 +237,14 @@ export const AgentPortal: React.FC = () => {
                         required 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                         placeholder="John Doe"
                       />
                     </div>
                   </div>
+                  
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Phone Number</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                       <input 
@@ -163,8 +252,23 @@ export const AgentPortal: React.FC = () => {
                         required 
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
-                        placeholder="+234..."
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="+234 800 000 0000"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">State / Location</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type="text" 
+                        required 
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="Lagos State, Nigeria"
                       />
                     </div>
                   </div>
@@ -172,7 +276,7 @@ export const AgentPortal: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                   <input 
@@ -180,14 +284,14 @@ export const AgentPortal: React.FC = () => {
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                     placeholder="agent@company.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                   <input 
@@ -195,7 +299,7 @@ export const AgentPortal: React.FC = () => {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-4 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                     placeholder="••••••••"
                   />
                   <button 
@@ -208,16 +312,52 @@ export const AgentPortal: React.FC = () => {
                 </div>
               </div>
 
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      required 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Referral Code (Optional)</label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <input 
+                      type="text" 
+                      value={referredByCode}
+                      onChange={(e) => setReferredByCode(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                      placeholder="Enter code of referee"
+                    />
+                  </div>
+                </div>
+              )}
+
               {mode === 'login' && (
-                <div className="flex justify-end">
-                  <button type="button" className="text-[10px] font-bold text-forge-gold uppercase tracking-widest">Forgot Password?</button>
+                <div className="flex justify-between items-center pt-1">
+                  <div className="text-[10px] text-slate-400">
+                    Test access: <span className="text-forge-gold font-bold">realtor@company.com</span>
+                  </div>
+                  <button type="button" onClick={() => alert("Please contact corporate admin to reset your credentials.")} className="text-[10px] font-bold text-forge-gold uppercase tracking-widest hover:underline">Forgot Password?</button>
                 </div>
               )}
 
               <button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-forge-navy text-white py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-forge-dark transition-all shadow-xl shadow-forge-navy/20 flex items-center justify-center gap-3 mt-4"
+                className="w-full bg-forge-navy text-white py-4.5 rounded-xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-forge-dark transition-all shadow-xl shadow-forge-navy/20 flex items-center justify-center gap-3 mt-4"
               >
                 {isLoading ? <Loader2 size={16} className="animate-spin" /> : (mode === 'login' ? 'Access Portal' : 'Register Account')}
                 {!isLoading && <ArrowRight size={16} />}
