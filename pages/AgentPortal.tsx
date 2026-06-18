@@ -161,21 +161,11 @@ export const AgentPortal: React.FC = () => {
     setSuccessMessage("");
     
     try {
-      let apiBaseUrl = "";
-      try {
-        // @ts-expect-error - process can be undefined in browser environments
-        if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL) {
-          // @ts-expect-error - process can be undefined in browser environments
-          apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-        }
-      } catch {
-        // Ignore resolution errors
-      }
-
-      console.log("Registration API request started to endpoint:", `${apiBaseUrl}/api/auth/register`);
+      const requestUrl = '/api/auth/register';
+      console.log("Registration API request started to endpoint:", requestUrl);
       
       const response = await fetch(
-        `${apiBaseUrl}/api/auth/register`,
+        requestUrl,
         {
           method: "POST",
           headers: {
@@ -222,7 +212,11 @@ export const AgentPortal: React.FC = () => {
       }
       
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Registration error caught:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errName = error instanceof Error ? error.name : "UnknownError";
+      console.error("Fetch failed:", errMsg);
+      console.error("Error name:", errName);
       setErrorMessage(
         "Something went wrong. Please check your connection and try again."
       );

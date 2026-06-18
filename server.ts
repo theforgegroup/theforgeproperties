@@ -26,7 +26,10 @@ const dbUrl = process.env.DATABASE_URL;
 let dbPool: pg.Pool | null = null;
 if (dbUrl) {
   console.log("Configuring PostgreSQL connection pool...");
-  dbPool = new pg.Pool({ connectionString: dbUrl });
+  dbPool = new pg.Pool({
+    connectionString: dbUrl,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
 }
 
 async function runMigrations() {
