@@ -53,6 +53,22 @@ const FAQS_LIST = [
   { q: 'What documents are supplied for farmland parcels?', a: 'Far farmland investments, clients receive: Deed of Farm Lease, Registered Agricultural Survey layout, and Certificate of Plot Allotment.' }
 ];
 
+interface BrochureImage {
+  url: string;
+  type: string;
+  filename: string;
+  size: string;
+}
+
+interface BrochureItem {
+  property_id: string;
+  property_name: string;
+  property_location: string;
+  property_type: string;
+  referral_link: string;
+  images: BrochureImage[];
+}
+
 export const AgentDashboard: React.FC = () => {
   const { currentUser, logout, setAuthenticatedUser } = useAuth();
   const { properties, leads, sales, settings, addLead, requestPayout, updateAgent } = useProperties();
@@ -126,7 +142,7 @@ export const AgentDashboard: React.FC = () => {
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [trainingResources, setTrainingResources] = useState<Record<string, unknown>[]>([]);
   const [trainingLoading, setTrainingLoading] = useState(true);
-  const [brochures, setBrochures] = useState<Record<string, unknown>[]>([]);
+  const [brochures, setBrochures] = useState<BrochureItem[]>([]);
   const [brochuresLoading, setBrochuresLoading] = useState(true);
 
   useEffect(() => {
@@ -866,16 +882,25 @@ export const AgentDashboard: React.FC = () => {
                       </button>
                     </div>
                     
-                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200/70">
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <span className="bg-forge-navy text-forge-gold text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-widest">
-                          {announcements[0].badge}
-                        </span>
-                        <span className="text-slate-400 text-[11px] font-semibold">{announcements[0].date}</span>
+                    {announcements && announcements.length > 0 ? (
+                      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200/70">
+                        <div className="flex items-center gap-2.5 mb-3">
+                          <span className="bg-forge-navy text-forge-gold text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-widest">
+                            {String(announcements[0].category || announcements[0].badge || 'Broadcast')}
+                          </span>
+                          <span className="text-slate-400 text-[11px] font-semibold">
+                            {String(announcements[0].date || (announcements[0].created_at ? new Date(String(announcements[0].created_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today'))}
+                          </span>
+                        </div>
+                        <h4 className="text-base font-bold text-forge-navy leading-normal mb-2">{String(announcements[0].title || 'No Title')}</h4>
+                        <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">{String(announcements[0].body || '')}</p>
                       </div>
-                      <h4 className="text-base font-bold text-forge-navy leading-normal mb-2">{announcements[0].title}</h4>
-                      <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">{announcements[0].body}</p>
-                    </div>
+                    ) : (
+                      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200/70 text-center py-8">
+                        <p className="text-slate-500 text-xs font-semibold">No Broadcast Announcements</p>
+                        <p className="text-slate-400 text-[11px] mt-1">Official agency news and updates will appear here.</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100">
@@ -1172,7 +1197,7 @@ export const AgentDashboard: React.FC = () => {
                      <p className="text-[10px] text-slate-450 mt-1">Property brochures will auto-populate as listings are added with uploaded high-res imagery.</p>
                    </div>
                  ) : (
-                   brochures.map((brochure: any) => (
+                   brochures.map((brochure: BrochureItem) => (
                      <div key={brochure.property_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                          <div>
@@ -1202,7 +1227,7 @@ export const AgentDashboard: React.FC = () => {
                        {/* Display Property Images as Card Grid */}
                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                          {brochure.images && brochure.images.length > 0 ? (
-                           brochure.images.map((img: any, idx: number) => (
+                           brochure.images.map((img: BrochureImage, idx: number) => (
                              <div key={idx} className="bg-slate-50 rounded-xl border border-slate-200/50 overflow-hidden flex flex-col justify-between hover:shadow transition-all group">
                                <div className="relative aspect-video bg-slate-200 overflow-hidden">
                                  <img 

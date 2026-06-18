@@ -560,7 +560,6 @@ export const AgentPortal: React.FC = () => {
 
               <button 
                 type="submit" 
-                onClick={mode === 'signup' ? handleSubmit : undefined}
                 disabled={isLoading}
                 style={{ opacity: isLoading ? 0.7 : 1 }}
                 className="w-full bg-forge-navy text-white py-4.5 rounded-xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-forge-dark transition-all shadow-xl shadow-forge-navy/20 flex items-center justify-center gap-3 mt-4"
