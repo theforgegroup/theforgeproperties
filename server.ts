@@ -80,14 +80,11 @@ async function runMigrations() {
         );
       `);
 
-      // ALTER users and agents to add profile_photo
+      // ALTER users to add profile_photo
       await client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT;
       `);
       Object.assign(client, {}); // satisfaction for TS linting
-      await client.query(`
-        ALTER TABLE agents ADD COLUMN IF NOT EXISTS profile_photo TEXT;
-      `);
 
       // ALTER users to add all other agent specific columns
       await client.query(`

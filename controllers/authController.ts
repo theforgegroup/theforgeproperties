@@ -203,9 +203,15 @@ export const register = async (req: Request, res: Response) => {
       );
       if (result && result.rows && result.rows[0]) {
         newUser = result.rows[0];
+      } else {
+        throw new Error('Database insert did not return any rows');
       }
     } catch (e) {
       console.error('PostgreSql insert user failed:', e);
+      return res.status(500).json({
+        success: false,
+        error: "Server database registration failed. Please try again."
+      });
     }
 
     try {
