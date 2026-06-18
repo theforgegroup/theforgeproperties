@@ -108,9 +108,57 @@ export const AgentDashboard: React.FC = () => {
   const [profileLocation, setProfileLocation] = useState(currentUser?.location || 'Lagos, Nigeria');
   const [profilePhone, setProfilePhone] = useState(currentUser?.phone || '+234 810 613 3572');
   const [profileBio, setProfileBio] = useState(currentUser?.bio || 'Professional Accredited Realtor');
-  const [profileImage, setProfileImage] = useState(currentUser?.profile_photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200');
+  const [profileImage, setProfileImage] = useState(currentUser?.profile_photo || '');
   const [profileMessage, setProfileMessage] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
+
+  // Profile photo upload state hooks
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoProgress, setPhotoProgress] = useState(0);
+  const [photoSuccess, setPhotoSuccess] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoFileName, setPhotoFileName] = useState('');
+  const [photoFileSize, setPhotoFileSize] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Real-Time database driven announcements & training
+  const [announcements, setAnnouncements] = useState<Record<string, unknown>[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [trainingResources, setTrainingResources] = useState<Record<string, unknown>[]>([]);
+  const [trainingLoading, setTrainingLoading] = useState(true);
+  const [brochures, setBrochures] = useState<Record<string, unknown>[]>([]);
+  const [brochuresLoading, setBrochuresLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPortalData = async () => {
+      try {
+        const [annRes, trainRes, brochuresRes] = await Promise.all([
+          fetch('/api/announcements'),
+          fetch('/api/training/resources'),
+          fetch('/api/materials/brochures')
+        ]);
+        if (annRes.ok) {
+          const annJson = await annRes.json();
+          if (annJson && annJson.success) setAnnouncements(annJson.data);
+        }
+        if (trainRes.ok) {
+          const trainJson = await trainRes.json();
+          if (trainJson && trainJson.success) setTrainingResources(trainJson.data);
+        }
+        if (brochuresRes.ok) {
+          const brocJson = await brochuresRes.json();
+          if (brocJson && brocJson.success) setBrochures(brocJson.data);
+        }
+      } catch (err) {
+        console.error('Failed to pre-fetch portal directories:', err);
+      } finally {
+        setAnnouncementsLoading(false);
+        setTrainingLoading(false);
+        setBrochuresLoading(false);
+      }
+    };
+    fetchPortalData();
+  }, []);
 
   // Change Password form states
   const [currentPasswordInput, setCurrentPasswordInput] = useState('');
@@ -209,33 +257,6 @@ export const AgentDashboard: React.FC = () => {
     { name: 'Faith Adebayo', sales: '2 closed', commission: '₦950,000', rank: 4, avatar: 'F', isMe: false }
   ], [currentUser?.name, agentSales.length, totalEarned]);
 
-  // Mock static Announcements list
-  const announcements = useMemo(() => [
-    {
-      id: 'ann-1',
-      title: '🌅 Double Points and 12% Commissions on Farmland phase 3!',
-      body: 'Attention high performers! For any farmland investment plots secured from June 15 to July 15, we are boosting agent commission to a premium 12%. Spread the flyer to your investor broadcast circles.',
-      category: 'Commission Update',
-      date: 'June 16, 2026',
-      badge: 'Commission'
-    },
-    {
-      id: 'ann-2',
-      title: '📍 New Property Launching: Royal Springs Oasis, Lekki Epe Corridor',
-      body: 'Verified Land with Governor\'s consent starting at ₦12,500,000. Starter packages can split across 3 installments. View properties tab to copy your unique referral code instantly.',
-      category: 'New Property',
-      date: 'June 10, 2026',
-      badge: 'New Property'
-    },
-    {
-      id: 'ann-3',
-      title: '🎓 Exclusive Webinar: Overcoming Cost Objections in high-inflation Nigeria',
-      body: 'Co-Founder Gabriel Oshin shares battle-tested blueprints for selling land despite macro economic realities. Replay available on "Training & Resources" tab.',
-      category: 'Event',
-      date: 'June 01, 2026',
-      badge: 'Event_Highlight'
-    }
-  ], []);
 
   // Filtered Properties list
   const filteredProperties = useMemo(() => {
@@ -250,27 +271,37 @@ export const AgentDashboard: React.FC = () => {
     });
   }, [properties, propSearch, propCategory, propStatus]);
 
-  // Training video database
-  const trainingLectures = [
-    { id: 'video-1', category: 'Getting Started', title: 'Realtor Code of Ethics & Compensation Schemes', duration: '12 mins', link: 'guide-1' },
-    { id: 'video-2', category: 'How to Sell Land', title: 'Verifying Nigerian Land Titles (C of O vs Governor Consent)', duration: '24 mins', link: 'guide-2' },
-    { id: 'video-3', category: 'Farmland Investment Guide', title: 'Explaining Agricultural Land Dividends to Investors', duration: '18 mins', link: 'guide-3' },
-    { id: 'video-4', category: 'House Sales', title: 'Lekki Off-Plan Shell Duplex Presentation Blueprint', duration: '31 mins', link: 'guide-4' },
-    { id: 'video-5', category: 'Objection Handling', title: 'Eliminating the "Let Me Think About It" Dilemma', duration: '15 mins', link: 'guide-5' }
-  ];
+  // Dynamic API driven categories, videos, webinar replays, and FAQs
+  const trainingLectures = useMemo(() => {
+    const rawLectures = trainingResources.filter(r => r.type === 'video').map(r => ({
+      id: r.id,
+      category: r.category_name || r.category || 'General',
+      title: r.title,
+      duration: r.duration_minutes ? `${r.duration_minutes} mins` : 'Self-Paced'
+    }));
+    return rawLectures;
+  }, [trainingResources]);
 
-  const webinarReplays = [
-    { title: 'Prospecting High Net Worth Nigerians in Diaspora (Q1 Webinar)', date: 'May 12, 2026', duration: '55 mins' },
-    { title: 'The Epe Greenfield Gold Rush Masterclass', date: 'April 04, 2026', duration: '1 hr 12 mins' }
-  ];
+  const webinarReplays = useMemo(() => {
+    return trainingResources.filter(r => r.type === 'webinar_replay').map(r => ({
+      title: r.title,
+      date: new Date(r.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      duration: r.duration_minutes ? `${r.duration_minutes} mins` : '1 hr'
+    }));
+  }, [trainingResources]);
 
   const filteredFaqs = useMemo(() => {
-    if (!faqSearchTerm) return FAQS_LIST;
-    return FAQS_LIST.filter(f => 
+    const dbFaqs = trainingResources.filter(r => r.type === 'faq').map(r => ({
+      q: r.title,
+      a: r.description || ''
+    }));
+    const faqs = dbFaqs.length > 0 ? dbFaqs : FAQS_LIST;
+    if (!faqSearchTerm) return faqs;
+    return faqs.filter(f => 
       f.q.toLowerCase().includes(faqSearchTerm.toLowerCase()) || 
       f.a.toLowerCase().includes(faqSearchTerm.toLowerCase())
     );
-  }, [faqSearchTerm]);
+  }, [trainingResources, faqSearchTerm]);
 
   // Support category color map
   const getTicketStatusBadgeColor = (status: string) => {
@@ -285,6 +316,34 @@ export const AgentDashboard: React.FC = () => {
     setDownloadCounts(updated);
     localStorage.setItem('tfp_downloads', JSON.stringify(updated));
     alert(`${alertText} downloaded! Incremented download metric in system log.`);
+  };
+
+  const trackBrochureDownload = async (propertyId: string, imageUrl: string, filename: string) => {
+    try {
+      // Background tracking POST log
+      fetch('/api/materials/brochures/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': currentUser?.id || 'agent-123'
+        },
+        body: JSON.stringify({
+          property_id: propertyId,
+          image_url: imageUrl
+        })
+      });
+
+      // Execute browser-safe anchor click attachment downloader
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = filename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to log tracking download:', err);
+    }
   };
 
   const markAnnAsRead = (id: string) => {
@@ -414,6 +473,95 @@ export const AgentDashboard: React.FC = () => {
       setBankMessage('Failed to sync coordinates to database.');
     } finally {
       setIsBankSaving(false);
+    }
+  };
+
+  const getInitials = (userName: string) => {
+    if (!userName) return 'GP';
+    const parts = userName.split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return userName.substring(0, 2).toUpperCase();
+  };
+
+  const getAvatarBg = (userName: string) => {
+    const hash = Array.from(userName || 'Forge').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = [
+      'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-amber-500',
+      'bg-indigo-500', 'bg-purple-500', 'bg-pink-500', 'bg-emerald-500'
+    ];
+    return colors[hash % colors.length];
+  };
+
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoError('');
+    setPhotoSuccess(false);
+    setPhotoProgress(0);
+    setPhotoFileName(file.name);
+    
+    // Format size
+    const sizeInMB = file.size / (1024 * 1024);
+    setPhotoFileSize(sizeInMB < 0.1 ? `${(file.size / 1024).toFixed(1)} KB` : `${sizeInMB.toFixed(2)} MB`);
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Only JPG, PNG and WEBP file types are allowed');
+      return;
+    }
+
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      setPhotoError('File size must be less than 2MB');
+      return;
+    }
+
+    setPhotoUploading(true);
+    const formData = new FormData();
+    formData.append('profile_photo', file);
+
+    const interval = setInterval(() => {
+      setPhotoProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 15;
+      });
+    }, 100);
+
+    try {
+      const res = await fetch(`/api/user/profile-photo?user_id=${currentUser?.id || 'agent-123'}`, {
+        method: 'PUT',
+        headers: {
+          'X-User-Id': currentUser?.id || 'agent-123',
+          'X-User-Role': 'Agent'
+        },
+        body: formData
+      });
+
+      clearInterval(interval);
+      setPhotoProgress(100);
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        setProfileImage(resData.data.profile_photo);
+        setPhotoSuccess(true);
+        // Sync context and session state immediately
+        setAuthenticatedUser({
+          ...currentUser,
+          profile_photo: resData.data.profile_photo
+        }, 'Agent');
+      } else {
+        setPhotoError(resData.message || 'Failed to upload photo');
+      }
+    } catch (err) {
+      clearInterval(interval);
+      console.error(err);
+      setPhotoError('Network failure uploading image');
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -991,118 +1139,111 @@ export const AgentDashboard: React.FC = () => {
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
           {/* TAB 3: MARKETING MATERIALS */}
-          {activeTab === 'marketing' && (
-            <div className="space-y-8 animate-fadeIn">
-              
-              <div className="p-6 bg-forge-navy text-white rounded-3xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-                <div>
-                   <h3 className="text-xl font-serif font-bold">Marketing Materials Hub</h3>
-                   <p className="text-white/60 text-xs mt-1">Acquire professional marketing media customized to pull sales inquiries.</p>
-                </div>
-                <button 
-                  onClick={() => handleDownload('logo-kit', 'Corporate Branding Assets bundle')}
-                  className="bg-forge-gold text-forge-navy px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shrink-0"
-                >
-                  Download TFP Brand Kit
-                </button>
-              </div>
+           {activeTab === 'marketing' && (
+             <div className="space-y-8 animate-fadeIn">
+               
+               <div className="p-6 bg-forge-navy text-white rounded-3xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                 <div>
+                    <h3 className="text-xl font-serif font-bold">Marketing Materials Hub</h3>
+                    <p className="text-white/60 text-xs mt-1">Acquire professional marketing media customized to pull sales inquiries.</p>
+                 </div>
+                 <button 
+                   onClick={() => handleDownload('logo-kit', 'Corporate Branding Assets bundle')}
+                   className="bg-forge-gold text-forge-navy px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shrink-0 cursor-pointer"
+                 >
+                   Download TFP Brand Kit
+                 </button>
+               </div>
 
-              {/* Organised per Available Property */}
-              <div className="space-y-8">
-                {properties.slice(0, 3).map(property => (
-                  <div key={property.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                      <div>
-                        <h4 className="text-base font-bold text-forge-navy">{property.title}</h4>
-                        <p className="text-xs text-slate-400">Marketing Assets Package</p>
-                      </div>
-                      <span className="bg-amber-50 text-forge-gold text-[10px] font-bold px-2.5 py-1 rounded-lg">
-                        10% Commission Promo
-                      </span>
-                    </div>
+               {/* Organised per Available Property */}
+               <div className="space-y-8">
+                 {brochuresLoading ? (
+                   <div className="p-12 text-center text-slate-400 text-xs italic">
+                     Retrieving marketing brochure libraries...
+                   </div>
+                 ) : brochures.length === 0 ? (
+                   <div className="p-16 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white">
+                     <BookOpen size={40} className="text-slate-300 mx-auto mb-3" />
+                     <p className="font-bold">No property brochures published yet.</p>
+                     <p className="text-[10px] text-slate-450 mt-1">Property brochures will auto-populate as listings are added with uploaded high-res imagery.</p>
+                   </div>
+                 ) : (
+                   brochures.map((brochure: any) => (
+                     <div key={brochure.property_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                         <div>
+                           <h4 className="text-base font-bold text-forge-navy">{brochure.property_name}</h4>
+                           <p className="text-xs text-slate-400 flex items-center gap-1">
+                             <span>📍 {brochure.property_location}</span>
+                             <span>•</span>
+                             <span className="capitalize">{String(brochure.property_type)} Assets Package</span>
+                           </p>
+                         </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      
-                      {/* Brand Flyer */}
-                      <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 text-center space-y-3">
-                        <span className="text-xs font-bold text-forge-navy">Brochures & Flyers</span>
-                        <p className="text-slate-400 text-[10px]">FB square, WhatsApp, IG slide layouts available.</p>
-                        <div className="pt-2">
-                          <button 
-                            onClick={() => handleDownload('flyer_' + property.slug, `${property.title} Flyer Pack`)}
-                            className="w-full py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-forge-navy flex items-center justify-center gap-1.5"
-                          >
-                            <Download size={12} /> Download ZIP
-                          </button>
-                        </div>
-                      </div>
+                         {/* Copy Referral Link Trigger */}
+                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto font-mono text-[10px]">
+                           <div className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl border-dashed truncate max-w-xs">{brochure.referral_link}</div>
+                           <button 
+                             onClick={() => {
+                               navigator.clipboard.writeText(brochure.referral_link);
+                               alert("Your custom agent referral link is copied! Leads from this link will automatically lock to your account.");
+                             }}
+                             className="bg-forge-navy hover:bg-forge-gold hover:text-forge-navy text-white text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                           >
+                             <Copy size={12} /> Copy Referral
+                           </button>
+                         </div>
+                       </div>
 
-                      {/* Pre written Caption */}
-                      <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 text-center space-y-3">
-                        <span className="text-xs font-bold text-forge-navy">IG Caption Template</span>
-                        <p className="text-slate-400 text-[10px] line-clamp-2">"Invest in luxury properties today starting from..."</p>
-                        <div className="pt-2">
-                          <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(`📈 Discover ${property.title} in ${property.location}! Perfect documentation with C of O. Secure yours now. Price from ₦${property.price ? property.price.toLocaleString() : 'Negotiable'}. DM/Call now!`);
-                              alert("Pre-written copy-writing text copied to clipboard!");
-                            }}
-                            className="w-full py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-forge-navy flex items-center justify-center gap-1.5"
-                          >
-                            <Copy size={12} /> Copy Caption
-                          </button>
-                        </div>
-                      </div>
+                       {/* Display Property Images as Card Grid */}
+                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                         {brochure.images && brochure.images.length > 0 ? (
+                           brochure.images.map((img: any, idx: number) => (
+                             <div key={idx} className="bg-slate-50 rounded-xl border border-slate-200/50 overflow-hidden flex flex-col justify-between hover:shadow transition-all group">
+                               <div className="relative aspect-video bg-slate-200 overflow-hidden">
+                                 <img 
+                                   src={img.url} 
+                                   alt={`${brochure.property_name} slide ${idx + 1}`} 
+                                   referrerPolicy="no-referrer"
+                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                 />
+                                 <span className="absolute top-2 left-2 bg-black/60 text-white text-[8px] font-bold tracking-widest px-1.5 py-0.5 rounded uppercase">
+                                   {img.type}
+                                 </span>
+                               </div>
 
-                      {/* Video Stream */}
-                      <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 text-center space-y-3">
-                        <span className="text-xs font-bold text-forge-navy">Drone Presentation Video</span>
-                        <p className="text-slate-400 text-[10px]">High definition cinematic walkthrough (42 seconds).</p>
-                        <div className="pt-2 flex gap-1.5">
-                          <button 
-                            onClick={() => alert("Playing presentation drone stream in sandbox. Video is 4K resolution.")}
-                            className="flex-grow py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[9px] font-bold uppercase tracking-widest text-forge-navy flex items-center justify-center gap-1"
-                          >
-                            <Play size={11} /> Stream
-                          </button>
-                          <button 
-                            onClick={() => handleDownload('video_' + property.slug, `${property.title} walkthrough video`)}
-                            className="p-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-forge-navy"
-                          >
-                            <Download size={12} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Email Template */}
-                      <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 text-center space-y-3">
-                        <span className="text-xs font-bold text-forge-navy">Email Inbound Campaign</span>
-                        <p className="text-slate-400 text-[10px]">Cold pitch template matching HNW individuals.</p>
-                        <div className="pt-2">
-                          <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(`Subject: Secure High-Yield Plots with Verified Titles at ${property.title}\n\nDear Investor,\n\nI hope this email finds you well. I wanted to bring to your attention a exclusive land inventory launch...`);
-                              alert("Professional cold outreach email pitch template copied to clipboard!");
-                            }}
-                            className="w-full py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-forge-navy flex items-center justify-center gap-1.5"
-                          >
-                            <Copy size={12} /> Copy Campaign
-                          </button>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-          )}
+                               <div className="p-4 space-y-3">
+                                 <p className="text-[10px] text-slate-500 font-mono truncate" title={img.filename}>
+                                   {img.filename}
+                                 </p>
+                                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">
+                                   Dimension: High Quality • Size: {img.size}
+                                 </p>
+                                 <button
+                                   onClick={() => trackBrochureDownload(brochure.property_id, img.url, img.filename)}
+                                   className="w-full py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-widest text-forge-navy flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                 >
+                                   <Download size={13} /> Download Brochure
+                                 </button>
+                               </div>
+                             </div>
+                           ))
+                         ) : (
+                           <div className="col-span-full py-8 text-center text-slate-400 text-xs italic bg-slate-50 border border-dashed border-slate-150 rounded-xl">
+                             Images directory empty for this listing.
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   ))
+                 )}
+               </div>
+             </div>
+           )}
 
           {/* TAB 4: COMMISSION & EARNINGS */}
           {activeTab === 'earnings' && (
@@ -1460,41 +1601,52 @@ export const AgentDashboard: React.FC = () => {
               <div>
                 <h3 className="font-serif text-lg text-forge-navy font-bold mb-6">Accredited Sales Training Video Library</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {trainingLectures.map(lecture => {
-                    const isWatched = watchedVideos.includes(lecture.id);
-                    return (
-                      <div key={lecture.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-start">
-                            <span className="bg-slate-50 text-slate-400 text-[9px] font-extrabold px-2.5 py-1 rounded-lg uppercase border tracking-widest">
-                              {lecture.category}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 font-mono">{lecture.duration}</span>
+                  {trainingLoading ? (
+                    <div className="col-span-3 p-12 text-center text-slate-400 text-xs italic">
+                      Lifting video library index...
+                    </div>
+                  ) : trainingLectures.length === 0 ? (
+                    <div className="col-span-3 p-16 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white">
+                      <p className="font-bold">No accredited courses active.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Please check back later for newly released training materials.</p>
+                    </div>
+                  ) : (
+                    trainingLectures.map(lecture => {
+                      const isWatched = watchedVideos.includes(lecture.id);
+                      return (
+                        <div key={lecture.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <span className="bg-slate-50 text-slate-400 text-[9px] font-extrabold px-2.5 py-1 rounded-lg uppercase border tracking-widest">
+                                {lecture.category}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 font-mono">{lecture.duration}</span>
+                            </div>
+                            <h4 className="text-sm font-bold text-forge-navy leading-snug line-clamp-2">{lecture.title}</h4>
                           </div>
-                          <h4 className="text-sm font-bold text-forge-navy leading-snug line-clamp-2">{lecture.title}</h4>
-                        </div>
 
-                        <div className="pt-6 flex justify-between items-center select-none">
-                          <label className="flex items-center gap-2 text-xs font-bold text-slate-400 cursor-pointer">
-                            <input 
-                              type="checkbox"
-                              checked={isWatched}
-                              onChange={() => toggleVideoWatched(lecture.id)}
-                              className="w-4.5 h-4.5 accent-forge-gold rounded"
-                            />
-                            {isWatched ? <span className="text-green-600">Marked Watched</span> : 'Mark Watched'}
-                          </label>
-                          <button 
-                            onClick={() => alert(`Streaming course content for: ${lecture.title}. Mark item watched once complete.`)}
-                            className="bg-forge-navy text-white hover:bg-forge-dark p-2 rounded-xl transition-all"
-                            title="Play Video"
-                          >
-                            <Video size={16} />
-                          </button>
+                          <div className="pt-6 flex justify-between items-center select-none">
+                            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 cursor-pointer">
+                              <input 
+                                type="checkbox"
+                                checked={isWatched}
+                                onChange={() => toggleVideoWatched(lecture.id)}
+                                className="w-4.5 h-4.5 accent-forge-gold rounded"
+                              />
+                              {isWatched ? <span className="text-green-600">Marked Watched</span> : 'Mark Watched'}
+                            </label>
+                            <button 
+                              onClick={() => alert(`Streaming course content for: ${lecture.title}. Mark item watched once complete.`)}
+                              className="bg-forge-navy text-white hover:bg-forge-dark p-2 rounded-xl transition-all"
+                              title="Play Video"
+                            >
+                              <Video size={16} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -1566,33 +1718,50 @@ export const AgentDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                {announcements.map(ann => {
-                  const isRead = readAnnouncements.includes(ann.id);
-                  return (
-                    <div 
-                      key={ann.id} 
-                      onClick={() => markAnnAsRead(ann.id)}
-                      className={`p-6 rounded-2xl border shadow-sm transition-all relative overflow-hidden cursor-pointer ${
-                        isRead ? 'bg-white border-slate-100' : 'bg-indigo-50/40 border-indigo-200'
-                      }`}
-                    >
-                      {!isRead && (
-                        <div className="absolute top-0 right-0 bg-forge-gold text-forge-navy text-[8px] font-extrabold uppercase px-3 py-1.5 rounded-bl-xl tracking-wider flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 bg-red-650 rounded-full animate-ping" /> UNREAD
+                {announcementsLoading ? (
+                  <div className="p-12 text-center text-slate-400 text-xs italic">
+                    Lifting chronological broadcasts...
+                  </div>
+                ) : announcements.length === 0 ? (
+                  <div className="p-16 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white">
+                    <p className="font-bold">No announcements released yet.</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Check back later for newly published broadcasts from active administrators.</p>
+                  </div>
+                ) : (
+                  announcements.map(ann => {
+                    const isRead = readAnnouncements.includes(String(ann.id));
+                    const formattedDate = new Date(String(ann.created_at || Date.now())).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+                    const badge = String(ann.category || 'General Update');
+                    return (
+                      <div 
+                        key={String(ann.id)} 
+                        onClick={() => markAnnAsRead(String(ann.id))}
+                        className={`p-6 rounded-2xl border shadow-sm transition-all relative overflow-hidden cursor-pointer ${
+                          isRead ? 'bg-white border-slate-100' : 'bg-indigo-50/40 border-indigo-200'
+                        }`}
+                      >
+                        {!isRead && (
+                          <div className="absolute top-0 right-0 bg-forge-gold text-forge-navy text-[8px] font-extrabold uppercase px-3 py-1.5 rounded-bl-xl tracking-wider flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-red-650 rounded-full animate-ping" /> UNREAD
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">
+                          <span className="bg-forge-navy text-forge-gold px-2.5 py-0.5 rounded tracking-widest">{badge}</span>
+                          <span>•</span>
+                          <span>{formattedDate}</span>
                         </div>
-                      )}
 
-                      <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">
-                        <span className="bg-forge-navy text-forge-gold px-2.5 py-0.5 rounded tracking-widest">{ann.badge}</span>
-                        <span>•</span>
-                        <span>{ann.date}</span>
+                        <h4 className="text-base font-bold text-forge-navy leading-normal mb-2">{String(ann.title)}</h4>
+                        <p className="text-slate-600 text-xs leading-relaxed">{String(ann.body)}</p>
                       </div>
-
-                      <h4 className="text-base font-bold text-forge-navy leading-normal mb-2">{ann.title}</h4>
-                      <p className="text-slate-600 text-xs leading-relaxed">{ann.body}</p>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
@@ -1638,7 +1807,9 @@ export const AgentDashboard: React.FC = () => {
                        />
                      </div>
                      <div>
-                       <label className="block text-[9px] font-bold uppercase text-slate-400 mb-1">Profile Photo URL</label>
+                       <label className="hidden">Profile Photo URL</label>
+                     </div>
+                     <div className="hidden">
                        <input 
                          type="text" 
                          required
@@ -1672,9 +1843,87 @@ export const AgentDashboard: React.FC = () => {
                   
                   {/* Photo profile card */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm text-center space-y-4">
-                    <div className="w-24 h-24 rounded-full overflow-hidden mx-auto border-2 border-forge-gold">
-                      <img src={profileImage} alt={currentUser?.name} className="w-full h-full object-cover" />
+                    
+                    {/* Hidden interactive file picker */}
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleProfilePhotoChange} 
+                      accept="image/jpeg,image/png,image/webp" 
+                      className="hidden" 
+                    />
+
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-[120px] h-[120px] rounded-full overflow-hidden mx-auto border-2 border-forge-gold group relative cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-[1.03] shadow-md"
+                    >
+                      {profileImage ? (
+                        <img src={profileImage} alt={currentUser?.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-white font-serif text-3xl font-bold ${getAvatarBg(currentUser?.name || '')}`}>
+                          {getInitials(currentUser?.name || '')}
+                        </div>
+                      )}
+                      
+                      {/* Upload icon overlay on hover */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                          width="24" height="24" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          className="text-forge-gold animate-bounce"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="17 8 12 3 7 8"/>
+                          <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-200 mt-1">Change photo</span>
+                      </div>
                     </div>
+
+                    {/* Progress, stats, success & error indicators */}
+                    <div className="min-h-[40px] flex flex-col items-center justify-center">
+                      {photoUploading && (
+                        <div className="w-full max-w-[200px] space-y-1.5 animate-fadeIn">
+                          <div className="flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                            <span>Uploading photo...</span>
+                            <span>{photoProgress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                            <div className="bg-forge-gold h-full transition-all duration-300" style={{ width: `${photoProgress}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!photoUploading && photoSuccess && (
+                        <div className="flex items-center gap-1 text-green-650 text-xs font-bold animate-fadeIn">
+                          <CheckCircle size={14} className="text-green-600 animate-pulse" /> Profile photo updated!
+                        </div>
+                      )}
+
+                      {!photoUploading && photoError && (
+                        <div className="text-red-500 text-xs font-semibold px-2 text-center leading-relaxed">
+                          ⚠️ {photoError}
+                        </div>
+                      )}
+
+                      {!photoUploading && !photoSuccess && !photoError && photoFileName && (
+                        <p className="text-[10px] text-slate-400 truncate max-w-[220px]">
+                          {photoFileName} ({photoFileSize})
+                        </p>
+                      )}
+
+                      {!photoUploading && !photoSuccess && !photoError && !photoFileName && (
+                        <p className="text-[10px] text-slate-400 italic">
+                          Click photo to upload custom avatar
+                        </p>
+                      )}
+                    </div>
+
                     <div>
                       <h4 className="text-base font-bold text-forge-navy leading-normal">{currentUser?.name}</h4>
                       <p className="text-slate-450 text-[10px] uppercase font-bold tracking-widest">{realtorId}</p>

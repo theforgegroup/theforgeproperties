@@ -19,6 +19,7 @@ import { AdminSettings } from './pages/AdminSettings';
 import { AdminBlog } from './pages/AdminBlog';
 import { AdminPostForm } from './pages/AdminPostForm';
 import { AdminAgents } from './pages/AdminAgents';
+import { AdminTraining } from './pages/AdminTraining';
 import { AdminPayouts } from './pages/AdminPayouts';
 import { AdminNeighborhoods } from './pages/AdminNeighborhoods';
 import { AdminTestimonials } from './pages/AdminTestimonials';
@@ -92,6 +93,7 @@ const AppLayout: React.FC = () => {
           <Route path="/admin" element={<AdminEntry />} />
           <Route path="/admin/crm" element={<ProtectedRoute role="Admin"><AdminCRM /></ProtectedRoute>} />
           <Route path="/admin/agents" element={<ProtectedRoute role="Admin"><AdminAgents /></ProtectedRoute>} />
+          <Route path="/admin/training" element={<ProtectedRoute role="Admin"><AdminTraining /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute role="Admin"><AdminPayouts /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute role="Admin"><AdminAnalytics /></ProtectedRoute>} />
           <Route path="/admin/neighborhoods" element={<ProtectedRoute role="Admin"><AdminNeighborhoods /></ProtectedRoute>} />
