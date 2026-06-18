@@ -2,25 +2,97 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
-import { extractErrorMessage } from '../utils/errorUtils';
 import { Lock, Mail, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, MapPin, Users } from 'lucide-react';
 
 export const AgentPortal: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'success'>('login');
+  
+  // Login form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [location, setLocation] = useState('');
-  const [referredByCode, setReferredByCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+
+  // Signup form state
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    state: "",
+    password: "",
+    confirm_password: "",
+    referral_code: ""
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const { setAuthenticatedUser } = useAuth();
-  const { agents, addAgent, settings } = useProperties();
+  const { agents, settings } = useProperties();
   const navigate = useNavigate();
+
+  // Input Change Handler:
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear field error on change
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+  // Frontend Validation:
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = "Full name is required";
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+    
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[0-9+\s-]{10,15}$/.test(formData.phone)) {
+      newErrors.phone = "Enter a valid phone number";
+    }
+    
+    if (!formData.state.trim()) {
+      newErrors.state = "State/Location is required";
+    }
+    
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+    
+    if (!formData.confirm_password) {
+      newErrors.confirm_password = "Please confirm your password";
+    } else if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = "You must agree to the terms and conditions";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,31 +150,82 @@ export const AgentPortal: React.FC = () => {
     }, 1000);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  // Submit Handler:
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
-    setError('');
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please retype and try again.');
-      setIsLoading(false);
-      return;
-    }
-
+    setErrorMessage("");
+    setSuccessMessage("");
+    
     try {
-      await addAgent({
-        name,
-        email,
-        phone,
-        location,
-        password,
-        referred_by_code: referredByCode,
-        status: 'Pending'
-      });
-      setMode('success');
-    } catch (err: unknown) {
-      console.error('Signup error:', err);
-      setError(extractErrorMessage(err, 'Signup failed. Please try again.'));
+      let apiBaseUrl = "";
+      try {
+        // @ts-expect-error - process can be undefined in browser environments
+        if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL) {
+          // @ts-expect-error - process can be undefined in browser environments
+          apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        }
+      } catch {
+        // Ignore resolution errors
+      }
+
+      console.log("Registration API request started to endpoint:", `${apiBaseUrl}/api/auth/register`);
+      
+      const response = await fetch(
+        `${apiBaseUrl}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            full_name: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            state: formData.state,
+            password: formData.password,
+            confirm_password: formData.confirm_password,
+            referral_code: formData.referral_code || null
+          })
+        }
+      );
+      
+      console.log("Registration API response status:", response.status);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setErrorMessage(
+          data.error || "Registration failed. Please try again."
+        );
+        return;
+      }
+      
+      if (data.success) {
+        setSuccessMessage(
+          "Registration successful! Your account is under review. You will be notified once approved."
+        );
+        // Reset form
+        setFormData({
+          full_name: "",
+          email: "",
+          phone: "",
+          state: "",
+          password: "",
+          confirm_password: "",
+          referral_code: ""
+        });
+        setAgreedToTerms(false);
+        setMode('success');
+      }
+      
+    } catch (error) {
+      console.error("Registration error:", error);
+      setErrorMessage(
+        "Something went wrong. Please check your connection and try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +239,13 @@ export const AgentPortal: React.FC = () => {
             <ShieldCheck size={40} />
           </div>
           <h2 className="text-3xl font-serif text-forge-navy mb-4">Registration Successful</h2>
+          
+          {successMessage && (
+            <div className="success-message text-green-600 text-sm font-semibold mb-6">
+              {successMessage}
+            </div>
+          )}
+
           <p className="text-slate-600 mb-8 leading-relaxed">
             Your application is under review. You will be notified once approved. You can now join our community of high-performing realtors.
           </p>
@@ -131,13 +261,8 @@ export const AgentPortal: React.FC = () => {
             <button 
               onClick={() => {
                 setMode('login');
-                setName('');
-                setPhone('');
-                setEmail('');
-                setLocation('');
-                setPassword('');
-                setConfirmPassword('');
-                setReferredByCode('');
+                setErrorMessage("");
+                setSuccessMessage("");
               }}
               className="block w-full border border-slate-200 text-slate-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-slate-50 transition-all"
             >
@@ -190,21 +315,27 @@ export const AgentPortal: React.FC = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => { setMode('signup'); setError(''); }}
+                onClick={() => { setMode('signup'); setErrorMessage(""); setSuccessMessage(""); }}
                 className={`flex-1 pb-3 text-xs font-bold uppercase tracking-widest transition-all ${mode === 'signup' ? 'text-forge-navy border-b-2 border-forge-gold' : 'text-slate-400'}`}
               >
                 Sign Up
               </button>
             </div>
 
-            {error && (
+            {error && mode === 'login' && (
               <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6 border border-red-100 leading-relaxed">
                 {error}
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={mode === 'login' ? handleLogin : handleSignup}>
-              {mode === 'signup' && (
+            {errorMessage && mode === 'signup' && (
+              <div className="error-message bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6 border border-red-100 leading-relaxed">
+                {errorMessage}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={mode === 'login' ? handleLogin : handleSubmit}>
+              {mode === 'signup' ? (
                 <>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Full Name</label>
@@ -213,12 +344,18 @@ export const AgentPortal: React.FC = () => {
                       <input 
                         type="text" 
                         required 
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleChange}
                         className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                         placeholder="John Doe"
                       />
                     </div>
+                    {errors.full_name && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.full_name}
+                      </span>
+                    )}
                   </div>
                   
                   <div>
@@ -228,12 +365,18 @@ export const AgentPortal: React.FC = () => {
                       <input 
                         type="tel" 
                         required 
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
                         className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                         placeholder="+234 800 000 0000"
                       />
                     </div>
+                    {errors.phone && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.phone}
+                      </span>
+                    )}
                   </div>
 
                   <div>
@@ -243,99 +386,196 @@ export const AgentPortal: React.FC = () => {
                       <input 
                         type="text" 
                         required 
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
                         className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
                         placeholder="Lagos State, Nigeria"
                       />
                     </div>
+                    {errors.state && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.state}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type="email" 
+                        required 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="agent@company.com"
+                      />
+                    </div>
+                    {errors.email && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.email}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required 
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="••••••••"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-forge-navy"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.password}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required 
+                        name="confirm_password"
+                        value={formData.confirm_password}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    {errors.confirm_password && (
+                      <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                        {errors.confirm_password}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Referral Code (Optional)</label>
+                    <div className="relative">
+                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type="text" 
+                        name="referral_code"
+                        value={formData.referral_code}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="Enter code of referee"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 pt-1 ml-1">
+                    <input 
+                      type="checkbox" 
+                      id="agreedToTerms"
+                      name="agreedToTerms"
+                      checked={agreedToTerms}
+                      onChange={(e) => {
+                        setAgreedToTerms(e.target.checked);
+                        if (errors.terms) {
+                          setErrors(prev => {
+                            const copy = { ...prev };
+                            delete copy.terms;
+                            return copy;
+                          });
+                        }
+                      }}
+                      className="mt-1 accent-forge-gold cursor-pointer"
+                    />
+                    <label htmlFor="agreedToTerms" className="text-[11px] text-slate-500 leading-normal select-none cursor-pointer">
+                      I agree to the <span className="text-forge-gold underline hover:text-forge-dark transition-colors cursor-pointer">Terms & Conditions</span> guidelines
+                    </label>
+                  </div>
+                  {errors.terms && (
+                    <span className="field-error text-red-500 text-[10px] ml-1 mt-1 block font-semibold">
+                      {errors.terms}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type="email" 
+                        required 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="agent@company.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
+                        placeholder="••••••••"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-forge-navy"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end items-center pt-1">
+                    <button type="button" onClick={() => alert("Please contact corporate admin to reset your credentials.")} className="text-[10px] font-bold text-forge-gold uppercase tracking-widest hover:underline">Forgot Password?</button>
                   </div>
                 </>
               )}
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                  <input 
-                    type="email" 
-                    required 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
-                    placeholder="agent@company.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    required 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
-                    placeholder="••••••••"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-forge-navy"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      required 
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Referral Code (Optional)</label>
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input 
-                      type="text" 
-                      value={referredByCode}
-                      onChange={(e) => setReferredByCode(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3.5 rounded-xl text-sm focus:border-forge-gold focus:outline-none transition-all"
-                      placeholder="Enter code of referee"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {mode === 'login' && (
-                <div className="flex justify-end items-center pt-1">
-                  <button type="button" onClick={() => alert("Please contact corporate admin to reset your credentials.")} className="text-[10px] font-bold text-forge-gold uppercase tracking-widest hover:underline">Forgot Password?</button>
-                </div>
-              )}
-
               <button 
                 type="submit" 
+                onClick={mode === 'signup' ? handleSubmit : undefined}
                 disabled={isLoading}
+                style={{ opacity: isLoading ? 0.7 : 1 }}
                 className="w-full bg-forge-navy text-white py-4.5 rounded-xl font-bold uppercase tracking-[0.2em] text-xs hover:bg-forge-dark transition-all shadow-xl shadow-forge-navy/20 flex items-center justify-center gap-3 mt-4"
               >
-                {isLoading ? <Loader2 size={16} className="animate-spin" /> : (mode === 'login' ? 'Access Portal' : 'Register Account')}
-                {!isLoading && <ArrowRight size={16} />}
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>{mode === 'signup' ? "Creating Account..." : "Authenticating..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{mode === 'login' ? 'Access Portal' : 'Register Account'}</span>
+                    <ArrowRight size={16} />
+                  </>
+                )}
               </button>
             </form>
           </div>

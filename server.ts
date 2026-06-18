@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import pg from 'pg';
 import multer from 'multer';
+import { authRouter } from './routes/auth';
 
 const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
 
@@ -38,6 +39,45 @@ async function runMigrations() {
     try {
       // Create migrations database tables structure
       await client.query('BEGIN;');
+
+      // Create users table if not exists
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR(100) PRIMARY KEY,
+          full_name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          phone VARCHAR(50) NOT NULL,
+          state VARCHAR(100) NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          role VARCHAR(50) DEFAULT 'realtor',
+          status VARCHAR(50) DEFAULT 'pending',
+          referral_code VARCHAR(100) UNIQUE NOT NULL,
+          referred_by VARCHAR(100) REFERENCES users(id),
+          bio TEXT,
+          profile_photo TEXT,
+          email_verified BOOLEAN DEFAULT FALSE,
+          email_verification_token VARCHAR(255),
+          password_reset_token VARCHAR(255),
+          password_reset_expires TIMESTAMP,
+          last_login TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Create notifications table if not exists
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id VARCHAR(100) PRIMARY KEY,
+          user_id VARCHAR(100) REFERENCES users(id) ON DELETE CASCADE,
+          title VARCHAR(255) NOT NULL,
+          message TEXT NOT NULL,
+          type VARCHAR(50) NOT NULL,
+          link VARCHAR(255),
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
 
       // ALTER users and agents to add profile_photo
       await client.query(`
@@ -283,6 +323,8 @@ async function startServer() {
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
   });
+
+  app.use('/api/auth', express.json(), authRouter);
 
   app.post('/api/ai/chat', express.json(), async (req, res) => {
     try {
