@@ -205,13 +205,12 @@ export const register = async (req: Request, res: Response) => {
           referred_by,
           email_verified,
           email_verification_token,
-          password,
           created_at,
           updated_at
         ) VALUES (
           $1, $2, $3, $4, $5, $6,
           'realtor', 'pending',
-          $7, $8, FALSE, $9, $10,
+          $7, $8, FALSE, $9,
           NOW(), NOW()
         ) RETURNING 
           id, full_name, email, phone, 
@@ -226,8 +225,7 @@ export const register = async (req: Request, res: Response) => {
           password_hash,
           newReferralCode,
           referred_by,
-          email_verification_token,
-          password
+          email_verification_token
         ]
       );
       if (result && result.rows && result.rows[0]) {

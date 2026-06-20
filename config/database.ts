@@ -161,7 +161,6 @@ export const query = async (text: string, params?: unknown[]) => {
       referred_by: safeParams[7] ? String(safeParams[7]) : null,
       email_verified: false,
       email_verification_token: String(safeParams[8] || ''),
-      password: safeParams[9] ? String(safeParams[9]) : '',
       total_sales: 0,
       total_commission: 0,
       available_balance: 0,
