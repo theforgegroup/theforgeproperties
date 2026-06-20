@@ -32,6 +32,8 @@ if (dbUrl) {
   });
 }
 
+export const app = express();
+
 async function runMigrations() {
   if (!dbPool) {
     console.log("No DATABASE_URL available in environment. Skipping direct SQL migrations.");
@@ -256,7 +258,6 @@ async function startServer() {
   // Run DB table creations and cleanups on boot
   await runMigrations();
 
-  const app = express();
   app.set('trust proxy', true);
   const PORT = 3000;
 
@@ -1281,9 +1282,11 @@ interface MulterRequest extends express.Request {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();

@@ -145,6 +145,7 @@ export const AdminTraining: React.FC = () => {
       setUploadProgress(100);
 
       const responseText = await res.text();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let resData: any = {};
       try {
         resData = JSON.parse(responseText);

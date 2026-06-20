@@ -185,6 +185,7 @@ export const AgentPortal: React.FC = () => {
       
       console.log("Registration API response status:", response.status);
       const responseText = await response.text();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any = {};
       try {
         data = JSON.parse(responseText);
