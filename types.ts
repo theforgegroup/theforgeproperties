@@ -147,9 +147,9 @@ export interface TeamMember {
 }
 
 export interface ListingAgent {
-  name: string;
-  phone: string;
-  image: string;
+  name?: string;
+  phone?: string;
+  image?: string;
   ai_popup_enabled?: boolean;
   ai_popup_headline?: string;
   ai_popup_body?: string;

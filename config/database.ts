@@ -40,6 +40,18 @@ interface MockDbStructure {
     email_verification_token: string;
     created_at: string;
     updated_at: string;
+    password?: string;
+    total_sales?: number;
+    total_commission?: number;
+    available_balance?: number;
+    pending_balance?: number;
+    total_clicks?: number;
+    total_leads?: number;
+    bank_name?: string | null;
+    account_number?: string | null;
+    account_name?: string | null;
+    bio?: string | null;
+    profile_photo?: string | null;
   }>;
   notifications: Array<{
     id: string;

@@ -895,18 +895,8 @@ async function startServer() {
   });
 
 interface MulterRequest extends express.Request {
-  files?: {
-    [fieldname: string]: {
-      fieldname: string;
-      originalname: string;
-      encoding: string;
-      mimetype: string;
-      size: number;
-      destination: string;
-      filename: string;
-      path: string;
-    }[];
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  files?: any;
 }
 
   // REST API 4: POST /api/training/admin (Protected / Admin Upload)

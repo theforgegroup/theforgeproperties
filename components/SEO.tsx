@@ -114,7 +114,8 @@ export const SEO: React.FC<SEOProps> = ({
       "image": socialImage 
     };
 
-    const combinedSchemaList = [baseOrgSchema];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const combinedSchemaList: any[] = [baseOrgSchema];
     if (schema) {
       const schemaObj = schema as Record<string, unknown>;
       if (schemaObj["@graph"] && Array.isArray(schemaObj["@graph"])) {
