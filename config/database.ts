@@ -9,7 +9,13 @@ if (dbUrl) {
   console.log("Configuring config/database PostgreSQL connection pool...");
   dbPool = new pg.Pool({
     connectionString: dbUrl,
-    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false }
+    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false },
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000
+  });
+  dbPool.on('error', (err) => {
+    console.error('Unexpected error on idle pg client:', err);
   });
 } else {
   console.log("Warning: DATABASE_URL not set in config/database. Direct SQL queries will fall back to JSON/In-memory store.");

@@ -28,7 +28,13 @@ if (dbUrl) {
   console.log("Configuring PostgreSQL connection pool...");
   dbPool = new pg.Pool({
     connectionString: dbUrl,
-    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false }
+    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false },
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000
+  });
+  dbPool.on('error', (err) => {
+    console.error('Unexpected error on idle pg client in server:', err);
   });
 }
 
