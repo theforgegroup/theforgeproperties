@@ -184,11 +184,21 @@ export const AgentPortal: React.FC = () => {
       );
       
       console.log("Registration API response status:", response.status);
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonErr) {
+        console.error("Failed to parse registration response as JSON:", jsonErr);
+        setErrorMessage(
+          `Server returned an invalid response code ${response.status}. Please check your connection and try again.`
+        );
+        return;
+      }
       
       if (!response.ok) {
         setErrorMessage(
-          data.error || "Registration failed. Please try again."
+          data.error || data.message || "Registration failed. Please try again."
         );
         return;
       }

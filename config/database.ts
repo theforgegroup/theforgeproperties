@@ -9,7 +9,7 @@ if (dbUrl) {
   console.log("Configuring config/database PostgreSQL connection pool...");
   dbPool = new pg.Pool({
     connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false }
   });
 } else {
   console.log("Warning: DATABASE_URL not set in config/database. Direct SQL queries will fall back to JSON/In-memory store.");

@@ -28,7 +28,7 @@ if (dbUrl) {
   console.log("Configuring PostgreSQL connection pool...");
   dbPool = new pg.Pool({
     connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: dbUrl && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false }
   });
 }
 
@@ -200,6 +200,15 @@ async function runMigrations() {
           read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `, "Create announcement_reads table");
+
+      await executeResilient(`
+        CREATE TABLE IF NOT EXISTS admin_activity_log (
+          id SERIAL PRIMARY KEY,
+          activity_type VARCHAR(100) NOT NULL,
+          description TEXT NOT NULL,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `, "Create admin_activity_log table");
 
       // 4. Do mock deletions under try/catch
       try {
@@ -901,10 +910,36 @@ interface MulterRequest extends express.Request {
     const expressReq = req as MulterRequest;
     (async () => {
       try {
-        const { category_id, title, type, description, duration_minutes, sort_order, video_url } = expressReq.body || {};
+        const { category_id, new_category_name, title, type, description, duration_minutes, sort_order, video_url } = expressReq.body || {};
+
+        let resolvedCategoryId: number | null = null;
+        if (category_id) {
+          resolvedCategoryId = parseInt(category_id);
+        } else if (new_category_name && new_category_name.trim()) {
+          const trimmedName = new_category_name.trim();
+          const { data: existingCats } = await supabase
+            .from('training_categories')
+            .select('id')
+            .eq('name', trimmedName);
+            
+          if (existingCats && existingCats.length > 0) {
+            resolvedCategoryId = existingCats[0].id;
+          } else {
+            const { data: insertedCat, error: insertCatError } = await supabase
+              .from('training_categories')
+              .insert([{ name: trimmedName, sort_order: 10 }])
+              .select();
+              
+            if (insertCatError) {
+              console.error('Failed to auto-create category in Supabase:', insertCatError);
+              return res.status(500).json({ success: false, message: 'Could not create custom category.' });
+            }
+            resolvedCategoryId = insertedCat?.[0]?.id || null;
+          }
+        }
 
         // 1. Mandatory Fields validation
-        if (!category_id || !title || !type) {
+        if (!resolvedCategoryId || !title || !type) {
           return res.status(400).json({ success: false, message: 'Category_id, Title and Type are required parameters.' });
         }
 
@@ -981,7 +1016,7 @@ interface MulterRequest extends express.Request {
       const uniqueId = 'trn-' + crypto.randomUUID().substring(0, 8);
       const insertRecord = {
         id: uniqueId,
-        category_id: parseInt(category_id),
+        category_id: resolvedCategoryId,
         title,
         type,
         description: description || '',

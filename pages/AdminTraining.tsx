@@ -144,7 +144,16 @@ export const AdminTraining: React.FC = () => {
       clearInterval(interval);
       setUploadProgress(100);
 
-      const resData = await res.json();
+      const responseText = await res.text();
+      let resData: any = {};
+      try {
+        resData = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Failed to parse training upload response as JSON:", e);
+        setFormError(`Server error (${res.status}): Failed to parse server response. Please make sure all direct SQL tables are created.`);
+        return;
+      }
+
       if (res.ok && resData.success) {
         setFormSuccess(true);
         // Clear inputs
@@ -169,8 +178,9 @@ export const AdminTraining: React.FC = () => {
       }
     } catch (err) {
       clearInterval(interval);
-      console.error(err);
-      setFormError('API timeout or connection error during file upload.');
+      console.error("Training upload catch block error:", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setFormError(`Upload failed: ${errMsg}. Please check your connection and try again.`);
     } finally {
       setFormUploading(false);
     }
