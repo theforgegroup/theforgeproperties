@@ -30,60 +30,61 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-forge-navy text-white pt-16 md:pt-24 pb-8 md:pb-12 overflow-hidden relative">
+    <footer className="bg-forge-navy text-white pt-16 md:pt-24 pb-8 md:pb-12 overflow-hidden relative border-t border-white/5">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-forge-gold to-transparent" />
       
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 mb-16 md:mb-20">
+          
           {/* Brand Column */}
-          <div className="lg:col-span-4 text-center lg:text-left">
+          <div className="lg:col-span-5 text-center lg:text-left">
             <Link to="/" className="flex flex-col mb-6 md:mb-8 group items-center lg:items-start">
               {settings.logo ? (
-                <img src={settings.logo} alt="The Forge Properties" className="h-20 md:h-28 w-auto object-contain mb-2" />
+                <img src={settings.logo} alt="The Forge Properties" className="h-16 md:h-20 w-auto object-contain mb-2" />
               ) : isLoading ? (
-                <div className="h-24 w-32 animate-pulse bg-white/5 rounded" />
+                <div className="h-16 w-32 animate-pulse bg-white/5 rounded" />
               ) : (
                 <>
-                  <span className="text-2xl md:text-3xl font-bold tracking-tight text-white group-hover:text-forge-gold transition-colors">THE FORGE</span>
+                  <span className="text-2xl md:text-3xl font-black tracking-tight text-white group-hover:text-forge-gold transition-colors">THE FORGE</span>
                   <span className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
                 </>
               )}
             </Link>
-            <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8 md:mb-10 max-w-md mx-auto lg:mx-0">
-              Defining excellence in Nigerian luxury real estate. We provide unparalleled services for the world's most discerning clients and investors.
+            <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
+              Making land ownership real for young Nigerians.
             </p>
             <div className="flex justify-center lg:justify-start space-x-4 md:space-x-6">
-              <a href="https://www.tiktok.com/@theforgegroup" target="_blank" rel="noopener noreferrer" className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all"><TikTokIcon size={18} /></a>
-              <a href="https://www.instagram.com/theforgeproperties_" target="_blank" rel="noopener noreferrer" className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all"><Instagram size={18} /></a>
+              <a href="https://www.tiktok.com/@theforgegroup" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all" title="TikTok"><TikTokIcon size={18} /></a>
+              <a href="https://www.instagram.com/theforgeproperties_" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all" title="Instagram"><Instagram size={18} /></a>
             </div>
           </div>
 
-          {/* Links Columns */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-8 text-center lg:text-left">
+          {/* Quick Links Columns */}
+          <div className="lg:col-span-4 grid grid-cols-2 gap-8 text-center lg:text-left">
             <div>
-              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6 md:mb-8">Explore</h3>
-              <ul className="space-y-3 md:space-y-4 text-slate-400 text-sm md:text-base font-medium">
-                <li><Link to="/listings" className="hover:text-forge-gold transition-colors">Exclusive Listings</Link></li>
-                <li><Link to="/blog" className="hover:text-forge-gold transition-colors">Journal & Insights</Link></li>
+              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Quick Links</h3>
+              <ul className="space-y-3 text-slate-400 text-sm md:text-base font-medium">
+                <li><Link to="/" className="hover:text-forge-gold transition-colors">Home</Link></li>
                 <li><Link to="/about" className="hover:text-forge-gold transition-colors">About Us</Link></li>
+                <li><Link to="/listings" className="hover:text-forge-gold transition-colors">Properties</Link></li>
+                <li><a href="/#diaspora" className="hover:text-forge-gold transition-colors">Diaspora</a></li>
                 <li><Link to="/contact" className="hover:text-forge-gold transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6 md:mb-8">Services</h3>
-              <ul className="space-y-3 md:space-y-4 text-slate-400 text-sm md:text-base font-medium">
+              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Investments</h3>
+              <ul className="space-y-3 text-slate-400 text-sm md:text-base font-medium">
                 <li><Link to="/listings?type=land" className="hover:text-forge-gold transition-colors">Land Acquisition</Link></li>
-                <li><Link to="/listings?type=house" className="hover:text-forge-gold transition-colors">Luxury Homes</Link></li>
+                <li><Link to="/listings?type=house" className="hover:text-forge-gold transition-colors">Luxury Plots</Link></li>
                 <li><Link to="/agent/portal" className="hover:text-forge-gold transition-colors">Agent Partnership</Link></li>
-                <li><Link to="/contact" className="hover:text-forge-gold transition-colors">Property Valuation</Link></li>
               </ul>
             </div>
           </div>
 
           {/* Newsletter Column */}
           <div className="lg:col-span-3 text-center lg:text-left">
-            <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6 md:mb-8">Newsletter</h3>
-            <p className="text-slate-400 text-sm mb-6">Subscribe to receive exclusive property alerts and market insights.</p>
+            <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Newsletter</h3>
+            <p className="text-slate-400 text-sm mb-6">Subscribe to receive exclusive property updates and flexible payment plans.</p>
             {subscribed ? (
               <div className="bg-forge-gold/10 border border-forge-gold/20 p-4 rounded-xl text-forge-gold text-sm flex items-center gap-2 justify-center lg:justify-start">
                 <Check size={16} /> Subscribed Successfully
@@ -93,12 +94,12 @@ export const Footer: React.FC = () => {
                 <input 
                   type="email" 
                   required 
-                  placeholder="Email address" 
+                  placeholder="Your email address" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
-                  className="bg-white/5 border border-white/10 text-white px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-forge-gold transition-colors text-center lg:text-left" 
+                  className="bg-white/5 border border-white/10 text-white px-5 py-3.5 rounded-xl text-sm focus:outline-none focus:border-forge-gold transition-colors text-center lg:text-left" 
                 />
-                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-[10px] md:text-xs tracking-widest py-4 rounded-xl hover:bg-white transition-all">Subscribe</button>
+                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-[10px] tracking-widest py-3.5 rounded-xl hover:bg-white transition-all">Subscribe</button>
               </form>
             )}
           </div>
@@ -111,8 +112,8 @@ export const Footer: React.FC = () => {
               <MapPin size={20} />
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Office</p>
-              <p className="text-sm text-slate-300 font-medium">{settings.address}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Location</p>
+              <p className="text-sm text-slate-300 font-medium">Lagos–Ogun Corridor, Nigeria</p>
             </div>
           </div>
           <a href={`tel:${settings.contact_phone}`} className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left group">
@@ -131,24 +132,22 @@ export const Footer: React.FC = () => {
             <div>
               <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Email</p>
               <a href={`mailto:${settings.contact_email}`} className="text-sm text-slate-300 font-medium hover:text-forge-gold transition-colors block">{settings.contact_email}</a>
-              {settings.contact_email_2 && (
-                <a href={`mailto:${settings.contact_email_2}`} className="text-sm text-slate-300 font-medium hover:text-forge-gold transition-colors block mt-1">{settings.contact_email_2}</a>
-              )}
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
-          <p className="text-xs md:text-sm text-slate-500 text-center md:text-left">
-            &copy; {new Date().getFullYear()} The Forge Group. All rights reserved.
+          <p className="text-xs text-slate-500 text-center md:text-left">
+            &copy; {new Date().getFullYear()} The Forge Properties. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 md:gap-8 text-xs md:text-sm text-slate-500">
+          <div className="flex items-center gap-6 md:gap-8 text-xs text-slate-500">
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <button 
               onClick={scrollToTop}
               className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-forge-navy transition-all shrink-0"
+              title="Scroll to Top"
             >
               <ArrowUp size={18} />
             </button>
@@ -158,4 +157,3 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
-
