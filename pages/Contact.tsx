@@ -1,178 +1,368 @@
-
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { 
+  Phone, 
+  Mail, 
+  MapPin, 
+  MessageCircle, 
+  CheckCircle2, 
+  Send,
+  ChevronRight
+} from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { Lead } from '../types';
+import { SEO } from '../components/SEO';
 
 export const Contact: React.FC = () => {
-  const { settings, addLead } = useProperties();
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', message: '' });
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success'>('idle');
+  const { addLead } = useProperties();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [interest, setInterest] = useState('Buying Land');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newLead: Lead = {
-      id: Date.now().toString(),
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
-      date: new Date().toISOString(),
-      status: 'New',
-      type: 'General Inquiry'
-    };
-    
-    addLead(newLead);
-    setSubmitStatus('success');
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' });
-    setTimeout(() => setSubmitStatus('idle'), 3000);
+    setError('');
+
+    if (!name || !phone || !email) {
+      setError('Please provide your name, phone number, and email.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addLead({
+        id: 'contact-' + Date.now(),
+        name,
+        email,
+        phone,
+        message: `Interest: ${interest}. ${message || 'General message from contact page.'}`,
+        property_id: 'contact-page',
+        property_title: `Inquiry: ${interest}`,
+        date: new Date().toISOString(),
+        status: 'New',
+        type: 'Contact Page Inquiry'
+      });
+      setIsSuccess(true);
+    } catch (err) {
+      console.error(err);
+      setIsSuccess(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const directWhatsAppUrl = `https://wa.me/2348106133572?text=${encodeURIComponent(
+    `Hello The Forge Properties, I'm reaching out from your website. My name is ${name || 'an interested investor'} and I'm interested in ${interest}.`
+  )}`;
+
   return (
-    <div className="min-h-screen bg-slate-50 pt-20">
-      {/* Header */}
-      <div className="bg-white pt-12 md:pt-24 pb-12 md:pb-20 border-b border-slate-100">
-        <div className="container mx-auto px-6 text-center">
-          <span className="text-forge-gold text-[10px] md:text-xs uppercase tracking-[0.4em] font-bold mb-4 block">Get In Touch</span>
-          <h1 className="text-3xl md:text-6xl font-bold text-forge-navy leading-tight">Start Your Journey</h1>
+    <div className="min-h-screen bg-white text-[#1A1A1A] pt-20">
+      <SEO
+        title="Contact Us | The Forge Properties"
+        description="Have a question about verified land, need title verification advice, or want to know where to start? We're here."
+      />
+
+      {/* HERO SECTION */}
+      <section className="bg-[#1A2847] text-white py-16 sm:py-20 px-4 sm:px-6 relative overflow-hidden border-b-2 border-[#C9962A]/40">
+        <div 
+          className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#C9962A]/15 blur-3xl pointer-events-none" 
+          aria-hidden="true" 
+        />
+
+        <div className="container mx-auto max-w-5xl relative z-10 text-center">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-300 mb-6">
+            <Link to="/" className="hover:text-[#C9962A] transition-colors">
+              Home
+            </Link>
+            <ChevronRight size={14} className="text-[#C9962A]" />
+            <span className="text-[#C9962A]">Contact</span>
+          </nav>
+
+          <span className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] block mb-2">
+            Get In Touch
+          </span>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white font-display mb-4">
+            Let's Talk Land
+          </h1>
+          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Have a question about a property, need title verification advice, or just want to know where to start? We're here.
+          </p>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-6 py-12 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 shadow-2xl overflow-hidden rounded-2xl md:rounded-3xl">
-          
-          {/* Dark Info Side */}
-          <div className="bg-forge-navy text-white p-10 md:p-20 flex flex-col justify-between relative overflow-hidden">
-             {/* Background Pattern */}
-             <div className="absolute top-0 right-0 w-64 h-64 bg-forge-gold opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-
-             <div className="relative z-10">
-               <h3 className="text-2xl md:text-4xl font-bold mb-12 md:mb-16">Contact Information</h3>
-               
-               <div className="space-y-10 md:space-y-12">
-                 <div className="flex items-start gap-6 group">
-                   <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all duration-500">
-                     <MapPin size={24} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Headquarters</p>
-                     <p className="text-base md:text-xl leading-relaxed font-medium whitespace-pre-line">{settings.address}</p>
-                   </div>
-                 </div>
-
-                 <div className="flex items-start gap-6 group">
-                   <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all duration-500">
-                     <Phone size={24} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Phone</p>
-                     <p className="text-base md:text-xl leading-relaxed font-medium">{settings.contact_phone}</p>
-                   </div>
-                 </div>
-
-                 <div className="flex items-start gap-6 group">
-                   <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all duration-500">
-                     <Mail size={24} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Email</p>
-                     <p className="text-base md:text-xl leading-relaxed font-medium break-all">{settings.contact_email}</p>
-                     {settings.contact_email_2 && (
-                       <p className="text-base md:text-xl leading-relaxed font-medium break-all mt-1">{settings.contact_email_2}</p>
-                     )}
-                   </div>
-                 </div>
-                 
-                 <div className="flex items-start gap-6 group">
-                   <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all duration-500">
-                     <Clock size={24} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Office Hours</p>
-                     <p className="text-base md:text-xl leading-relaxed font-medium">Mon - Fri: 8:00 AM - 6:00 PM</p>
-                   </div>
-                 </div>
-               </div>
-             </div>
-          </div>
-
-          {/* Form Side */}
-          <div className="bg-white p-10 md:p-20">
-            <h3 className="text-2xl md:text-4xl font-bold text-forge-navy mb-10 md:mb-12">Send a Message</h3>
+      {/* TWO COLUMNS: LEFT CONTACT DETAILS, RIGHT CONTACT FORM */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-[#F2F2F0]">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             
-            {submitStatus === 'success' ? (
-               <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                 <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-8">
-                   <CheckCircle className="text-green-600" size={48} />
-                 </div>
-                 <h3 className="text-2xl font-bold text-forge-navy mb-4">Message Received</h3>
-                 <p className="text-slate-500 font-medium leading-relaxed">Thank you for contacting The Forge. Our team will respond to your inquiry within 24 hours.</p>
-               </div>
-            ) : (
-              <form className="space-y-6 md:space-y-8" onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="First Name"
-                      required
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-100 p-5 rounded-xl focus:border-forge-gold focus:bg-white focus:outline-none transition-all placeholder-slate-400 text-slate-800 font-medium" 
-                    />
+            {/* LEFT COLUMN: Contact Details (5 cols) */}
+            <div className="lg:col-span-5 bg-[#1A2847] text-white rounded-[16px] p-8 sm:p-10 border border-[#C9962A]/40 shadow-xl flex flex-col justify-between">
+              <div className="space-y-8">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] block mb-2">
+                    Direct Reach
+                  </span>
+                  <h2 className="text-2xl font-bold text-white font-display">
+                    The Forge Properties HQ
+                  </h2>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Prompt responses for local and diaspora inquiries.
+                  </p>
+                </div>
+
+                <div className="space-y-6 text-sm">
+                  {/* Phone */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#111B31] border border-[#C9962A]/40 flex items-center justify-center text-[#C9962A] shrink-0">
+                      <Phone size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                        Phone & WhatsApp
+                      </span>
+                      <a href="tel:+2348106133572" className="text-white hover:text-[#C9962A] font-semibold text-base transition-colors">
+                        +234 810 613 3572
+                      </a>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Last Name"
-                      required
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                      className="w-full bg-slate-50 border border-slate-100 p-5 rounded-xl focus:border-forge-gold focus:bg-white focus:outline-none transition-all placeholder-slate-400 text-slate-800 font-medium" 
-                    />
+
+                  {/* Email */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#111B31] border border-[#C9962A]/40 flex items-center justify-center text-[#C9962A] shrink-0">
+                      <Mail size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                        Official Email
+                      </span>
+                      <a href="mailto:theforgeproperties@gmail.com" className="text-white hover:text-[#C9962A] font-semibold transition-colors break-all">
+                        theforgeproperties@gmail.com
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Office */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#111B31] border border-[#C9962A]/40 flex items-center justify-center text-[#C9962A] shrink-0">
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                        Office Location
+                      </span>
+                      <p className="text-white font-medium">
+                        Sangotedo, Lagos State, Nigeria
+                      </p>
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <input 
-                    type="email" 
-                    placeholder="Email Address"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 p-5 rounded-xl focus:border-forge-gold focus:bg-white focus:outline-none transition-all placeholder-slate-400 text-slate-800 font-medium" 
-                  />
-                </div>
 
-                <div>
-                  <input 
-                    type="tel" 
-                    placeholder="Phone Number (Optional)"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 p-5 rounded-xl focus:border-forge-gold focus:bg-white focus:outline-none transition-all placeholder-slate-400 text-slate-800 font-medium" 
-                  />
+                {/* Socials */}
+                <div className="pt-4 border-t border-white/10">
+                  <span className="text-xs font-bold uppercase tracking-[1.5px] text-[#C9962A] block mb-3">
+                    Follow Our Journey
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://www.instagram.com/theforgeproperties_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-[6px] bg-[#111B31] border border-white/15 text-xs text-slate-300 hover:text-[#C9962A] hover:border-[#C9962A] transition-all font-semibold"
+                    >
+                      Instagram
+                    </a>
+                    <a
+                      href="https://www.tiktok.com/@theforgeproperties_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-[6px] bg-[#111B31] border border-white/15 text-xs text-slate-300 hover:text-[#C9962A] hover:border-[#C9962A] transition-all font-semibold"
+                    >
+                      TikTok
+                    </a>
+                    <a
+                      href="https://www.facebook.com/theforgeproperties_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-[6px] bg-[#111B31] border border-white/15 text-xs text-slate-300 hover:text-[#C9962A] hover:border-[#C9962A] transition-all font-semibold"
+                    >
+                      Facebook
+                    </a>
+                    <a
+                      href="https://x.com/theforgeproperties_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-[6px] bg-[#111B31] border border-white/15 text-xs text-slate-300 hover:text-[#C9962A] hover:border-[#C9962A] transition-all font-semibold"
+                    >
+                      X
+                    </a>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-2">Handle: @theforgeproperties_</p>
                 </div>
+              </div>
 
-                <div>
-                  <textarea 
-                    rows={5} 
-                    placeholder="How can we assist you?"
-                    required
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 p-5 rounded-xl focus:border-forge-gold focus:bg-white focus:outline-none transition-all placeholder-slate-400 text-slate-800 resize-none font-medium"
-                  ></textarea>
-                </div>
+              {/* Big Green "Chat on WhatsApp" Button */}
+              <div className="pt-8">
+                <a
+                  id="contact-whatsapp-cta"
+                  href={directWhatsAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-base py-4 px-6 rounded-[8px] inline-flex items-center justify-center gap-2 shadow-lg transition-all min-h-[44px]"
+                >
+                  <MessageCircle size={22} />
+                  <span>Chat on WhatsApp</span>
+                </a>
+              </div>
+            </div>
 
-                <button className="w-full bg-forge-navy text-white px-10 py-5 rounded-xl uppercase font-bold tracking-[0.2em] text-[10px] md:text-xs hover:bg-forge-gold hover:text-forge-navy transition-all duration-500 shadow-xl shadow-forge-navy/20">
-                  Submit Inquiry
-                </button>
-              </form>
-            )}
+            {/* RIGHT COLUMN: Contact Form (7 cols) */}
+            <div className="lg:col-span-7 bg-white rounded-[16px] p-8 sm:p-12 border border-slate-200 shadow-xl flex flex-col justify-between">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] block mb-2">
+                  Send A Message
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A2847] font-display mb-6">
+                  How Can We Help You?
+                </h2>
+
+                {isSuccess ? (
+                  <div className="text-center py-10 space-y-4">
+                    <div className="w-14 h-14 bg-[#FDF3E3] text-[#C9962A] rounded-full mx-auto flex items-center justify-center">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#1A2847] font-display">Message Sent!</h3>
+                    <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                      Thank you, <strong>{name}</strong>! We've received your request regarding <strong>{interest}</strong>. A property consultant will get back to you shortly.
+                    </p>
+                    <div className="pt-4 flex justify-center">
+                      <button
+                        onClick={() => {
+                          setIsSuccess(false);
+                          setName('');
+                          setPhone('');
+                          setEmail('');
+                          setMessage('');
+                        }}
+                        className="bg-[#1A2847] text-white font-bold text-sm px-6 py-3 rounded-[8px] min-h-[44px]"
+                      >
+                        Send Another Message
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                      <div className="p-3 bg-red-50 text-red-700 text-xs rounded-[8px] border border-red-200">
+                        {error}
+                      </div>
+                    )}
+
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="contact-name" className="block text-xs font-bold uppercase tracking-[1px] text-[#1A2847] mb-1">
+                        Full Name *
+                      </label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Bukola Adebayo"
+                        className="w-full px-4 py-3 text-sm border border-slate-300 rounded-[8px] focus:outline-none focus:border-[#C9962A] focus:ring-1 focus:ring-[#C9962A] min-h-[44px]"
+                      />
+                    </div>
+
+                    {/* Phone & Email Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="contact-phone" className="block text-xs font-bold uppercase tracking-[1px] text-[#1A2847] mb-1">
+                          Phone / WhatsApp *
+                        </label>
+                        <input
+                          id="contact-phone"
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="e.g. +234 810 613 3572"
+                          className="w-full px-4 py-3 text-sm border border-slate-300 rounded-[8px] focus:outline-none focus:border-[#C9962A] focus:ring-1 focus:ring-[#C9962A] min-h-[44px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="contact-email" className="block text-xs font-bold uppercase tracking-[1px] text-[#1A2847] mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          id="contact-email"
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="e.g. bukola@gmail.com"
+                          className="w-full px-4 py-3 text-sm border border-slate-300 rounded-[8px] focus:outline-none focus:border-[#C9962A] focus:ring-1 focus:ring-[#C9962A] min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* "What are you interested in?" dropdown */}
+                    <div>
+                      <label htmlFor="contact-interest" className="block text-xs font-bold uppercase tracking-[1px] text-[#1A2847] mb-1">
+                        What are you interested in? *
+                      </label>
+                      <select
+                        id="contact-interest"
+                        value={interest}
+                        onChange={(e) => setInterest(e.target.value)}
+                        className="w-full bg-white px-4 py-3 text-sm border border-slate-300 rounded-[8px] focus:outline-none focus:border-[#C9962A] focus:ring-1 focus:ring-[#C9962A] min-h-[44px] text-[#1A1A1A] font-medium"
+                      >
+                        <option value="Buying Land">Buying Land</option>
+                        <option value="Co-Buying">Co-Buying with a Friend / Group</option>
+                        <option value="Becoming a Realtor">Becoming a Realtor (15% Commission)</option>
+                        <option value="The Forge Nation">The Forge Nation Community</option>
+                        <option value="General Enquiry">General Enquiry / Title Consultation</option>
+                      </select>
+                    </div>
+
+                    {/* Message */}
+                    <div>
+                      <label htmlFor="contact-message" className="block text-xs font-bold uppercase tracking-[1px] text-[#1A2847] mb-1">
+                        Your Message
+                      </label>
+                      <textarea
+                        id="contact-message"
+                        rows={4}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Tell us about what you are looking for, preferred budget, or questions..."
+                        className="w-full px-4 py-3 text-sm border border-slate-300 rounded-[8px] focus:outline-none focus:border-[#C9962A] focus:ring-1 focus:ring-[#C9962A]"
+                      />
+                    </div>
+
+                    {/* Send Message Button in Gold */}
+                    <button
+                      id="contact-submit-btn"
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg min-h-[44px] disabled:opacity-50"
+                    >
+                      <Send size={18} />
+                      <span>{isSubmitting ? 'Sending Message...' : 'Send Message'}</span>
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -58,6 +58,12 @@ export interface Property {
   };
   featured?: boolean;
   show_on_homepage?: boolean;
+  developer?: string;
+  plot_sizes?: string[];
+  documentation?: string;
+  is_coming_soon?: boolean;
+  price_options?: { size: string; price: number; formattedPrice: string; }[];
+  payment_plan?: string;
 }
 
 export interface Lead {
@@ -130,10 +136,12 @@ export interface BlogPost {
   excerpt: string;
   content: string; 
   cover_image: string;
-  author: string;
+  author?: string;
   date: string; 
   category: string;
   status: 'Published' | 'Draft';
+  tags?: string[];
+  read_time?: string;
   meta_description?: string;
   keyphrase?: string;
   featured?: boolean;

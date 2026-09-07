@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Trash2, Edit, Plus, Search, MapPin } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, MapPin, ArrowRight } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/AdminLayout';
@@ -46,9 +46,9 @@ export const Admin: React.FC = () => {
           <h2 className="text-2xl font-serif text-forge-navy">Recent Inquiries</h2>
           <button 
             onClick={() => navigate('/admin/crm')}
-            className="text-xs font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-colors flex items-center gap-1"
+            className="text-xs font-bold text-forge-gold uppercase tracking-widest hover:text-forge-navy transition-colors flex items-center gap-1.5"
           >
-            View All Leads <span className="text-lg leading-none">□</span>
+            <span>View All Leads</span> <ArrowRight size={14} className="shrink-0" />
           </button>
         </div>
         

@@ -1,6 +1,6 @@
 {
-  "name": "The Forge Properties",
-  "description": "A luxury real estate platform for The Forge Group of Companies, featuring AI-powered property search, premium listings, and a sophisticated corporate identity.",
+  "name": "The Forge Properties — Land. Legacy. Growth.",
+  "description": "Making verified land ownership accessible to young Nigerians and diaspora buyers affordably and transparently. Explore verified titled plots in Lagos and Ogun State.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

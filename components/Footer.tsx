@@ -1,156 +1,209 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MapPin, Phone, Mail, Check, ArrowUp } from 'lucide-react';
-import { useProperties } from '../context/PropertyContext';
-
-const TikTokIcon = ({ size = 20, className = "" }: { size?: number, className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-  </svg>
-);
+import { ShieldCheck, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { settings, addSubscriber, isLoading } = useProperties();
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email && email.includes('@')) {
-      addSubscriber(email);
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
-    <footer className="bg-forge-navy text-white pt-16 md:pt-24 pb-8 md:pb-12 overflow-hidden relative border-t border-white/5">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-forge-gold to-transparent" />
-      
-      <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 mb-16 md:mb-20">
+    <footer className="bg-[#1A2847] text-white pt-16 pb-10 border-t-2 border-[#C9962A]/50 relative">
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-14 border-b border-white/10">
           
-          {/* Brand Column */}
-          <div className="lg:col-span-5 text-center lg:text-left">
-            <Link to="/" className="flex flex-col mb-6 md:mb-8 group items-center lg:items-start">
-              {settings.logo ? (
-                <img src={settings.logo} alt="The Forge Properties" className="h-16 md:h-20 w-auto object-contain mb-2" />
-              ) : isLoading ? (
-                <div className="h-16 w-32 animate-pulse bg-white/5 rounded" />
-              ) : (
-                <>
-                  <span className="text-2xl md:text-3xl font-black tracking-tight text-white group-hover:text-forge-gold transition-colors">THE FORGE</span>
-                  <span className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-forge-gold font-bold">Properties</span>
-                </>
-              )}
-            </Link>
-            <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
-              Making land ownership real for young Nigerians.
-            </p>
-            <div className="flex justify-center lg:justify-start space-x-4 md:space-x-6">
-              <a href="https://www.tiktok.com/@theforgegroup" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all" title="TikTok"><TikTokIcon size={18} /></a>
-              <a href="https://www.instagram.com/theforgeproperties_" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-forge-gold hover:text-forge-navy transition-all" title="Instagram"><Instagram size={18} /></a>
-            </div>
-          </div>
-
-          {/* Quick Links Columns */}
-          <div className="lg:col-span-4 grid grid-cols-2 gap-8 text-center lg:text-left">
-            <div>
-              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Quick Links</h3>
-              <ul className="space-y-3 text-slate-400 text-sm md:text-base font-medium">
-                <li><Link to="/" className="hover:text-forge-gold transition-colors">Home</Link></li>
-                <li><Link to="/about" className="hover:text-forge-gold transition-colors">About Us</Link></li>
-                <li><Link to="/listings" className="hover:text-forge-gold transition-colors">Properties</Link></li>
-                <li><a href="/#diaspora" className="hover:text-forge-gold transition-colors">Diaspora</a></li>
-                <li><Link to="/contact" className="hover:text-forge-gold transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Investments</h3>
-              <ul className="space-y-3 text-slate-400 text-sm md:text-base font-medium">
-                <li><Link to="/listings?type=land" className="hover:text-forge-gold transition-colors">Land Acquisition</Link></li>
-                <li><Link to="/listings?type=house" className="hover:text-forge-gold transition-colors">Luxury Plots</Link></li>
-                <li><Link to="/agent/portal" className="hover:text-forge-gold transition-colors">Agent Partnership</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Newsletter Column */}
-          <div className="lg:col-span-3 text-center lg:text-left">
-            <h3 className="text-white text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold mb-6">Newsletter</h3>
-            <p className="text-slate-400 text-sm mb-6">Subscribe to receive exclusive property updates and flexible payment plans.</p>
-            {subscribed ? (
-              <div className="bg-forge-gold/10 border border-forge-gold/20 p-4 rounded-xl text-forge-gold text-sm flex items-center gap-2 justify-center lg:justify-start">
-                <Check size={16} /> Subscribed Successfully
+          {/* Col 1: About The Forge (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <Link to="/" className="flex items-center gap-2.5 group" id="footer-logo">
+              <div className="w-9 h-9 rounded-[8px] bg-[#111B31] border border-[#C9962A]/40 flex items-center justify-center text-[#C9962A]">
+                <ShieldCheck className="w-5 h-5 text-[#C9962A]" />
               </div>
-            ) : (
-              <form className="flex flex-col gap-3" onSubmit={handleSubscribe}>
-                <input 
-                  type="email" 
-                  required 
-                  placeholder="Your email address" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  className="bg-white/5 border border-white/10 text-white px-5 py-3.5 rounded-xl text-sm focus:outline-none focus:border-forge-gold transition-colors text-center lg:text-left" 
-                />
-                <button className="bg-forge-gold text-forge-navy font-bold uppercase text-[10px] tracking-widest py-3.5 rounded-xl hover:bg-white transition-all">Subscribe</button>
-              </form>
-            )}
-          </div>
-        </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold tracking-tight text-white font-display">
+                  THE FORGE
+                </span>
+                <span className="text-[10px] uppercase tracking-[2px] text-[#C9962A] font-bold -mt-1">
+                  PROPERTIES
+                </span>
+              </div>
+            </Link>
+            
+            <p className="text-slate-300 text-sm leading-relaxed max-w-sm">
+              Making verified, titled land ownership accessible to young Nigerians and diaspora buyers — affordably, transparently, and on their own terms.
+            </p>
 
-        {/* Contact Strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-10 md:py-12 border-y border-white/5 mb-10 md:mb-12">
-          <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold shrink-0">
-              <MapPin size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Location</p>
-              <p className="text-sm text-slate-300 font-medium">Lagos–Ogun Corridor, Nigeria</p>
+            <div className="pt-2">
+              <span className="text-xs uppercase tracking-[2px] text-[#C9962A] font-bold block mb-2.5">
+                Connect With Us
+              </span>
+              <div className="flex items-center space-x-2.5">
+                {/* Instagram */}
+                <a 
+                  href="https://www.instagram.com/theforgeproperties_" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="Instagram"
+                  className="w-9 h-9 rounded-[8px] bg-[#111B31] border border-white/10 hover:border-[#C9962A] text-slate-300 hover:text-[#C9962A] transition-all flex items-center justify-center text-xs font-bold"
+                >
+                  IG
+                </a>
+                {/* TikTok */}
+                <a 
+                  href="https://www.tiktok.com/@theforgeproperties_" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="TikTok"
+                  className="w-9 h-9 rounded-[8px] bg-[#111B31] border border-white/10 hover:border-[#C9962A] text-slate-300 hover:text-[#C9962A] transition-all flex items-center justify-center text-xs font-bold"
+                >
+                  TK
+                </a>
+                {/* Facebook */}
+                <a 
+                  href="https://www.facebook.com/theforgeproperties_" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="Facebook"
+                  className="w-9 h-9 rounded-[8px] bg-[#111B31] border border-white/10 hover:border-[#C9962A] text-slate-300 hover:text-[#C9962A] transition-all flex items-center justify-center text-xs font-bold"
+                >
+                  FB
+                </a>
+                {/* X */}
+                <a 
+                  href="https://x.com/theforgeproperties_" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="X"
+                  className="w-9 h-9 rounded-[8px] bg-[#111B31] border border-white/10 hover:border-[#C9962A] text-slate-300 hover:text-[#C9962A] transition-all flex items-center justify-center text-xs font-bold"
+                >
+                  X
+                </a>
+                {/* WhatsApp */}
+                <a 
+                  href="https://wa.me/2348106133572" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="WhatsApp"
+                  className="w-9 h-9 rounded-[8px] bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all flex items-center justify-center text-xs font-bold"
+                >
+                  WA
+                </a>
+              </div>
             </div>
           </div>
-          <a href={`tel:${settings.contact_phone}`} className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left group">
-            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all">
-              <Phone size={20} />
+
+          {/* Col 2: Quick Links (3 cols) */}
+          <div className="lg:col-span-3">
+            <h4 className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] mb-4">
+              Quick Links
+            </h4>
+            <ul className="space-y-2.5 text-sm text-slate-300">
+              <li>
+                <Link to="/" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/properties" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> Verified Properties
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/forge-nation" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> The Forge Nation
+                </Link>
+              </li>
+              <li>
+                <Link to="/join-realtors" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> Join Realtors (15% Commission)
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> Property Blog & Guides
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-[#C9962A] transition-colors flex items-center gap-1.5">
+                  <ArrowRight size={13} className="text-[#C9962A]" /> Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Properties (2 cols) */}
+          <div className="lg:col-span-2">
+            <h4 className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] mb-4">
+              Properties
+            </h4>
+            <ul className="space-y-2.5 text-sm text-slate-300">
+              <li>
+                <Link to="/properties" className="hover:text-[#C9962A] transition-colors">
+                  Prasino Lush Phase 2
+                </Link>
+              </li>
+              <li>
+                <span className="text-slate-400 text-xs block">Kobape, Abeokuta</span>
+              </li>
+              <li className="pt-2">
+                <span className="text-[#C9962A] font-semibold text-xs uppercase tracking-wider block">
+                  Plot Sizes
+                </span>
+                <span className="text-slate-300 text-xs">150 SQM • 300 SQM • 500 SQM</span>
+              </li>
+              <li className="pt-2">
+                <span className="text-xs text-slate-400">Partner: Geofort Africa</span>
+              </li>
+              <li>
+                <span className="inline-block bg-[#111B31] text-[#C9962A] text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border border-[#C9962A]/30">
+                  Titled Land Only
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 4: Contact Details (3 cols) */}
+          <div className="lg:col-span-3 space-y-3.5">
+            <h4 className="text-xs font-bold uppercase tracking-[2px] text-[#C9962A] mb-4">
+              Contact Details
+            </h4>
+            <div className="flex items-start gap-2.5 text-sm text-slate-300">
+              <MapPin size={17} className="text-[#C9962A] shrink-0 mt-0.5" />
+              <span>Sangotedo, Lagos State, Nigeria</span>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Call Us</p>
-              <p className="text-sm text-slate-300 font-medium group-hover:text-forge-gold transition-colors">{settings.contact_phone}</p>
+            <div className="flex items-center gap-2.5 text-sm text-slate-300">
+              <Phone size={17} className="text-[#C9962A] shrink-0" />
+              <a href="tel:+2348106133572" className="hover:text-[#C9962A] transition-colors">
+                +234 810 613 3572
+              </a>
             </div>
-          </a>
-          <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left group">
-            <div className="w-12 h-12 rounded-2xl bg-forge-gold/10 flex items-center justify-center text-forge-gold shrink-0 group-hover:bg-forge-gold group-hover:text-forge-navy transition-all">
-              <Mail size={20} />
+            <div className="flex items-center gap-2.5 text-sm text-slate-300">
+              <Mail size={17} className="text-[#C9962A] shrink-0" />
+              <a href="mailto:theforgeproperties@gmail.com" className="hover:text-[#C9962A] transition-colors break-all">
+                theforgeproperties@gmail.com
+              </a>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Email</p>
-              <a href={`mailto:${settings.contact_email}`} className="text-sm text-slate-300 font-medium hover:text-forge-gold transition-colors block">{settings.contact_email}</a>
+            <div className="pt-2">
+              <a 
+                href="https://wa.me/2348106133572"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs px-4 py-2.5 rounded-[8px] transition-colors min-h-[44px]"
+              >
+                <span>Chat With Us on WhatsApp</span>
+              </a>
             </div>
           </div>
+
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
-          <p className="text-xs text-slate-500 text-center md:text-left">
-            &copy; {new Date().getFullYear()} The Forge Properties. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6 md:gap-8 text-xs text-slate-500">
-            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-            <button 
-              onClick={scrollToTop}
-              className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-forge-navy transition-all shrink-0"
-              title="Scroll to Top"
-            >
-              <ArrowUp size={18} />
-            </button>
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div>
+            © {new Date().getFullYear()} The Forge Properties. All rights reserved.
+          </div>
+          <div className="text-[#C9962A] font-bold text-sm font-display tracking-wide">
+            Land. Legacy. Growth.
           </div>
         </div>
       </div>

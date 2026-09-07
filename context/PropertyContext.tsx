@@ -3,6 +3,8 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Property, Lead, SiteSettings, Subscriber, BlogPost, Agent, AgentSale, PayoutRequest, Neighborhood, Testimonial } from '../types';
 import { supabase } from '../lib/supabaseClient';
+import { DEFAULT_PROPERTIES } from '../services/defaultProperties';
+import { DEFAULT_BLOG_POSTS } from '../services/defaultBlogPosts';
 
 interface Category {
   id: string;
@@ -89,10 +91,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<Property[]>(DEFAULT_PROPERTIES);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>(DEFAULT_BLOG_POSTS);
   const [categories, setCategories] = useState<Category[]>([
     { id: '1', name: 'Market Insights' },
     { id: '2', name: 'Luxury Lifestyle' },
@@ -136,10 +138,28 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         supabase.from('site_settings').select('*').eq('id', 1).single()
       ]);
 
-      if (propsData) setProperties(propsData);
+      if (propsData && propsData.length > 0) {
+        const hasPrasino = propsData.some((p: Property) => p.slug === 'prasino-lush-phase-2' || (p.title && p.title.includes('Prasino')));
+        if (!hasPrasino) {
+          setProperties([...DEFAULT_PROPERTIES, ...propsData]);
+        } else {
+          setProperties(propsData);
+        }
+      } else {
+        setProperties(DEFAULT_PROPERTIES);
+      }
       if (leadsData) setLeads(leadsData);
       if (subsData) setSubscribers(subsData);
-      if (postsData) setPosts(postsData);
+      if (postsData && postsData.length > 0) {
+        const hasCustomPosts = postsData.some((p: BlogPost) => p.slug === 'how-to-buy-land-in-nigeria-from-diaspora-without-scams');
+        if (!hasCustomPosts) {
+          setPosts([...DEFAULT_BLOG_POSTS, ...postsData]);
+        } else {
+          setPosts(postsData);
+        }
+      } else {
+        setPosts(DEFAULT_BLOG_POSTS);
+      }
       if (catsData && catsData.length > 0) setCategories(catsData);
       if (agentsList) setAgents(agentsList);
       if (salesData) setSales(salesData);

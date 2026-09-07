@@ -1,11 +1,14 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useParams, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { FloatingWhatsApp } from './components/FloatingWhatsApp';
+import { NewsletterModal } from './components/NewsletterModal';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
-import { Listings } from './pages/Listings';
+import { Properties } from './pages/Properties';
+import { TheForgeNation } from './pages/TheForgeNation';
+import { JoinRealtors } from './pages/JoinRealtors';
 import { ListingDetails } from './pages/ListingDetails';
 import { Blog } from './pages/Blog';
 import { BlogPostDetails } from './pages/BlogPostDetails';
@@ -25,7 +28,6 @@ import { AdminNeighborhoods } from './pages/AdminNeighborhoods';
 import { AdminTestimonials } from './pages/AdminTestimonials';
 import { AgentPortal } from './pages/AgentPortal';
 import { AgentDashboard } from './pages/AgentDashboard';
-import { AIConcierge } from './components/AIConcierge';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PropertyProvider, useProperties } from './context/PropertyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -43,10 +45,9 @@ const ScrollToTop = () => {
 const ReferralRedirect = () => {
   const { code } = useParams();
   useEffect(() => {
-    // Logic to log click in Supabase 'agent_clicks' table would go here
     console.log(`Referral clicked for code: ${code}`);
   }, [code]);
-  return <Navigate to="/listings" replace />;
+  return <Navigate to="/properties" replace />;
 };
 
 const AdminEntry: React.FC = () => {
@@ -59,7 +60,6 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAgentDashboardRoute = location.pathname.startsWith('/agent/dashboard');
-  const isBlogRoute = location.pathname.startsWith('/blog');
 
   useEffect(() => {
     const agentImage = settings?.listing_agent?.image;
@@ -72,15 +72,18 @@ const AppLayout: React.FC = () => {
   }, [settings?.listing_agent?.image]);
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900 selection:bg-forge-gold selection:text-forge-navy">
+    <div className="flex flex-col min-h-screen font-sans bg-white text-[#1A1A1A] selection:bg-[#C9962A] selection:text-[#1A2847]">
       {!isAdminRoute && !isAgentDashboardRoute && <Navbar />}
       
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/listings" element={<Listings />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/listings" element={<Properties />} />
           <Route path="/listings/:slug" element={<ListingDetails />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/forge-nation" element={<TheForgeNation />} />
+          <Route path="/join-realtors" element={<JoinRealtors />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPostDetails />} />
           <Route path="/contact" element={<Contact />} />
@@ -90,6 +93,7 @@ const AppLayout: React.FC = () => {
           <Route path="/agent/dashboard" element={<ProtectedRoute role="Agent"><AgentDashboard /></ProtectedRoute>} />
           <Route path="/ref/:code" element={<ReferralRedirect />} />
 
+          {/* Admin Routes */}
           <Route path="/admin" element={<AdminEntry />} />
           <Route path="/admin/crm" element={<ProtectedRoute role="Admin"><AdminCRM /></ProtectedRoute>} />
           <Route path="/admin/agents" element={<ProtectedRoute role="Admin"><AdminAgents /></ProtectedRoute>} />
@@ -105,12 +109,19 @@ const AppLayout: React.FC = () => {
           <Route path="/admin/properties/new" element={<ProtectedRoute role="Admin"><AdminPropertyForm /></ProtectedRoute>} />
           <Route path="/admin/properties/edit/:id" element={<ProtectedRoute role="Admin"><AdminPropertyForm /></ProtectedRoute>} />
           
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
       {!isAdminRoute && !isAgentDashboardRoute && <Footer />}
-      {!isAdminRoute && !isAgentDashboardRoute && !isBlogRoute && <AIConcierge />}
+
+      {/* Global Elements */}
+      {!isAdminRoute && !isAgentDashboardRoute && (
+        <>
+          <FloatingWhatsApp />
+          <NewsletterModal />
+        </>
+      )}
     </div>
   );
 };

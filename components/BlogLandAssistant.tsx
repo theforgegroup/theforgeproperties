@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useProperties } from '../context/PropertyContext';
-import { Bot, X, Sparkles, Send, Phone, Mail, User, Shield, Loader2, CheckCircle } from 'lucide-react';
+import { Bot, X, Sparkles, Send, Phone, Mail, User, Shield, Loader2, CheckCircle, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 
@@ -549,7 +549,7 @@ export const BlogLandAssistant: React.FC = () => {
                 </div>
               )}
 
-              {/* Suggestions Chips (render when user has zero or only приветствие message and is not loading) */}
+              {/* Suggestions Chips (render when user has zero or only welcome message and is not loading) */}
               {!isTyping && messages.length <= 2 && (
                 <div className="pt-2 space-y-2">
                   <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-1">Suggested Land Topics:</p>
@@ -593,7 +593,8 @@ export const BlogLandAssistant: React.FC = () => {
                       }}
                       className="w-full bg-forge-gold hover:bg-white text-forge-navy font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
-                      📞 Request a Call
+                      <Phone size={14} className="shrink-0" />
+                      <span>Request a Call</span>
                     </button>
                     
                     <a
@@ -605,7 +606,8 @@ export const BlogLandAssistant: React.FC = () => {
                       }}
                       className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm text-center"
                     >
-                      💬 Chat on WhatsApp
+                      <MessageCircle size={14} className="shrink-0" />
+                      <span>Chat on WhatsApp</span>
                     </a>
 
                     <button

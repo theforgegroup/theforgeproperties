@@ -3,7 +3,8 @@ import {
   Users, DollarSign, Award, Copy, Check, 
   Wallet, LayoutDashboard, LogOut, MessageSquare, Menu, X, 
   Landmark, History, FileText, Download, Play, Video, BookOpen, 
-  Bell, User, CheckCircle, Search, MessageCircle, FileDown
+  Bell, User, CheckCircle, Search, MessageCircle, FileDown,
+  MapPin, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProperties } from '../context/PropertyContext';
@@ -392,7 +393,7 @@ export const AgentDashboard: React.FC = () => {
     });
 
     if (matchedLead) {
-      setLeadDuplicateAlert(`⚠️ LEAD LOCKED PROCESS OVERRIDE: Phone/Email matches a client secured by another Realtor on ${new Date(matchedLead.date).toLocaleDateString()}. Original Realtor holds primary commission protection lock.`);
+      setLeadDuplicateAlert(`LEAD LOCKED PROCESS OVERRIDE: Phone/Email matches a client secured by another Realtor on ${new Date(matchedLead.date).toLocaleDateString()}. Original Realtor holds primary commission protection lock.`);
     } else {
       setLeadDuplicateAlert(null);
     }
@@ -1051,8 +1052,8 @@ export const AgentDashboard: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 text-[11px] font-medium text-slate-500 bg-slate-50 p-3 rounded-xl">
-                          <div>📍 Plots: <span className="font-bold text-forge-navy">Available</span></div>
-                          <div>📜 Title: <span className="font-bold text-forge-navy">C of O</span></div>
+                          <div className="flex items-center gap-1.5"><MapPin size={13} className="text-forge-gold shrink-0" /> <span>Plots: <span className="font-bold text-forge-navy">Available</span></span></div>
+                          <div className="flex items-center gap-1.5"><FileText size={13} className="text-forge-gold shrink-0" /> <span>Title: <span className="font-bold text-forge-navy">C of O</span></span></div>
                         </div>
                       </div>
                     </div>
@@ -1202,8 +1203,8 @@ export const AgentDashboard: React.FC = () => {
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                          <div>
                            <h4 className="text-base font-bold text-forge-navy">{brochure.property_name}</h4>
-                           <p className="text-xs text-slate-400 flex items-center gap-1">
-                             <span>📍 {brochure.property_location}</span>
+                           <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                             <span className="inline-flex items-center gap-1"><MapPin size={12} className="text-forge-gold shrink-0" /> {brochure.property_location}</span>
                              <span>•</span>
                              <span className="capitalize">{String(brochure.property_type)} Assets Package</span>
                            </p>
@@ -1475,8 +1476,9 @@ export const AgentDashboard: React.FC = () => {
                   )}
 
                   {leadDuplicateAlert && (
-                     <div className="p-4 bg-red-50 text-red-700 text-xs font-bold rounded-xl border border-red-100 leading-relaxed">
-                        {leadDuplicateAlert}
+                     <div className="p-4 bg-red-50 text-red-700 text-xs font-bold rounded-xl border border-red-100 leading-relaxed flex items-start gap-2.5">
+                        <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+                        <span>{leadDuplicateAlert}</span>
                      </div>
                   )}
 
@@ -1931,8 +1933,9 @@ export const AgentDashboard: React.FC = () => {
                       )}
 
                       {!photoUploading && photoError && (
-                        <div className="text-red-500 text-xs font-semibold px-2 text-center leading-relaxed">
-                          ⚠️ {photoError}
+                        <div className="text-red-500 text-xs font-semibold px-2 text-center leading-relaxed flex items-center justify-center gap-1.5">
+                          <AlertTriangle size={13} className="shrink-0" />
+                          <span>{photoError}</span>
                         </div>
                       )}
 
