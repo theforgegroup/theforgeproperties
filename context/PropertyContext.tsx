@@ -65,18 +65,6 @@ interface PropertyContextType {
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
-const broadcastLiveSync = (reason: string) => {
-  try {
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-      const channel = new BroadcastChannel('tfp_live_updates');
-      channel.postMessage({ type: 'LIVE_UPDATE', reason, timestamp: Date.now() });
-      channel.close();
-    }
-  } catch (e) {
-    console.debug('BroadcastChannel error:', e);
-  }
-};
-
 const DEFAULT_SETTINGS: SiteSettings = {
   contact_email: 'theforgeproperties@gmail.com',
   contact_email_2: 'info@theforgeproperties.com',
@@ -95,16 +83,6 @@ const DEFAULT_SETTINGS: SiteSettings = {
   whatsapp_group_link: 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t',
   min_payout_amount: 50000,
   logo: "",
-  hero_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop",
-  hero_headline: "Own Land. Own Your Future. Start Today.",
-  hero_subheadline: "We help young Nigerians own verified, titled land — affordably, transparently, and on their terms.",
-  hero_badge: "The Forge Properties • Land. Legacy. Growth.",
-  about_story_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop",
-  about_hero_image: "",
-  services_hero_image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop",
-  contact_banner_image: "",
-  nation_banner_image: "",
-  realtors_banner_image: "",
   ai_popup_enabled: true,
   ai_popup_headline: "Have Questions About Land or Property Investment?",
   ai_popup_body: "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
@@ -161,21 +139,24 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       ]);
 
       if (propsData && propsData.length > 0) {
-        // Put database properties first so admin updates and new properties are immediately shown!
-        const existingIds = new Set(propsData.map((p: Property) => p.id));
-        const existingSlugs = new Set(propsData.map((p: Property) => p.slug));
-        const missingDefaults = DEFAULT_PROPERTIES.filter(dp => !existingIds.has(dp.id) && !existingSlugs.has(dp.slug));
-        setProperties([...propsData, ...missingDefaults]);
+        const hasPrasino = propsData.some((p: Property) => p.slug === 'prasino-lush-phase-2' || (p.title && p.title.includes('Prasino')));
+        if (!hasPrasino) {
+          setProperties([...DEFAULT_PROPERTIES, ...propsData]);
+        } else {
+          setProperties(propsData);
+        }
       } else {
         setProperties(DEFAULT_PROPERTIES);
       }
       if (leadsData) setLeads(leadsData);
       if (subsData) setSubscribers(subsData);
       if (postsData && postsData.length > 0) {
-        const existingIds = new Set(postsData.map((p: BlogPost) => p.id));
-        const existingSlugs = new Set(postsData.map((p: BlogPost) => p.slug));
-        const missingDefaults = DEFAULT_BLOG_POSTS.filter(dp => !existingIds.has(dp.id) && !existingSlugs.has(dp.slug));
-        setPosts([...postsData, ...missingDefaults]);
+        const hasCustomPosts = postsData.some((p: BlogPost) => p.slug === 'how-to-buy-land-in-nigeria-from-diaspora-without-scams');
+        if (!hasCustomPosts) {
+          setPosts([...DEFAULT_BLOG_POSTS, ...postsData]);
+        } else {
+          setPosts(postsData);
+        }
       } else {
         setPosts(DEFAULT_BLOG_POSTS);
       }
@@ -194,23 +175,13 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
           contact_email_2 = parts[1]?.trim() || '';
         }
 
-        // Unpack AI & image customization settings from listing_agent jsonb
+        // Unpack AI settings from listing_agent jsonb
         const {
           ai_popup_enabled = true,
           ai_popup_headline = "Have Questions About Land or Property Investment?",
           ai_popup_body = "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
           ai_popup_cta = "Ask The Forge AI",
           ai_floating_button_enabled = true,
-          hero_image = DEFAULT_SETTINGS.hero_image,
-          hero_headline = DEFAULT_SETTINGS.hero_headline,
-          hero_subheadline = DEFAULT_SETTINGS.hero_subheadline,
-          hero_badge = DEFAULT_SETTINGS.hero_badge,
-          about_story_image = DEFAULT_SETTINGS.about_story_image,
-          about_hero_image = DEFAULT_SETTINGS.about_hero_image,
-          services_hero_image = DEFAULT_SETTINGS.services_hero_image,
-          contact_banner_image = DEFAULT_SETTINGS.contact_banner_image,
-          nation_banner_image = DEFAULT_SETTINGS.nation_banner_image,
-          realtors_banner_image = DEFAULT_SETTINGS.realtors_banner_image,
           ...cleanListingAgent
         } = settingsData.listing_agent || {};
 
@@ -220,16 +191,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
           contact_email,
           contact_email_2,
           listing_agent: cleanListingAgent,
-          hero_image: settingsData.hero_image || hero_image || DEFAULT_SETTINGS.hero_image,
-          hero_headline: settingsData.hero_headline || hero_headline || DEFAULT_SETTINGS.hero_headline,
-          hero_subheadline: settingsData.hero_subheadline || hero_subheadline || DEFAULT_SETTINGS.hero_subheadline,
-          hero_badge: settingsData.hero_badge || hero_badge || DEFAULT_SETTINGS.hero_badge,
-          about_story_image: settingsData.about_story_image || about_story_image || DEFAULT_SETTINGS.about_story_image,
-          about_hero_image: settingsData.about_hero_image || about_hero_image || DEFAULT_SETTINGS.about_hero_image,
-          services_hero_image: settingsData.services_hero_image || services_hero_image || DEFAULT_SETTINGS.services_hero_image,
-          contact_banner_image: settingsData.contact_banner_image || contact_banner_image || DEFAULT_SETTINGS.contact_banner_image,
-          nation_banner_image: settingsData.nation_banner_image || nation_banner_image || DEFAULT_SETTINGS.nation_banner_image,
-          realtors_banner_image: settingsData.realtors_banner_image || realtors_banner_image || DEFAULT_SETTINGS.realtors_banner_image,
           ai_popup_enabled,
           ai_popup_headline,
           ai_popup_body,
@@ -246,47 +207,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     fetchData();
-
-    // 1. Supabase Realtime channel for live multi-user / multi-tab database updates
-    const channel = supabase
-      .channel('tfp-realtime-sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'properties' }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'neighborhoods' }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => {
-        fetchData();
-      })
-      .subscribe();
-
-    // 2. Instant Cross-tab BroadcastChannel listener
-    let bc: BroadcastChannel | null = null;
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-      bc = new BroadcastChannel('tfp_live_updates');
-      bc.onmessage = () => {
-        fetchData();
-      };
-    }
-
-    // 3. Tab focus listener (when user switches between admin tab and public site)
-    const onFocus = () => {
-      fetchData();
-    };
-    window.addEventListener('focus', onFocus);
-
-    return () => {
-      supabase.removeChannel(channel);
-      if (bc) bc.close();
-      window.removeEventListener('focus', onFocus);
-    };
   }, []);
 
   const addNeighborhood = async (neighborhood: Neighborhood) => {
@@ -414,7 +334,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
     if (error) throw error;
     setProperties(prev => [property, ...prev]);
-    broadcastLiveSync('PROPERTY_ADDED');
   };
 
   const updateProperty = async (updatedProperty: Property) => {
@@ -427,14 +346,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
     if (error) throw error;
     setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
-    broadcastLiveSync('PROPERTY_UPDATED');
   };
 
   const deleteProperty = async (id: string) => {
     const { error } = await supabase.from('properties').delete().eq('id', id);
     if (error) throw error;
     setProperties(prev => prev.filter(p => p.id !== id));
-    broadcastLiveSync('PROPERTY_DELETED');
   };
 
   const addLead = async (lead: Lead) => {
@@ -474,7 +391,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       throw error;
     }
     setPosts(prev => [cleanPost, ...prev]);
-    broadcastLiveSync('POST_ADDED');
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
@@ -484,14 +400,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       throw error;
     }
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
-    broadcastLiveSync('POST_UPDATED');
   };
 
   const deletePost = async (id: string) => {
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (error) throw error;
     setPosts(prev => prev.filter(p => p.id !== id));
-    broadcastLiveSync('POST_DELETED');
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
@@ -499,7 +413,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { contact_email_2, ...payload } = newSettings;
       const dbPayload: Partial<SiteSettings> & { id?: number } = { ...payload };
 
-      // Pack AI settings & image settings into listing_agent jsonb object for reliable database storage
+      // Pack AI settings into listing_agent jsonb object for database storage
       dbPayload.listing_agent = {
         ...(newSettings.listing_agent || {}),
         ai_popup_enabled: newSettings.ai_popup_enabled,
@@ -507,16 +421,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         ai_popup_body: newSettings.ai_popup_body,
         ai_popup_cta: newSettings.ai_popup_cta,
         ai_floating_button_enabled: newSettings.ai_floating_button_enabled,
-        hero_image: newSettings.hero_image,
-        hero_headline: newSettings.hero_headline,
-        hero_subheadline: newSettings.hero_subheadline,
-        hero_badge: newSettings.hero_badge,
-        about_story_image: newSettings.about_story_image,
-        about_hero_image: newSettings.about_hero_image,
-        services_hero_image: newSettings.services_hero_image,
-        contact_banner_image: newSettings.contact_banner_image,
-        nation_banner_image: newSettings.nation_banner_image,
-        realtors_banner_image: newSettings.realtors_banner_image,
       };
 
       // Delete these custom settings from dbPayload since they are virtual top-level fields not present in postgres DB columns
@@ -525,16 +429,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       delete dbPayload.ai_popup_body;
       delete dbPayload.ai_popup_cta;
       delete dbPayload.ai_floating_button_enabled;
-      delete dbPayload.hero_image;
-      delete dbPayload.hero_headline;
-      delete dbPayload.hero_subheadline;
-      delete dbPayload.hero_badge;
-      delete dbPayload.about_story_image;
-      delete dbPayload.about_hero_image;
-      delete dbPayload.services_hero_image;
-      delete dbPayload.contact_banner_image;
-      delete dbPayload.nation_banner_image;
-      delete dbPayload.realtors_banner_image;
       
       if (contact_email_2 && contact_email_2.trim()) {
         dbPayload.contact_email = `${newSettings.contact_email || ''};${contact_email_2.trim()}`;
@@ -546,7 +440,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         throw error;
       }
       setSettings(newSettings);
-      broadcastLiveSync('SETTINGS_UPDATED');
     } catch (err) {
       console.error('updateSettings failed:', err);
       throw err;

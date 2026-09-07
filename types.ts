@@ -175,16 +175,6 @@ export interface SiteSettings {
   whatsapp_group_link: string;
   min_payout_amount: number;
   logo?: string;
-  hero_image?: string;
-  hero_headline?: string;
-  hero_subheadline?: string;
-  hero_badge?: string;
-  about_story_image?: string;
-  about_hero_image?: string;
-  services_hero_image?: string;
-  contact_banner_image?: string;
-  nation_banner_image?: string;
-  realtors_banner_image?: string;
   ai_popup_enabled?: boolean;
   ai_popup_headline?: string;
   ai_popup_body?: string;
