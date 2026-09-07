@@ -249,7 +249,7 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                 id="submit-enquiry-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm py-3.5 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 min-h-[44px]"
+                className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm py-3.5 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 min-h-[44px]"
               >
                 <span>{isSubmitting ? 'Submitting Enquiry...' : 'Submit Property Enquiry'}</span>
                 <ArrowRight size={16} />

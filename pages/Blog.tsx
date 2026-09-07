@@ -170,7 +170,7 @@ export const Blog: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm px-6 py-3 rounded-[8px] transition-all min-h-[44px] shrink-0 disabled:opacity-50 shadow-md"
+                  className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-6 py-3 rounded-[8px] transition-all min-h-[44px] shrink-0 disabled:opacity-50 shadow-md"
                 >
                   {loading ? 'Subscribing...' : 'Subscribe'}
                 </button>

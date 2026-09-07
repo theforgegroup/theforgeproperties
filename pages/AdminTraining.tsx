@@ -238,7 +238,7 @@ export const AdminTraining: React.FC = () => {
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-forge-gold text-forge-navy font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded flex items-center gap-2 hover:bg-forge-navy hover:text-white transition-all shadow-md cursor-pointer"
+              className="bg-forge-gold hover:bg-forge-navy text-white font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded flex items-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <Plus size={16} /> Upload New Material
             </button>
@@ -425,7 +425,7 @@ export const AdminTraining: React.FC = () => {
                 <button
                   type="submit"
                   disabled={formUploading}
-                  className="bg-forge-navy hover:bg-forge-gold hover:text-forge-navy text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all cursor-pointer w-full md:w-auto shrink-0 shadow"
+                  className="bg-forge-navy hover:bg-forge-gold text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all cursor-pointer w-full md:w-auto shrink-0 shadow"
                 >
                   {formUploading ? `Saving Lesson Metadata... [${uploadProgress}%]` : 'Confirm lesson release'}
                 </button>

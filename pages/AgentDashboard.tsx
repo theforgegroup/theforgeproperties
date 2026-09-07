@@ -36,13 +36,13 @@ const NavItem: React.FC<NavItemProps & { activeTab: string; setActiveTab: (id: N
     className={`
       w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-300 group
       ${activeTab === id 
-        ? 'bg-forge-gold text-forge-navy shadow-lg shadow-forge-gold/10 font-bold translate-x-1' 
+        ? 'bg-forge-gold text-white shadow-lg shadow-forge-gold/10 font-bold translate-x-1' 
         : 'text-slate-400 hover:text-white hover:bg-white/5'}
     `}
   >
     <Icon size={18} className={`transition-transform duration-300 ${activeTab === id ? 'scale-110' : 'group-hover:scale-110'}`} />
     <span className="text-xs uppercase tracking-widest font-bold">{label}</span>
-    {activeTab === id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-forge-navy" />}
+    {activeTab === id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
   </button>
 );
 
@@ -1179,7 +1179,7 @@ export const AgentDashboard: React.FC = () => {
                  </div>
                  <button 
                    onClick={() => handleDownload('logo-kit', 'Corporate Branding Assets bundle')}
-                   className="bg-forge-gold text-forge-navy px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shrink-0 cursor-pointer"
+                   className="bg-forge-gold hover:bg-forge-navy text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer"
                  >
                    Download TFP Brand Kit
                  </button>
@@ -1218,7 +1218,7 @@ export const AgentDashboard: React.FC = () => {
                                navigator.clipboard.writeText(brochure.referral_link);
                                alert("Your custom agent referral link is copied! Leads from this link will automatically lock to your account.");
                              }}
-                             className="bg-forge-navy hover:bg-forge-gold hover:text-forge-navy text-white text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                             className="bg-forge-navy hover:bg-forge-gold text-white text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
                            >
                              <Copy size={12} /> Copy Referral
                            </button>
@@ -1293,7 +1293,7 @@ export const AgentDashboard: React.FC = () => {
                 <div className="relative z-10 w-full md:w-auto select-none">
                   <button 
                     onClick={() => setShowPayoutModal(true)}
-                    className="w-full md:w-auto bg-forge-gold hover:bg-white text-forge-navy px-10 py-4.5 rounded-2xl font-bold uppercase tracking-wider text-xs shadow-xl shadow-forge-gold/10 transition-all text-center"
+                    className="w-full md:w-auto bg-forge-gold hover:bg-forge-navy text-white px-10 py-4.5 rounded-2xl font-bold uppercase tracking-wider text-xs shadow-xl shadow-forge-gold/10 transition-all text-center"
                   >
                     Request Payout
                   </button>

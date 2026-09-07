@@ -29,7 +29,7 @@ export const AdminBlog: React.FC = () => {
         </div>
         <button 
           onClick={() => navigate('/admin/blog/new')}
-          className="bg-forge-gold text-forge-navy px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-white border border-transparent hover:border-forge-gold transition-all shadow-md"
+          className="bg-forge-gold hover:bg-forge-navy text-white px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-md"
         >
           <Plus size={16} /> Add New Post
         </button>

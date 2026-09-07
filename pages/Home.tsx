@@ -142,7 +142,7 @@ export const Home: React.FC = () => {
               <Link
                 id="hero-explore-btn"
                 to="/properties"
-                className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base px-8 py-4 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 shadow-lg shadow-[#C9962A]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                className="bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base px-8 py-4 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 shadow-lg shadow-[#C9962A]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <span>Explore Properties</span>
                 <ArrowRight size={18} />
@@ -617,7 +617,7 @@ export const Home: React.FC = () => {
             <Link
               id="become-a-realtor-btn"
               to="/join-realtors"
-              className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-xs sm:text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-1.5 transition-all shrink-0"
+              className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-1.5 transition-all shrink-0"
             >
               <span>Become a Realtor</span>
               <ArrowRight size={14} />
@@ -662,7 +662,7 @@ export const Home: React.FC = () => {
                     id="home-newsletter-submit"
                     type="submit"
                     disabled={newsletterLoading}
-                    className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm px-6 py-3 rounded-[8px] transition-all min-h-[44px] shrink-0 disabled:opacity-50"
+                    className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-6 py-3 rounded-[8px] transition-all min-h-[44px] shrink-0 disabled:opacity-50"
                   >
                     {newsletterLoading ? 'Subscribing...' : 'Subscribe'}
                   </button>

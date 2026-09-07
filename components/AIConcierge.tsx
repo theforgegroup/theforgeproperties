@@ -48,8 +48,8 @@ export const AIConcierge: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all duration-300 hover:scale-105 flex items-center justify-center font-serif font-bold tracking-widest ${
           isOpen 
-            ? 'bg-forge-dark text-forge-gold w-14 h-14 rounded-full rotate-90' 
-            : 'bg-forge-navy text-forge-gold px-6 py-4 rounded-full border border-forge-gold/30 shadow-forge-navy/50 gap-3'
+            ? 'bg-forge-dark text-white w-14 h-14 rounded-full rotate-90' 
+            : 'bg-forge-navy text-white px-6 py-4 rounded-full border border-forge-gold/30 shadow-forge-navy/50 gap-3'
         }`}
         aria-label="Open The Forge AI"
       >
@@ -57,8 +57,8 @@ export const AIConcierge: React.FC = () => {
           <X size={24} />
         ) : (
           <>
-            <Sparkles size={20} className="animate-pulse" />
-            <span className="whitespace-nowrap text-xs md:text-sm">THE FORGE AI</span>
+            <Sparkles size={20} className="animate-pulse text-forge-gold" />
+            <span className="whitespace-nowrap text-xs md:text-sm text-white">THE FORGE AI</span>
           </>
         )}
       </button>
@@ -129,7 +129,7 @@ export const AIConcierge: React.FC = () => {
             <button 
               type="submit" 
               disabled={isLoading || !inputText.trim()}
-              className="bg-forge-gold text-forge-navy p-3 rounded-full hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-forge-gold/20"
+              className="bg-forge-gold text-white p-3 rounded-full hover:bg-[#B38322] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-forge-gold/20"
             >
               <Send size={18} />
             </button>

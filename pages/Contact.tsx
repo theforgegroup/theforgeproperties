@@ -350,7 +350,7 @@ export const Contact: React.FC = () => {
                       id="contact-submit-btn"
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg min-h-[44px] disabled:opacity-50"
+                      className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg min-h-[44px] disabled:opacity-50"
                     >
                       <Send size={18} />
                       <span>{isSubmitting ? 'Sending Message...' : 'Send Message'}</span>

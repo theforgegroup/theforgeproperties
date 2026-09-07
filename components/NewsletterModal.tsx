@@ -108,7 +108,7 @@ export const NewsletterModal: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm py-3 rounded-[8px] transition-all min-h-[44px] shadow-md hover:shadow-lg flex items-center justify-center"
+                  className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm py-3 rounded-[8px] transition-all min-h-[44px] shadow-md hover:shadow-lg flex items-center justify-center"
                 >
                   Subscribe for Free
                 </button>

@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
             <Link 
               id="desktop-explore-cta"
               to="/properties"
-              className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-98"
+              className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-98"
             >
               <span>Explore Properties</span>
               <ArrowRight size={16} />
@@ -103,7 +103,7 @@ export const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center gap-2">
             <Link 
               to="/properties"
-              className="sm:hidden bg-[#C9962A] text-[#1A2847] font-bold text-xs px-3 py-2 rounded-[8px] min-h-[40px] flex items-center"
+              className="sm:hidden bg-[#C9962A] text-white font-bold text-xs px-3 py-2 rounded-[8px] min-h-[40px] flex items-center"
             >
               Explore
             </Link>
@@ -153,7 +153,7 @@ export const Navbar: React.FC = () => {
             <Link 
               to="/properties"
               onClick={() => setIsOpen(false)}
-              className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-base py-3.5 inline-flex items-center justify-center gap-2 rounded-[8px] shadow-lg min-h-[44px]"
+              className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-base py-3.5 inline-flex items-center justify-center gap-2 rounded-[8px] shadow-lg min-h-[44px]"
             >
               <span>Explore Properties</span>
               <ArrowRight size={18} />

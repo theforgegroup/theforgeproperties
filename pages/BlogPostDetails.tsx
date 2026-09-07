@@ -117,7 +117,7 @@ export const BlogPostDetails: React.FC = () => {
           <p className="text-slate-600 mb-6 text-sm">We couldn't locate the guide you're looking for.</p>
           <Link 
             to="/blog" 
-            className="inline-flex items-center gap-2 bg-[#C9962A] text-[#1A2847] px-6 py-3 font-bold text-sm rounded-[8px]"
+            className="inline-flex items-center gap-2 bg-[#C9962A] hover:bg-[#B38322] text-white px-6 py-3 font-bold text-sm rounded-[8px] transition-all"
           >
             <ArrowLeft size={16} />
             <span>Return to Blog</span>
@@ -222,7 +222,7 @@ export const BlogPostDetails: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <button
               onClick={() => setIsEnquiryOpen(true)}
-              className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm px-6 py-3.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 shadow-md transition-all"
+              className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-6 py-3.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 shadow-md transition-all"
             >
               <span>Enquire About Prasino Lush</span>
               <ArrowRight size={16} />

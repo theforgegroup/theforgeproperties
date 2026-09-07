@@ -188,7 +188,7 @@ export const Properties: React.FC = () => {
               <p className="text-xs text-slate-500 mb-6">Try resetting your location, plot size, or price range filters.</p>
               <button
                 onClick={resetFilters}
-                className="bg-[#C9962A] text-[#1A2847] font-bold text-xs px-5 py-2.5 rounded-[8px] min-h-[44px]"
+                className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-xs px-5 py-2.5 rounded-[8px] min-h-[44px] transition-all"
               >
                 Reset Filters
               </button>
@@ -384,7 +384,7 @@ export const Properties: React.FC = () => {
                       const p = properties.find(x => x.slug === 'prasino-lush-phase-2') || properties[0];
                       handleOpenEnquiry(p, '150 SQM');
                     }}
-                    className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-bold text-sm px-6 py-3.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-2 shadow-lg"
+                    className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-6 py-3.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-2 shadow-lg"
                   >
                     <span>Enquire About Prasino Lush Phase 2</span>
                     <ArrowRight size={16} />

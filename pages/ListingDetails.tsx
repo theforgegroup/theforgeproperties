@@ -46,7 +46,7 @@ export const ListingDetails: React.FC = () => {
           <p className="text-slate-600 mb-6 text-sm">We couldn't locate the property you are looking for.</p>
           <Link 
             to="/properties" 
-            className="inline-flex items-center gap-2 bg-[#C9962A] text-[#1A2847] px-6 py-3 font-bold text-sm rounded-[8px]"
+            className="inline-flex items-center gap-2 bg-[#C9962A] hover:bg-[#B38322] text-white px-6 py-3 font-bold text-sm rounded-[8px] transition-all"
           >
             <ArrowLeft size={16} />
             <span>Browse All Land</span>
@@ -281,7 +281,7 @@ export const ListingDetails: React.FC = () => {
                     <button
                       id="property-detail-enquire-btn"
                       onClick={() => setIsEnquiryOpen(true)}
-                      className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base py-3.5 px-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg min-h-[44px]"
+                      className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base py-3.5 px-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg min-h-[44px]"
                     >
                       <span>Enquire Now</span>
                     </button>

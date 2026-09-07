@@ -331,7 +331,7 @@ export const TheForgeNation: React.FC = () => {
                       onClick={() => setLocationType('Nigeria')}
                       className={`py-3 px-4 text-xs font-bold rounded-[8px] border transition-all flex items-center justify-center gap-2 min-h-[44px] ${
                         locationType === 'Nigeria'
-                          ? 'bg-[#C9962A] text-[#1A2847] border-[#C9962A]'
+                          ? 'bg-[#C9962A] text-white border-[#C9962A]'
                           : 'bg-white/10 text-white border-white/20 hover:border-[#C9962A]'
                       }`}
                     >
@@ -342,7 +342,7 @@ export const TheForgeNation: React.FC = () => {
                       onClick={() => setLocationType('Diaspora')}
                       className={`py-3 px-4 text-xs font-bold rounded-[8px] border transition-all flex items-center justify-center gap-2 min-h-[44px] ${
                         locationType === 'Diaspora'
-                          ? 'bg-[#C9962A] text-[#1A2847] border-[#C9962A]'
+                          ? 'bg-[#C9962A] text-white border-[#C9962A]'
                           : 'bg-white/10 text-white border-white/20 hover:border-[#C9962A]'
                       }`}
                     >
@@ -358,7 +358,7 @@ export const TheForgeNation: React.FC = () => {
                     id="join-the-forge-nation-btn"
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl min-h-[44px] disabled:opacity-50"
+                    className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl min-h-[44px] disabled:opacity-50"
                   >
                     <span>{isSubmitting ? 'Processing...' : 'Join The Forge Nation'}</span>
                     <ArrowRight size={18} />

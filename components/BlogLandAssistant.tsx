@@ -591,7 +591,7 @@ export const BlogLandAssistant: React.FC = () => {
                         setLeadMsg("Requested direct callback from a professional property specialist after chatting with Forge AI on the Blog.");
                         setShowLeadPrompt(false);
                       }}
-                      className="w-full bg-forge-gold hover:bg-white text-forge-navy font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      className="w-full bg-forge-gold hover:bg-[#B38322] text-white font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Phone size={14} className="shrink-0" />
                       <span>Request a Call</span>

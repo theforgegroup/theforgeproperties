@@ -94,7 +94,7 @@ export const JoinRealtors: React.FC = () => {
           <div className="mt-8 flex justify-center">
             <a
               href="#realtor-form-section"
-              className="bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base px-8 py-3.5 rounded-[8px] min-h-[44px] inline-flex items-center gap-2 shadow-lg transition-all"
+              className="bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base px-8 py-3.5 rounded-[8px] min-h-[44px] inline-flex items-center gap-2 shadow-lg transition-all"
             >
               <span>Apply to Join Now</span>
               <ArrowRight size={18} />
@@ -400,7 +400,7 @@ export const JoinRealtors: React.FC = () => {
                     id="apply-to-join-realtors-btn"
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#C9962A] hover:bg-[#B38322] text-[#1A2847] font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl min-h-[44px] disabled:opacity-50"
+                    className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-extrabold text-base py-4 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl min-h-[44px] disabled:opacity-50"
                   >
                     <span>{isSubmitting ? 'Submitting Application...' : 'Apply to Join'}</span>
                     <ArrowRight size={18} />
