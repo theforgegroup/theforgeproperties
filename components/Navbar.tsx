@@ -31,14 +31,14 @@ export const Navbar: React.FC = () => {
     <header 
       className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 py-3' 
-          : 'bg-white/80 backdrop-blur-sm border-b border-slate-100 py-4'
+          ? 'bg-[#0057FF] shadow-md border-b border-[#C8FF00]/30 py-3' 
+          : 'bg-[#0057FF] border-b border-[#C8FF00]/20 py-4'
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         <div className="flex items-center justify-between">
           
-          {/* Logo Left - Wordmark in Navy */}
+          {/* Logo Left - Wordmark in White & Yellow-Green */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2.5 group" id="nav-brand-logo">
               {settings.logo ? (
@@ -49,14 +49,14 @@ export const Navbar: React.FC = () => {
                 />
               ) : (
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-[8px] bg-[#1A2847] flex items-center justify-center text-[#C9962A] shadow-sm">
-                    <ShieldCheck className="w-5 h-5 text-[#C9962A]" />
+                  <div className="w-9 h-9 rounded-[8px] bg-[#C8FF00] flex items-center justify-center text-[#0A0A0A] shadow-sm">
+                    <ShieldCheck className="w-5 h-5 text-[#0A0A0A]" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xl font-extrabold tracking-tight text-[#1A2847] font-display">
+                    <span className="text-xl font-extrabold tracking-tight text-white font-display">
                       THE FORGE
                     </span>
-                    <span className="text-[10px] uppercase tracking-[2px] text-[#C9962A] font-bold -mt-1">
+                    <span className="text-[10px] uppercase tracking-[2px] text-[#C8FF00] font-bold -mt-1">
                       PROPERTIES
                     </span>
                   </div>
@@ -77,8 +77,8 @@ export const Navbar: React.FC = () => {
                   to={link.path}
                   className={`text-[13.5px] font-semibold transition-colors duration-200 ${
                     isActive 
-                      ? 'text-[#C9962A] font-bold border-b-2 border-[#C9962A] pb-0.5' 
-                      : 'text-[#1A1A1A]/85 hover:text-[#C9962A]'
+                      ? 'text-[#C8FF00] font-bold border-b-2 border-[#C8FF00] pb-0.5' 
+                      : 'text-white/90 hover:text-[#C8FF00]'
                   }`}
                 >
                   {link.name}
@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
             <Link 
               id="desktop-explore-cta"
               to="/properties"
-              className="bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-98"
+              className="bg-[#C8FF00] hover:bg-[#b5e600] text-[#0A0A0A] font-bold text-sm px-5 py-2.5 rounded-[8px] min-h-[44px] inline-flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-98"
             >
               <span>Explore Properties</span>
               <ArrowRight size={16} />
@@ -103,18 +103,18 @@ export const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center gap-2">
             <Link 
               to="/properties"
-              className="sm:hidden bg-[#C9962A] text-white font-bold text-xs px-3 py-2 rounded-[8px] min-h-[40px] flex items-center"
+              className="sm:hidden bg-[#C8FF00] text-[#0A0A0A] font-bold text-xs px-3 py-2 rounded-[8px] min-h-[40px] flex items-center"
             >
               Explore
             </Link>
             <button 
               id="mobile-menu-toggle"
-              className="text-[#1A2847] p-2 focus:outline-none rounded-[8px] hover:bg-slate-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="text-white p-2 focus:outline-none rounded-[8px] hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle navigation menu"
               aria-expanded={isOpen}
             >
-              {isOpen ? <X size={26} className="text-[#C9962A]" /> : <Menu size={26} />}
+              {isOpen ? <X size={26} className="text-[#C8FF00]" /> : <Menu size={26} />}
             </button>
           </div>
         </div>
@@ -123,7 +123,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Slide-down Drawer */}
       {isOpen && (
         <div 
-          className="lg:hidden fixed inset-0 top-[65px] left-0 w-full h-[calc(100vh-65px)] bg-[#1A2847] text-white z-[110] flex flex-col justify-between p-6 sm:p-8 overflow-y-auto animate-fadeIn"
+          className="lg:hidden fixed inset-0 top-[65px] left-0 w-full h-[calc(100vh-65px)] bg-[#0057FF] text-white z-[110] flex flex-col justify-between p-6 sm:p-8 overflow-y-auto animate-fadeIn"
           onClick={() => setIsOpen(false)}
         >
           <div className="flex flex-col space-y-4 my-auto pt-4" onClick={(e) => e.stopPropagation()}>
@@ -136,29 +136,29 @@ export const Navbar: React.FC = () => {
                   key={link.name}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
-                  className={`text-lg sm:text-xl font-bold transition-all py-2 border-b border-white/10 flex items-center justify-between ${
+                  className={`text-lg sm:text-xl font-bold transition-all py-2 border-b border-[#C8FF00]/30 flex items-center justify-between ${
                     isActive 
-                      ? 'text-[#C9962A] pl-2 border-l-4 border-l-[#C9962A]' 
-                      : 'text-white hover:text-[#C9962A]'
+                      ? 'text-[#C8FF00] pl-2 border-l-4 border-l-[#C8FF00]' 
+                      : 'text-white hover:text-[#C8FF00]'
                   }`}
                 >
                   <span>{link.name}</span>
-                  <ArrowRight size={16} className={isActive ? 'text-[#C9962A]' : 'opacity-40'} />
+                  <ArrowRight size={16} className={isActive ? 'text-[#C8FF00]' : 'opacity-40'} />
                 </Link>
               );
             })}
           </div>
 
-          <div className="pt-6 border-t border-white/10 space-y-3" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-6 border-t border-[#C8FF00]/30 space-y-3" onClick={(e) => e.stopPropagation()}>
             <Link 
               to="/properties"
               onClick={() => setIsOpen(false)}
-              className="w-full bg-[#C9962A] hover:bg-[#B38322] text-white font-bold text-base py-3.5 inline-flex items-center justify-center gap-2 rounded-[8px] shadow-lg min-h-[44px]"
+              className="w-full bg-[#C8FF00] hover:bg-[#b5e600] text-[#0A0A0A] font-bold text-base py-3.5 inline-flex items-center justify-center gap-2 rounded-[8px] shadow-lg min-h-[44px]"
             >
               <span>Explore Properties</span>
               <ArrowRight size={18} />
             </Link>
-            <p className="text-center text-xs text-white/60">
+            <p className="text-center text-xs text-white/70">
               Verified, Titled Land • Kobape & Lagos Growth Corridor
             </p>
           </div>

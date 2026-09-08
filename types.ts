@@ -175,6 +175,29 @@ export interface SiteSettings {
   whatsapp_group_link: string;
   min_payout_amount: number;
   logo?: string;
+  // Homepage Hero & Visuals
+  hero_image?: string;
+  hero_headline?: string;
+  hero_subheadline?: string;
+  hero_badge_text?: string;
+  hero_partner_name?: string;
+  home_story_image?: string;
+  home_cta_image?: string;
+  // Homepage Stats Bar
+  stat_active_realtors?: string;
+  stat_plots_available?: string;
+  stat_verified_partners?: string;
+  stat_titled_land?: string;
+  // Dedicated Page Images & Banners
+  about_hero_image?: string;
+  about_story_image?: string;
+  properties_hero_image?: string;
+  contact_hero_image?: string;
+  blog_hero_image?: string;
+  forge_nation_hero_image?: string;
+  join_realtors_hero_image?: string;
+  services_hero_image?: string;
+  // AI assistant settings
   ai_popup_enabled?: boolean;
   ai_popup_headline?: string;
   ai_popup_body?: string;

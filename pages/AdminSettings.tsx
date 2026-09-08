@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 /* Added Landmark to imports */
-import { Save, Mail, Phone, MapPin, Upload, Loader2, Database, MessageCircle, Landmark, BadgeCheck, Trash2, Plus, X, User, Bot, Sparkles } from 'lucide-react';
+import { 
+  Save, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Upload, 
+  Loader2, 
+  Database, 
+  MessageCircle, 
+  Landmark, 
+  BadgeCheck, 
+  Trash2, 
+  Plus, 
+  X, 
+  User, 
+  Bot, 
+  Sparkles,
+  Image as ImageIcon,
+  BarChart3,
+  Globe
+} from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { SiteSettings } from '../types';
@@ -8,7 +28,7 @@ import { AdminLayout } from '../components/AdminLayout';
 import { resizeImage } from '../utils/imageUtils';
 
 export const AdminSettings: React.FC = () => {
-  const { settings, updateSettings, seedDatabase, isLoading } = useProperties();
+  const { settings, updateSettings, seedDatabase } = useProperties();
   const [formData, setFormData] = useState<SiteSettings>(settings);
   const [isInitialized, setIsInitialized] = useState(false);
   const [message, setMessage] = useState('');
@@ -17,11 +37,11 @@ export const AdminSettings: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
   
   useEffect(() => {
-    if (settings && !isLoading && !isInitialized) {
+    if (settings && !isInitialized) {
       setFormData(settings);
       setIsInitialized(true);
     }
-  }, [settings, isLoading, isInitialized]);
+  }, [settings, isInitialized]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +49,10 @@ export const AdminSettings: React.FC = () => {
     setMessage('');
 
     try {
-      console.log('Attempting to save settings:', formData);
       await updateSettings(formData);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setIsError(false);
-      setMessage('Settings updated successfully!');
-      // Keep message visible longer for user to see
+      setMessage('Settings updated successfully! Changes are live across the entire website.');
       setTimeout(() => setMessage(''), 5000);
     } catch (err: unknown) {
       console.error('Form submission error:', err);
@@ -51,6 +69,36 @@ export const AdminSettings: React.FC = () => {
       setIsSeeding(true);
       await seedDatabase();
       setIsSeeding(false);
+    }
+  };
+
+  const handleSingleImageUpload = async (field: keyof SiteSettings, file: File) => {
+    setIsSaving(true);
+    setMessage('');
+    try {
+      const base64String = await resizeImage(file, 1920, 1080);
+      const { dataURLtoBlob } = await import('../utils/imageUtils');
+      const { uploadImage } = await import('../lib/supabaseClient');
+      const blob = dataURLtoBlob(base64String);
+      const fileName = `${String(field)}-${Date.now()}.${file.name.split('.').pop()}`;
+      const publicUrl = await uploadImage('site-assets', fileName, blob);
+      const updatedData = { ...formData, [field]: publicUrl };
+      setFormData(updatedData);
+
+      // Instantly auto-save so user sees changes live on the frontend without extra steps
+      try {
+        await updateSettings(updatedData);
+        setMessage(`${String(field).replace(/_/g, ' ')} uploaded & updated live on website!`);
+        setTimeout(() => setMessage(''), 6000);
+      } catch {
+        setMessage(`${String(field).replace(/_/g, ' ')} uploaded! Click "Save All Changes" below to persist.`);
+      }
+    } catch (err: unknown) {
+      console.error('Image upload error:', err);
+      setIsError(true);
+      setMessage(`Image upload failed: ${extractErrorMessage(err)}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -93,11 +141,123 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  // Reusable image upload & preview box
+  const renderImageUploader = (
+    fieldKey: keyof SiteSettings, 
+    label: string, 
+    description: string, 
+    recommendedSize: string = "Recommended: 1920x1080px JPG/PNG"
+  ) => {
+    const imageUrl = formData[fieldKey] as string | undefined;
+    const inputId = `upload-input-${String(fieldKey)}`;
+
+    return (
+      <div className="p-6 bg-[#F5F5F5] rounded-2xl border border-[#E0E4FF] space-y-4">
+        <div>
+          <h4 className="font-bold text-[#0A0A0A] text-sm">{label}</h4>
+          <p className="text-slate-500 text-xs">{description}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="w-full sm:w-48 h-32 bg-white border-2 border-dashed border-[#E0E4FF] rounded-xl overflow-hidden relative group shrink-0 flex items-center justify-center">
+            {imageUrl ? (
+              <>
+                <img src={imageUrl} alt={label} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const updated = { ...formData, [fieldKey]: '' };
+                    setFormData(updated);
+                    try {
+                      await updateSettings(updated);
+                    } catch {
+                      // Ignore error
+                    }
+                  }}
+                  className="absolute inset-0 bg-[#0057FF]/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs gap-1"
+                >
+                  <Trash2 size={18} />
+                  <span>Remove</span>
+                </button>
+              </>
+            ) : (
+              <div className="text-slate-300 flex flex-col items-center gap-1.5 p-4 text-center">
+                <ImageIcon size={28} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">No Image</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-3 w-full">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => document.getElementById(inputId)?.click()}
+                disabled={isSaving}
+                className="bg-[#0057FF] hover:bg-[#0047D6] px-4 py-2.5 rounded-lg text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                <span>Upload From Device</span>
+              </button>
+
+              <input
+                id={inputId}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleSingleImageUpload(fieldKey, file);
+                }}
+              />
+
+              {imageUrl && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const updated = { ...formData, [fieldKey]: '' };
+                    setFormData(updated);
+                    try {
+                      await updateSettings(updated);
+                    } catch {
+                      // Ignore error
+                    }
+                  }}
+                  className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1"
+                >
+                  Clear Image
+                </button>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                Or enter image URL directly:
+              </label>
+              <input
+                type="url"
+                value={imageUrl || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, [fieldKey]: e.target.value }))}
+                placeholder="https://images.unsplash.com/... or https://..."
+                className="w-full bg-white border border-[#E0E4FF] rounded-lg p-2.5 text-xs text-[#0A0A0A] focus:border-[#0057FF] focus:outline-none"
+              />
+            </div>
+
+            <p className="text-[10px] text-slate-400">{recommendedSize}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-4xl">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-serif text-forge-navy font-bold">Site Configuration</h1>
+          <div>
+            <h1 className="text-3xl font-serif text-forge-navy font-bold">Site Configuration</h1>
+            <p className="text-slate-500 text-sm mt-1">Live management for website branding, hero imagery, stats, and content.</p>
+          </div>
           <button 
             type="button" 
             onClick={handleSeed}
@@ -188,6 +348,224 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
+            {/* HOMEPAGE HERO & VISUAL BANNER SECTION */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="font-serif text-xl text-forge-navy font-bold mb-1 flex items-center gap-2">
+                  <Globe className="text-forge-gold" size={22} /> Homepage Hero & Visual Content
+                </h3>
+                <p className="text-slate-500 text-sm">Upload the hero background image and customize the main copy shown on the front-end homepage.</p>
+              </div>
+
+              {renderImageUploader(
+                'hero_image',
+                'Main Homepage Hero Background Image',
+                'Displayed as the cinematic background behind the hero headline with elegant navy overlays.',
+                'Recommended: 1920x1080px or higher, landscape orientation'
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Hero Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hero_badge_text || ''}
+                    onChange={(e) => setFormData({ ...formData, hero_badge_text: e.target.value })}
+                    placeholder="The Forge Properties • Land. Legacy. Growth."
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Verified Partner Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hero_partner_name || ''}
+                    onChange={(e) => setFormData({ ...formData, hero_partner_name: e.target.value })}
+                    placeholder="Geofort Africa"
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Hero Main Headline
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hero_headline || ''}
+                    onChange={(e) => setFormData({ ...formData, hero_headline: e.target.value })}
+                    placeholder="Own Land. Own Your Future. Start Today."
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none font-medium"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">Leave empty to use the default multi-line branded typography.</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Hero Sub-headline
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.hero_subheadline || ''}
+                    onChange={(e) => setFormData({ ...formData, hero_subheadline: e.target.value })}
+                    placeholder="We help young Nigerians own verified, titled land — affordably, transparently, and on their terms."
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* HOMEPAGE STATS BAR SECTION */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="font-serif text-xl text-forge-navy font-bold mb-1 flex items-center gap-2">
+                  <BarChart3 className="text-forge-gold" size={22} /> Homepage Live Stats Bar
+                </h3>
+                <p className="text-slate-500 text-sm">Control the 4 key statistical figures prominently displayed beneath the hero section.</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Active Realtors
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.stat_active_realtors || ''}
+                    onChange={(e) => setFormData({ ...formData, stat_active_realtors: e.target.value })}
+                    placeholder="50+"
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none font-bold text-forge-navy"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Plots Available
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.stat_plots_available || ''}
+                    onChange={(e) => setFormData({ ...formData, stat_plots_available: e.target.value })}
+                    placeholder="27"
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none font-bold text-forge-navy"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Verified Partners
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.stat_verified_partners || ''}
+                    onChange={(e) => setFormData({ ...formData, stat_verified_partners: e.target.value })}
+                    placeholder="2"
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none font-bold text-forge-navy"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                    Titled Land %
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.stat_titled_land || ''}
+                    onChange={(e) => setFormData({ ...formData, stat_titled_land: e.target.value })}
+                    placeholder="100%"
+                    className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm rounded-lg focus:border-forge-gold focus:outline-none font-bold text-forge-navy"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* INNER PAGES & HOMEPAGE VISUAL IMAGES SECTION */}
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-[#E0E4FF]">
+                <h3 className="font-serif text-xl text-[#0A0A0A] font-bold mb-1 flex items-center gap-2">
+                  <ImageIcon className="text-[#0057FF]" size={22} /> Website Pages Images & Banners
+                </h3>
+                <p className="text-slate-500 text-sm">Upload images for homepage story sections and key inner pages across the website.</p>
+              </div>
+
+              <div className="space-y-6">
+                {renderImageUploader(
+                  'home_story_image',
+                  'Homepage — Why The Forge / Story Section Image',
+                  'Featured photo displayed in the "Why The Forge Properties" core value and standards section.',
+                  'Recommended: 1200x800px or 16:9 ratio'
+                )}
+
+                {renderImageUploader(
+                  'home_cta_image',
+                  'Homepage — Community & CTA Banner Background',
+                  'Background photo displayed in the "Join The Forge Nation" strip.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'about_hero_image',
+                  'About Us Page — Hero Banner',
+                  'Cinematic background image displayed on the About Us header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'about_story_image',
+                  'About Us Page — Company Story Section Image',
+                  'Featured photo displayed alongside "Built by Young Nigerians, For Young Nigerians".',
+                  'Recommended: 800x600px or 4:3 ratio'
+                )}
+
+                {renderImageUploader(
+                  'properties_hero_image',
+                  'Properties Page — Hero Banner',
+                  'Background image displayed on the Our Properties header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'contact_hero_image',
+                  'Contact Page — Hero Banner',
+                  'Background image displayed on the Contact Us header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'blog_hero_image',
+                  'Blog & Insights Page — Hero Banner',
+                  'Background image displayed on the Blog header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'forge_nation_hero_image',
+                  'The Forge Nation Page — Hero Banner',
+                  'Background image displayed on the Forge Nation community page header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'join_realtors_hero_image',
+                  'Join Realtors Page — Hero Banner',
+                  'Background image displayed on the Join Realtors recruitment page header.',
+                  'Recommended: 1920x600px'
+                )}
+
+                {renderImageUploader(
+                  'services_hero_image',
+                  'Services / Advisory Page — Hero Banner',
+                  'Background image displayed on the Advisory & Services page.',
+                  'Recommended: 1920x600px'
+                )}
+              </div>
+            </div>
+
             {/* Meet The Team Section */}
             <div className="space-y-6">
               <div className="pb-4 border-b border-slate-100 flex justify-between items-end">
@@ -208,7 +586,7 @@ export const AdminSettings: React.FC = () => {
                 {formData.team_members?.map((member, index) => (
                   <div key={index} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 relative group">
                     <button 
-                      type="button"
+                      type="button" 
                       onClick={() => handleRemoveTeamMember(index)}
                       className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all z-10"
                     >
@@ -223,7 +601,7 @@ export const AdminSettings: React.FC = () => {
                             <button 
                               type="button" 
                               onClick={() => handleUpdateTeamMember(index, 'image', '')}
-                              className="absolute inset-0 bg-forge-navy/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white"
+                              className="absolute inset-0 bg-forge-navy/60 opacity-0 group/img:opacity-100 transition-opacity flex items-center justify-center text-white"
                             >
                               <Trash2 size={16} />
                             </button>

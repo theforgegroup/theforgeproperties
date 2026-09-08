@@ -72,7 +72,7 @@ const AppLayout: React.FC = () => {
   }, [settings?.listing_agent?.image]);
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-white text-[#1A1A1A] selection:bg-[#C9962A] selection:text-[#1A2847]">
+    <div className="flex flex-col min-h-screen font-sans bg-white text-[#0A0A0A] selection:bg-[#C8FF00] selection:text-[#0A0A0A]">
       {!isAdminRoute && !isAgentDashboardRoute && <Navbar />}
       
       <main className="flex-grow">

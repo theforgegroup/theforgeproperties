@@ -858,6 +858,27 @@ async function startServer() {
     }
   });
 
+  // General image and file upload endpoint for admin, hero, and site media
+  app.post('/api/upload', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded.' });
+      }
+      const publicUrl = `/uploads/${req.file.filename}`;
+      return res.json({
+        success: true,
+        url: publicUrl,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (err: unknown) {
+      console.error('General upload error:', err);
+      const msg = err instanceof Error ? err.message : 'Upload failed';
+      return res.status(500).json({ success: false, message: msg });
+    }
+  });
+
   // REST API 2: GET /api/training/categories (fetch list of real categories)
   app.get('/api/training/categories', async (req, res) => {
     try {

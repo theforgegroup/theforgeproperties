@@ -129,7 +129,7 @@ export const AIConcierge: React.FC = () => {
             <button 
               type="submit" 
               disabled={isLoading || !inputText.trim()}
-              className="bg-forge-gold text-white p-3 rounded-full hover:bg-[#B38322] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-forge-gold/20"
+              className="bg-forge-gold text-[#0A0A0A] p-3 rounded-full hover:bg-[#b5e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-forge-gold/20"
             >
               <Send size={18} />
             </button>

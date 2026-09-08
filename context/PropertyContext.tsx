@@ -61,6 +61,7 @@ interface PropertyContextType {
   updateSaleStatus: (id: string, status: AgentSale['deal_status']) => Promise<void>;
   
   seedDatabase: () => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -83,6 +84,29 @@ const DEFAULT_SETTINGS: SiteSettings = {
   whatsapp_group_link: 'https://chat.whatsapp.com/DRsRpTeucuK6bIfSu0pvje?mode=gi_t',
   min_payout_amount: 50000,
   logo: "",
+  // Homepage Hero & Visuals Defaults
+  hero_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600",
+  hero_headline: "Verified, Titled Land in Ogun & Lagos Growth Corridors",
+  hero_subheadline: "Own titled land with zero legal risk, transparent documentation, and flexible installment plans tailored for young Nigerians and diaspora investors.",
+  hero_badge_text: "Titled Land Only • 100% Surveyed & Verified",
+  hero_partner_name: "Geofort Africa",
+  // Homepage Stats Bar Defaults
+  stat_active_realtors: "50+",
+  stat_plots_available: "27",
+  stat_verified_partners: "2",
+  stat_titled_land: "100%",
+  // Dedicated Page Images & Banners
+  home_story_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800",
+  home_cta_image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2000",
+  about_hero_image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000",
+  about_story_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800",
+  properties_hero_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600",
+  contact_hero_image: "https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?q=80&w=2000",
+  blog_hero_image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000",
+  forge_nation_hero_image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2000",
+  join_realtors_hero_image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2000",
+  services_hero_image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000",
+  // AI assistant settings
   ai_popup_enabled: true,
   ai_popup_headline: "Have Questions About Land or Property Investment?",
   ai_popup_body: "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
@@ -91,10 +115,26 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [properties, setProperties] = useState<Property[]>(DEFAULT_PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>(() => {
+    try {
+      const cached = localStorage.getItem('forge_site_properties');
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Ignore storage error
+    }
+    return DEFAULT_PROPERTIES;
+  });
   const [leads, setLeads] = useState<Lead[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-  const [posts, setPosts] = useState<BlogPost[]>(DEFAULT_BLOG_POSTS);
+  const [posts, setPosts] = useState<BlogPost[]>(() => {
+    try {
+      const cached = localStorage.getItem('forge_site_posts');
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Ignore storage error
+    }
+    return DEFAULT_BLOG_POSTS;
+  });
   const [categories, setCategories] = useState<Category[]>([
     { id: '1', name: 'Market Insights' },
     { id: '2', name: 'Luxury Lifestyle' },
@@ -105,7 +145,15 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    try {
+      const cached = localStorage.getItem('forge_site_settings');
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Ignore storage error
+    }
+    return DEFAULT_SETTINGS;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
@@ -139,33 +187,37 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       ]);
 
       if (propsData && propsData.length > 0) {
-        const hasPrasino = propsData.some((p: Property) => p.slug === 'prasino-lush-phase-2' || (p.title && p.title.includes('Prasino')));
-        if (!hasPrasino) {
-          setProperties([...DEFAULT_PROPERTIES, ...propsData]);
-        } else {
-          setProperties(propsData);
+        setProperties(propsData);
+        try {
+          localStorage.setItem('forge_site_properties', JSON.stringify(propsData));
+        } catch {
+          // Ignore local storage error
         }
       } else {
         setProperties(DEFAULT_PROPERTIES);
       }
+
       if (leadsData) setLeads(leadsData);
       if (subsData) setSubscribers(subsData);
+
       if (postsData && postsData.length > 0) {
-        const hasCustomPosts = postsData.some((p: BlogPost) => p.slug === 'how-to-buy-land-in-nigeria-from-diaspora-without-scams');
-        if (!hasCustomPosts) {
-          setPosts([...DEFAULT_BLOG_POSTS, ...postsData]);
-        } else {
-          setPosts(postsData);
+        setPosts(postsData);
+        try {
+          localStorage.setItem('forge_site_posts', JSON.stringify(postsData));
+        } catch {
+          // Ignore local storage error
         }
       } else {
         setPosts(DEFAULT_BLOG_POSTS);
       }
+
       if (catsData && catsData.length > 0) setCategories(catsData);
       if (agentsList) setAgents(agentsList);
       if (salesData) setSales(salesData);
       if (payoutsData) setPayouts(payoutsData);
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData);
       if (testimonialsData) setTestimonials(testimonialsData);
+
       if (settingsData) {
         let contact_email = settingsData.contact_email || '';
         let contact_email_2 = '';
@@ -175,28 +227,73 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
           contact_email_2 = parts[1]?.trim() || '';
         }
 
-        // Unpack AI settings from listing_agent jsonb
+        // Unpack virtual & page settings from listing_agent jsonb
         const {
-          ai_popup_enabled = true,
-          ai_popup_headline = "Have Questions About Land or Property Investment?",
-          ai_popup_body = "Our AI Land Enquiry Assistant can help answer questions about land titles, documentation, land verification, property investment, and buying real estate in Nigeria.",
-          ai_popup_cta = "Ask The Forge AI",
-          ai_floating_button_enabled = true,
+          ai_popup_enabled = DEFAULT_SETTINGS.ai_popup_enabled,
+          ai_popup_headline = DEFAULT_SETTINGS.ai_popup_headline,
+          ai_popup_body = DEFAULT_SETTINGS.ai_popup_body,
+          ai_popup_cta = DEFAULT_SETTINGS.ai_popup_cta,
+          ai_floating_button_enabled = DEFAULT_SETTINGS.ai_floating_button_enabled,
+          hero_image = DEFAULT_SETTINGS.hero_image,
+          hero_headline = DEFAULT_SETTINGS.hero_headline,
+          hero_subheadline = DEFAULT_SETTINGS.hero_subheadline,
+          hero_badge_text = DEFAULT_SETTINGS.hero_badge_text,
+          hero_partner_name = DEFAULT_SETTINGS.hero_partner_name,
+          home_story_image = DEFAULT_SETTINGS.home_story_image,
+          home_cta_image = DEFAULT_SETTINGS.home_cta_image,
+          stat_active_realtors = DEFAULT_SETTINGS.stat_active_realtors,
+          stat_plots_available = DEFAULT_SETTINGS.stat_plots_available,
+          stat_verified_partners = DEFAULT_SETTINGS.stat_verified_partners,
+          stat_titled_land = DEFAULT_SETTINGS.stat_titled_land,
+          about_hero_image = DEFAULT_SETTINGS.about_hero_image,
+          about_story_image = DEFAULT_SETTINGS.about_story_image,
+          properties_hero_image = DEFAULT_SETTINGS.properties_hero_image,
+          contact_hero_image = DEFAULT_SETTINGS.contact_hero_image,
+          blog_hero_image = DEFAULT_SETTINGS.blog_hero_image,
+          forge_nation_hero_image = DEFAULT_SETTINGS.forge_nation_hero_image,
+          join_realtors_hero_image = DEFAULT_SETTINGS.join_realtors_hero_image,
+          services_hero_image = DEFAULT_SETTINGS.services_hero_image,
           ...cleanListingAgent
         } = settingsData.listing_agent || {};
 
-        setSettings({
+        const mergedSettings: SiteSettings = {
           ...DEFAULT_SETTINGS,
           ...settingsData,
           contact_email,
           contact_email_2,
           listing_agent: cleanListingAgent,
+          hero_image,
+          hero_headline,
+          hero_subheadline,
+          hero_badge_text,
+          hero_partner_name,
+          home_story_image,
+          home_cta_image,
+          stat_active_realtors,
+          stat_plots_available,
+          stat_verified_partners,
+          stat_titled_land,
+          about_hero_image,
+          about_story_image,
+          properties_hero_image,
+          contact_hero_image,
+          blog_hero_image,
+          forge_nation_hero_image,
+          join_realtors_hero_image,
+          services_hero_image,
           ai_popup_enabled,
           ai_popup_headline,
           ai_popup_body,
           ai_popup_cta,
           ai_floating_button_enabled
-        });
+        };
+
+        setSettings(mergedSettings);
+        try {
+          localStorage.setItem('forge_site_settings', JSON.stringify(mergedSettings));
+        } catch {
+          // Ignore local storage error
+        }
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -207,6 +304,55 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     fetchData();
+
+    // Background polling fallback every 10s to guarantee sync across admin and frontend tabs/devices
+    const pollInterval = setInterval(() => {
+      fetchData();
+    }, 10000);
+
+    // Setup live subscription to database updates
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'properties' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    // Auto-refresh data when user switches back to tab or on window focus
+    const handleSync = () => {
+      fetchData();
+    };
+
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') fetchData();
+    });
+    window.addEventListener('forge_settings_updated', handleSync);
+    window.addEventListener('forge_properties_updated', handleSync);
+    window.addEventListener('forge_posts_updated', handleSync);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'forge_settings_updated' || e.key === 'forge_properties_updated' || e.key === 'forge_posts_updated') {
+        fetchData();
+      }
+    });
+
+    return () => {
+      clearInterval(pollInterval);
+      supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('forge_settings_updated', handleSync);
+      window.removeEventListener('forge_properties_updated', handleSync);
+      window.removeEventListener('forge_posts_updated', handleSync);
+    };
   }, []);
 
   const addNeighborhood = async (neighborhood: Neighborhood) => {
@@ -333,7 +479,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       error = fallback.error;
     }
     if (error) throw error;
-    setProperties(prev => [property, ...prev]);
+    setProperties(prev => {
+      const updated = [property, ...prev];
+      try {
+        localStorage.setItem('forge_site_properties', JSON.stringify(updated));
+        localStorage.setItem('forge_properties_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_properties_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const updateProperty = async (updatedProperty: Property) => {
@@ -345,13 +501,33 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       error = fallback.error;
     }
     if (error) throw error;
-    setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
+    setProperties(prev => {
+      const updated = prev.map(p => p.id === updatedProperty.id ? updatedProperty : p);
+      try {
+        localStorage.setItem('forge_site_properties', JSON.stringify(updated));
+        localStorage.setItem('forge_properties_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_properties_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const deleteProperty = async (id: string) => {
     const { error } = await supabase.from('properties').delete().eq('id', id);
     if (error) throw error;
-    setProperties(prev => prev.filter(p => p.id !== id));
+    setProperties(prev => {
+      const updated = prev.filter(p => p.id !== id);
+      try {
+        localStorage.setItem('forge_site_properties', JSON.stringify(updated));
+        localStorage.setItem('forge_properties_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_properties_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const addLead = async (lead: Lead) => {
@@ -390,7 +566,17 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error('Supabase addPost error:', error);
       throw error;
     }
-    setPosts(prev => [cleanPost, ...prev]);
+    setPosts(prev => {
+      const updated = [cleanPost, ...prev];
+      try {
+        localStorage.setItem('forge_site_posts', JSON.stringify(updated));
+        localStorage.setItem('forge_posts_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_posts_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const updatePost = async (updatedPost: BlogPost) => {
@@ -399,21 +585,51 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error('Supabase updatePost error:', error);
       throw error;
     }
-    setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+    setPosts(prev => {
+      const updated = prev.map(p => p.id === updatedPost.id ? updatedPost : p);
+      try {
+        localStorage.setItem('forge_site_posts', JSON.stringify(updated));
+        localStorage.setItem('forge_posts_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_posts_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const deletePost = async (id: string) => {
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (error) throw error;
-    setPosts(prev => prev.filter(p => p.id !== id));
+    setPosts(prev => {
+      const updated = prev.filter(p => p.id !== id);
+      try {
+        localStorage.setItem('forge_site_posts', JSON.stringify(updated));
+        localStorage.setItem('forge_posts_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_posts_updated'));
+      } catch {
+        // Ignore local storage error
+      }
+      return updated;
+    });
   };
 
   const updateSettings = async (newSettings: SiteSettings) => {
+    // 1. Instantly update React state and LocalStorage so the frontend immediately reflects changes
+    setSettings(newSettings);
+    try {
+      localStorage.setItem('forge_site_settings', JSON.stringify(newSettings));
+      localStorage.setItem('forge_settings_updated', Date.now().toString());
+      window.dispatchEvent(new Event('forge_settings_updated'));
+    } catch {
+      // Ignore local storage error
+    }
+
     try {
       const { contact_email_2, ...payload } = newSettings;
-      const dbPayload: Partial<SiteSettings> & { id?: number } = { ...payload };
+      const dbPayload: Record<string, unknown> = { ...payload };
 
-      // Pack AI settings into listing_agent jsonb object for database storage
+      // Pack custom imagery, hero, metric, and AI settings into listing_agent jsonb object for database storage
       dbPayload.listing_agent = {
         ...(newSettings.listing_agent || {}),
         ai_popup_enabled: newSettings.ai_popup_enabled,
@@ -421,25 +637,57 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         ai_popup_body: newSettings.ai_popup_body,
         ai_popup_cta: newSettings.ai_popup_cta,
         ai_floating_button_enabled: newSettings.ai_floating_button_enabled,
+        hero_image: newSettings.hero_image,
+        hero_headline: newSettings.hero_headline,
+        hero_subheadline: newSettings.hero_subheadline,
+        hero_badge_text: newSettings.hero_badge_text,
+        hero_partner_name: newSettings.hero_partner_name,
+        home_story_image: newSettings.home_story_image,
+        home_cta_image: newSettings.home_cta_image,
+        stat_active_realtors: newSettings.stat_active_realtors,
+        stat_plots_available: newSettings.stat_plots_available,
+        stat_verified_partners: newSettings.stat_verified_partners,
+        stat_titled_land: newSettings.stat_titled_land,
+        about_hero_image: newSettings.about_hero_image,
+        about_story_image: newSettings.about_story_image,
+        properties_hero_image: newSettings.properties_hero_image,
+        contact_hero_image: newSettings.contact_hero_image,
+        blog_hero_image: newSettings.blog_hero_image,
+        forge_nation_hero_image: newSettings.forge_nation_hero_image,
+        join_realtors_hero_image: newSettings.join_realtors_hero_image,
+        services_hero_image: newSettings.services_hero_image,
       };
 
-      // Delete these custom settings from dbPayload since they are virtual top-level fields not present in postgres DB columns
-      delete dbPayload.ai_popup_enabled;
-      delete dbPayload.ai_popup_headline;
-      delete dbPayload.ai_popup_body;
-      delete dbPayload.ai_popup_cta;
-      delete dbPayload.ai_floating_button_enabled;
+      // Delete non-column fields from dbPayload root so Postgres doesn't reject them
+      const virtualFields = [
+        'ai_popup_enabled', 'ai_popup_headline', 'ai_popup_body', 'ai_popup_cta', 'ai_floating_button_enabled',
+        'hero_image', 'hero_headline', 'hero_subheadline', 'hero_badge_text', 'hero_partner_name',
+        'home_story_image', 'home_cta_image',
+        'stat_active_realtors', 'stat_plots_available', 'stat_verified_partners', 'stat_titled_land',
+        'about_hero_image', 'about_story_image', 'properties_hero_image', 'contact_hero_image',
+        'blog_hero_image', 'forge_nation_hero_image', 'join_realtors_hero_image', 'services_hero_image'
+      ];
+      virtualFields.forEach(f => delete dbPayload[f]);
       
       if (contact_email_2 && contact_email_2.trim()) {
         dbPayload.contact_email = `${newSettings.contact_email || ''};${contact_email_2.trim()}`;
       }
+
+      dbPayload.updated_at = new Date().toISOString();
 
       const { error } = await supabase.from('site_settings').upsert({ id: 1, ...dbPayload });
       if (error) {
         console.error('Supabase upsert error:', error);
         throw error;
       }
-      setSettings(newSettings);
+
+      // Broadcast update again on DB confirmation
+      try {
+        localStorage.setItem('forge_settings_updated', Date.now().toString());
+        window.dispatchEvent(new Event('forge_settings_updated'));
+      } catch {
+        // Ignore local storage error
+      }
     } catch (err) {
       console.error('updateSettings failed:', err);
       throw err;
@@ -477,7 +725,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       addNeighborhood, updateNeighborhood, deleteNeighborhood,
       addTestimonial, updateTestimonial, deleteTestimonial,
       addAgent, updateAgent, getAgentSales, getAgentPayouts, requestPayout, updatePayoutStatus, addSaleManually, updateSaleStatus,
-      seedDatabase
+      seedDatabase,
+      refreshData: fetchData
     }}>
       {children}
     </PropertyContext.Provider>

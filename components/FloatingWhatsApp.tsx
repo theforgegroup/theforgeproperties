@@ -8,7 +8,7 @@ export const FloatingWhatsApp: React.FC = () => {
 
   return (
     <aside aria-label="WhatsApp quick chat" className="fixed bottom-6 right-6 z-50 flex items-center group">
-      <span className="hidden md:inline-flex items-center mr-3 px-3.5 py-1.5 rounded-full bg-[#1A2847] text-white text-xs font-semibold shadow-lg border border-[#C9962A]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <span className="hidden md:inline-flex items-center mr-3 px-3.5 py-1.5 rounded-full bg-[#0057FF] text-white text-xs font-semibold shadow-lg border border-[#C8FF00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
         Chat with us on WhatsApp
       </span>
       <a
