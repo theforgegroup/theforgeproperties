@@ -294,7 +294,7 @@ export const BlogLandAssistant: React.FC = () => {
         let formattedLine = line;
         // Bold replacement **text**
         const boldRegex = /\*\*(.*?)\*\*/g;
-        formattedLine = formattedLine.replace(boldRegex, '<strong class="text-forge-gold font-bold">$1</strong>');
+        formattedLine = formattedLine.replace(boldRegex, '<strong class="text-[#774DFF] font-bold">$1</strong>');
         return formattedLine;
       })
       .join('<br />');
@@ -311,10 +311,10 @@ export const BlogLandAssistant: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="pointer-events-auto bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-2xl border border-forge-gold/30 flex flex-col gap-5 max-w-sm mb-4"
+            className="pointer-events-auto bg-[#0F172A] text-white rounded-3xl p-6 md:p-8 shadow-2xl border border-[#774DFF]/30 flex flex-col gap-5 max-w-sm mb-4"
           >
             <div className="flex justify-between items-start">
-              <div className="p-2.5 bg-forge-gold/10 rounded-2xl border border-forge-gold/20 flex items-center justify-center text-forge-gold animate-bounce">
+              <div className="p-2.5 bg-[#774DFF]/15 rounded-2xl border border-[#774DFF]/30 flex items-center justify-center text-[#774DFF] animate-bounce">
                 <Bot size={24} />
               </div>
               <button 
@@ -327,7 +327,7 @@ export const BlogLandAssistant: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <h4 className="font-serif text-lg md:text-xl font-bold leading-tight text-forge-gold">
+              <h4 className="font-display text-lg md:text-xl font-bold leading-tight text-white">
                 {popupHeadline}
               </h4>
               <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
@@ -338,13 +338,13 @@ export const BlogLandAssistant: React.FC = () => {
             <div className="flex gap-3 pt-2">
               <button 
                 onClick={handleOpenChat}
-                className="flex-1 bg-forge-gold text-forge-navy font-bold uppercase tracking-widest text-[10px] md:text-xs py-3 px-4 hover:bg-white hover:text-forge-navy transition-all duration-300 rounded-xl"
+                className="flex-1 bg-[#774DFF] text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3 px-4 hover:bg-[#683de6] transition-all duration-300 rounded-[8px]"
               >
                 {popupCta}
               </button>
               <button 
-                onClick={() => setShowPopup(false)}
-                className="flex-1 bg-slate-800 text-slate-300 font-bold uppercase tracking-widest text-[10px] md:text-xs py-3 px-4 hover:bg-slate-700 hover:text-white transition-all rounded-xl"
+                onClick={() => setShowPopup(false)} 
+                className="flex-1 bg-[#1E293B] text-slate-300 font-bold uppercase tracking-widest text-[10px] md:text-xs py-3 px-4 hover:bg-slate-700 hover:text-white transition-all rounded-[8px]"
               >
                 Maybe Later
               </button>
@@ -357,10 +357,10 @@ export const BlogLandAssistant: React.FC = () => {
       {aiFloatingEnabled && !isOpen && (
         <button
           onClick={handleOpenChat}
-          className="pointer-events-auto flex items-center gap-2 md:gap-3 bg-forge-navy text-white hover:bg-slate-900 transition-all shadow-2xl hover:shadow-forge-gold/25 p-4 md:py-4 md:px-6 rounded-full border border-forge-gold/40 relative group group/btn focus:outline-none"
+          className="pointer-events-auto flex items-center gap-2 md:gap-3 bg-[#0F172A] text-white hover:bg-slate-900 transition-all shadow-2xl hover:shadow-[#774DFF]/25 p-4 md:py-4 md:px-6 rounded-full border border-[#774DFF]/40 relative group group/btn focus:outline-none"
         >
-          <span className="absolute -inset-1 rounded-full bg-forge-gold/10 animate-ping opacity-70 group-hover:opacity-0 transition-opacity"></span>
-          <div className="text-forge-gold shrink-0">
+          <span className="absolute -inset-1 rounded-full bg-[#774DFF]/15 animate-ping opacity-70 group-hover:opacity-0 transition-opacity"></span>
+          <div className="text-[#774DFF] shrink-0">
             <Bot size={22} className="group-hover:rotate-12 transition-transform duration-300" />
           </div>
           <span className="font-bold text-xs uppercase tracking-widest hidden md:inline">
@@ -369,7 +369,7 @@ export const BlogLandAssistant: React.FC = () => {
           <span className="font-bold text-[10px] uppercase tracking-widest inline md:hidden">
             AI Help
           </span>
-          <Sparkles size={12} className="text-forge-gold hidden md:inline group-hover:scale-125 transition-transform" />
+          <Sparkles size={12} className="text-[#774DFF] hidden md:inline group-hover:scale-125 transition-transform" />
         </button>
       )}
 
@@ -384,16 +384,16 @@ export const BlogLandAssistant: React.FC = () => {
             className="pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col h-[550px] max-h-[85vh] w-full relative overflow-hidden"
           >
             {/* Chat Header */}
-            <div className="bg-forge-navy text-white p-5 flex justify-between items-center border-b border-forge-gold/30">
+            <div className="bg-[#0F172A] text-white p-5 flex justify-between items-center border-b border-[#774DFF]/30">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-forge-gold/10 rounded-xl border border-forge-gold/20 text-forge-gold">
+                <div className="p-2 bg-[#774DFF]/15 rounded-xl border border-[#774DFF]/30 text-[#774DFF]">
                   <Bot size={20} />
                 </div>
                 <div>
-                  <h4 className="font-serif text-sm md:text-base font-bold tracking-wide">
+                  <h4 className="font-display text-sm md:text-base font-bold tracking-wide">
                     The Forge AI
                   </h4>
-                  <p className="text-[9px] uppercase tracking-widest text-forge-gold font-bold">
+                  <p className="text-[9px] uppercase tracking-widest text-[#774DFF] font-bold">
                     Land Enquiry Assistant
                   </p>
                 </div>
@@ -402,7 +402,7 @@ export const BlogLandAssistant: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowConsultForm(!showConsultForm)}
-                  className="bg-forge-gold/10 hover:bg-forge-gold text-forge-gold hover:text-forge-navy transition-all px-3 py-1.5 rounded-lg border border-forge-gold/30 text-[9px] uppercase tracking-wider font-bold"
+                  className="bg-[#774DFF]/20 hover:bg-[#774DFF] text-[#774DFF] hover:text-white transition-all px-3 py-1.5 rounded-[6px] border border-[#774DFF]/30 text-[9px] uppercase tracking-wider font-bold"
                 >
                   Request Consultation
                 </button>
@@ -423,10 +423,10 @@ export const BlogLandAssistant: React.FC = () => {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
-                  className="absolute inset-[64px_0_0_0] bg-slate-900/95 backdrop-blur-sm z-20 p-6 flex flex-col text-white overflow-y-auto"
+                  className="absolute inset-[64px_0_0_0] bg-[#0F172A]/95 backdrop-blur-sm z-20 p-6 flex flex-col text-white overflow-y-auto"
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <h5 className="font-serif text-base text-forge-gold font-bold flex items-center gap-2">
+                    <h5 className="font-display text-base text-[#774DFF] font-bold flex items-center gap-2">
                       <Shield size={18} /> Direct Enquiry Consultation
                     </h5>
                     <button 
@@ -439,7 +439,7 @@ export const BlogLandAssistant: React.FC = () => {
 
                   {leadSubmitted ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
-                      <CheckCircle size={48} className="text-forge-gold animate-pulse" />
+                      <CheckCircle size={48} className="text-[#774DFF] animate-pulse" />
                       <h6 className="font-bold uppercase tracking-widest text-xs">Request Submitted!</h6>
                       <p className="text-xs text-slate-300 max-w-sm">
                         Thank you. Your land verification / consult request has been filed. A senior Forge realtor will review and follow up with you.
@@ -466,7 +466,7 @@ export const BlogLandAssistant: React.FC = () => {
                             placeholder="Full Name"
                             value={leadName}
                             onChange={(e) => setLeadName(e.target.value)}
-                            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-forge-gold focus:outline-none"
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-[#774DFF] focus:outline-none text-white"
                           />
                         </div>
 
@@ -477,7 +477,7 @@ export const BlogLandAssistant: React.FC = () => {
                             placeholder="Phone Number (WhatsApp Preferred)"
                             value={leadPhone}
                             onChange={(e) => setLeadPhone(e.target.value)}
-                            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-forge-gold focus:outline-none"
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-[#774DFF] focus:outline-none text-white"
                           />
                         </div>
 
@@ -488,7 +488,7 @@ export const BlogLandAssistant: React.FC = () => {
                             placeholder="Email Address"
                             value={leadEmail}
                             onChange={(e) => setLeadEmail(e.target.value)}
-                            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-forge-gold focus:outline-none"
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs focus:ring-1 focus:ring-[#774DFF] focus:outline-none text-white"
                           />
                         </div>
 
@@ -498,7 +498,7 @@ export const BlogLandAssistant: React.FC = () => {
                             rows={3}
                             value={leadMsg}
                             onChange={(e) => setLeadMsg(e.target.value)}
-                            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-xs focus:ring-1 focus:ring-forge-gold focus:outline-none resize-none"
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded-xl p-3 text-xs focus:ring-1 focus:ring-[#774DFF] focus:outline-none resize-none text-white"
                           />
                         </div>
                       </div>
@@ -506,7 +506,7 @@ export const BlogLandAssistant: React.FC = () => {
                       <button
                         type="submit"
                         disabled={leadSubmitting}
-                        className="w-full bg-forge-gold text-forge-navy font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full bg-[#774DFF] hover:bg-[#683de6] text-white font-bold uppercase tracking-widest text-xs py-4 rounded-[8px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {leadSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'Submit Request'}
                       </button>
@@ -517,16 +517,16 @@ export const BlogLandAssistant: React.FC = () => {
             </AnimatePresence>
 
             {/* Chat Message Box Container */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 bg-[#F3F4F6]">
               {messages.map((m, idx) => (
                 <div
                   key={idx}
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-3xl p-4 text-xs leading-relaxed font-medium md:text-sm shadow-sm ${
+                  <div className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed font-medium md:text-sm shadow-sm ${
                     m.role === 'user'
-                      ? 'bg-forge-navy text-white rounded-tr-none'
-                      : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                      ? 'bg-[#0F172A] text-white rounded-tr-none'
+                      : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
                   }`}>
                     {m.role === 'model' ? (
                       <div 
@@ -542,14 +542,14 @@ export const BlogLandAssistant: React.FC = () => {
               
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-slate-100 rounded-3xl p-4 rounded-tl-none shadow-sm flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-forge-gold" />
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 rounded-tl-none shadow-sm flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-[#774DFF]" />
                     <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Assistant is reviewing details...</span>
                   </div>
                 </div>
               )}
 
-              {/* Suggestions Chips (render when user has zero or only welcome message and is not loading) */}
+              {/* Suggestions Chips */}
               {!isTyping && messages.length <= 2 && (
                 <div className="pt-2 space-y-2">
                   <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-1">Suggested Land Topics:</p>
@@ -558,7 +558,7 @@ export const BlogLandAssistant: React.FC = () => {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(s)}
-                        className="bg-white hover:bg-forge-gold hover:text-forge-navy transition-all px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 border border-slate-200/60 shadow-sm text-left"
+                        className="bg-white hover:bg-[#774DFF] hover:text-white transition-all px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 border border-slate-200 shadow-sm text-left"
                       >
                         {s}
                       </button>
@@ -569,14 +569,13 @@ export const BlogLandAssistant: React.FC = () => {
 
               {/* Natural Lead capture card triggered occasionally */}
               {!isTyping && showLeadPrompt && (
-                <div className="bg-gradient-to-br from-slate-900 to-forge-navy text-white rounded-3xl p-5 border border-forge-gold/30 space-y-4 shadow-lg animate-fade-in relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-6 bg-forge-gold/5 rounded-full filter blur-xl"></div>
+                <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white rounded-2xl p-5 border border-[#774DFF]/30 space-y-4 shadow-lg animate-fade-in relative overflow-hidden">
                   <div className="flex gap-3 items-start relative z-10">
-                    <div className="p-2 bg-forge-gold/10 rounded-2xl text-forge-gold shrink-0 mt-0.5">
+                    <div className="p-2 bg-[#774DFF]/15 rounded-xl text-[#774DFF] shrink-0 mt-0.5">
                       <Sparkles size={16} />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-forge-gold">Premium Support</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#774DFF]">Premium Support</p>
                       <p className="text-xs md:text-sm font-semibold leading-relaxed text-slate-100">
                         Would you like a member of The Forge Properties team to help you further?
                       </p>
@@ -591,7 +590,7 @@ export const BlogLandAssistant: React.FC = () => {
                         setLeadMsg("Requested direct callback from a professional property specialist after chatting with Forge AI on the Blog.");
                         setShowLeadPrompt(false);
                       }}
-                      className="w-full bg-[#C8FF00] hover:bg-[#b5e600] text-[#0A0A0A] font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      className="w-full bg-[#774DFF] hover:bg-[#683de6] text-white font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-[8px] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Phone size={14} className="shrink-0" />
                       <span>Request a Call</span>
@@ -604,7 +603,7 @@ export const BlogLandAssistant: React.FC = () => {
                       onClick={() => {
                         setShowLeadPrompt(false);
                       }}
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm text-center"
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3.5 px-4 rounded-[8px] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm text-center"
                     >
                       <MessageCircle size={14} className="shrink-0" />
                       <span>Chat on WhatsApp</span>
@@ -615,7 +614,7 @@ export const BlogLandAssistant: React.FC = () => {
                       onClick={() => {
                         setShowLeadPrompt(false);
                       }}
-                      className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3 px-4 rounded-xl transition-all duration-300 cursor-pointer"
+                      className="w-full bg-[#1E293B] hover:bg-slate-700 text-slate-300 font-bold uppercase tracking-widest text-[9px] md:text-[10px] py-3 px-4 rounded-[8px] transition-all duration-300 cursor-pointer"
                     >
                       Continue Asking AI
                     </button>
@@ -639,12 +638,12 @@ export const BlogLandAssistant: React.FC = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Ask about Nigeria land titles, C of O, Gazette..."
-                className="flex-grow bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs md:text-sm focus:border-forge-gold focus:outline-none"
+                className="flex-grow bg-[#F3F4F6] border border-slate-200 rounded-xl py-3 px-4 text-xs md:text-sm focus:border-[#774DFF] focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="bg-forge-navy hover:bg-forge-gold text-white hover:text-forge-navy transition-all p-3 rounded-xl flex items-center justify-center disabled:opacity-40"
+                className="bg-[#0F172A] hover:bg-[#774DFF] text-white transition-all p-3 rounded-xl flex items-center justify-center disabled:opacity-40"
               >
                 <Send size={16} />
               </button>

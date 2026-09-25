@@ -35,14 +35,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row max-w-full overflow-x-hidden">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-forge-navy text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <div className="flex items-center gap-3 text-forge-gold">
+      <div className="lg:hidden bg-[#0F172A] text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <div className="flex items-center gap-3 text-[#774DFF]">
           <LayoutDashboard size={24} />
           <span className="font-bold tracking-widest text-lg uppercase">ADMIN</span>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="text-white hover:text-forge-gold transition-colors focus:outline-none"
+          className="text-white hover:text-[#774DFF] transition-colors focus:outline-none"
         >
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -58,12 +58,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Sidebar - Responsive */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 lg:w-80 bg-forge-navy text-white flex-shrink-0 
+        fixed inset-y-0 left-0 z-50 w-72 lg:w-80 bg-[#0F172A] text-white flex-shrink-0 
         transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:sticky lg:top-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="h-full flex flex-col p-6 lg:p-8">
-          <div className="hidden lg:flex items-center gap-4 mb-16 text-forge-gold">
+          <div className="hidden lg:flex items-center gap-4 mb-16 text-[#774DFF]">
             <LayoutDashboard size={32} />
             <span className="font-bold tracking-widest text-2xl uppercase">ADMIN PORTAL</span>
           </div>
@@ -75,7 +75,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                (item.path !== '/admin' && location.pathname.startsWith(item.path));
               
               const activeClass = isActive 
-                ? 'bg-slate-800 text-white shadow-lg border-l-4 border-forge-gold' 
+                ? 'bg-slate-800 text-white shadow-lg border-l-4 border-[#774DFF]' 
                 : 'text-slate-400 hover:text-white hover:bg-white/5';
               
               return (

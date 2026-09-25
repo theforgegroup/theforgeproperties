@@ -85,17 +85,17 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-[#0057FF]/40 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-[#0F172A]/60 backdrop-blur-sm animate-fadeIn"
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-lg bg-white rounded-[12px] shadow-2xl overflow-hidden border border-[#E0E4FF] my-auto"
+        className="relative w-full max-w-lg bg-white rounded-[12px] shadow-2xl overflow-hidden border border-[#E5E7EB] my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-[#0057FF] text-white p-6 border-b-2 border-[#C8FF00] relative">
+        <div className="bg-[#0F172A] text-white p-6 border-b-2 border-[#774DFF] relative">
           <button
             id="close-enquiry-modal"
             onClick={onClose}
@@ -106,16 +106,16 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
           </button>
 
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-bold tracking-[2px] uppercase text-[#0A0A0A] bg-[#C8FF00] px-2.5 py-1 rounded-[4px] inline-flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-[#0A0A0A]" /> Verified Property Enquiry
+            <span className="text-[11px] font-bold tracking-[2px] uppercase text-white bg-[#774DFF] px-2.5 py-1 rounded-[4px] inline-flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-white" /> Verified Property Enquiry
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-white font-display">
             {property ? property.title : 'Prasino Lush Phase 2'}
           </h3>
-          <p className="text-xs text-blue-100 mt-1 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-[#C8FF00]" />
+          <p className="text-xs text-slate-300 mt-1 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-[#774DFF]" />
             {property ? property.location : 'Kobape, Abeokuta, Ogun State'}
           </p>
         </div>
@@ -124,11 +124,11 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
         <div className="p-6">
           {isSuccess ? (
             <div className="text-center py-6 space-y-4">
-              <div className="w-14 h-14 bg-[#C8FF00]/20 text-[#0057FF] rounded-full mx-auto flex items-center justify-center">
+              <div className="w-14 h-14 bg-[#774DFF]/20 text-[#774DFF] rounded-full mx-auto flex items-center justify-center">
                 <CheckCircle2 size={32} />
               </div>
-              <h4 className="text-xl font-bold text-[#0057FF] font-display">Enquiry Submitted!</h4>
-              <p className="text-sm text-[#0A0A0A]/80 max-w-sm mx-auto leading-relaxed">
+              <h4 className="text-xl font-bold text-[#0F172A] font-display">Enquiry Submitted!</h4>
+              <p className="text-sm text-[#0F172A]/80 max-w-sm mx-auto leading-relaxed">
                 Thank you, <strong>{name}</strong>! An investment specialist from The Forge Properties has received your inquiry for <strong>{plotSize}</strong> and will reach out shortly.
               </p>
 
@@ -137,14 +137,14 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                   href={directWhatsAppUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-sm px-5 py-3 rounded-[8px] inline-flex items-center justify-center gap-2 transition-all min-h-[44px]"
+                  className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-sm px-5 py-3 rounded-[8px] inline-flex items-center justify-center gap-2 transition-all min-h-[44px]"
                 >
                   <MessageCircle size={18} />
                   <span>Chat Direct on WhatsApp</span>
                 </a>
                 <button
                   onClick={handleReset}
-                  className="bg-[#F5F5F5] hover:bg-slate-200 text-[#0057FF] font-semibold text-sm px-5 py-3 rounded-[8px] transition-colors min-h-[44px]"
+                  className="bg-[#F3F4F6] hover:bg-slate-200 text-[#0F172A] font-semibold text-sm px-5 py-3 rounded-[8px] transition-colors min-h-[44px]"
                 >
                   Close
                 </button>
@@ -160,7 +160,7 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
 
               {/* Plot Size Selection */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-[1px] text-[#0057FF] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-[1px] text-[#0F172A] mb-1.5">
                   Plot Size Interest
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -171,8 +171,8 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                       onClick={() => setPlotSize(size)}
                       className={`py-2 px-3 text-xs font-semibold rounded-[6px] border transition-all text-center ${
                         plotSize === size
-                          ? 'bg-[#0057FF] text-white border-[#0057FF] shadow-sm'
-                          : 'bg-white text-slate-700 border-[#E0E4FF] hover:border-[#0057FF]'
+                          ? 'bg-[#774DFF] text-white border-[#774DFF] shadow-sm'
+                          : 'bg-white text-slate-700 border-[#E5E7EB] hover:border-[#774DFF]'
                       }`}
                     >
                       {size}
@@ -183,7 +183,7 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
 
               {/* Name */}
               <div>
-                <label htmlFor="enquiry-name" className="block text-xs font-bold uppercase tracking-[1px] text-[#0A0A0A] mb-1">
+                <label htmlFor="enquiry-name" className="block text-xs font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
                   Full Name *
                 </label>
                 <input
@@ -193,13 +193,13 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Femi Adeyemi"
-                  className="w-full px-3.5 py-2.5 text-sm border border-[#E0E4FF] rounded-[8px] focus:outline-none focus:border-[#0057FF] focus:ring-1 focus:ring-[#0057FF] min-h-[44px]"
+                  className="w-full px-3.5 py-2.5 text-sm border border-[#E5E7EB] rounded-[8px] focus:outline-none focus:border-[#774DFF] focus:ring-1 focus:ring-[#774DFF] min-h-[44px]"
                 />
               </div>
 
               {/* Phone / WhatsApp */}
               <div>
-                <label htmlFor="enquiry-phone" className="block text-xs font-bold uppercase tracking-[1px] text-[#0A0A0A] mb-1">
+                <label htmlFor="enquiry-phone" className="block text-xs font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
                   Phone / WhatsApp Number *
                 </label>
                 <input
@@ -209,13 +209,13 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +234 810 000 0000"
-                  className="w-full px-3.5 py-2.5 text-sm border border-[#E0E4FF] rounded-[8px] focus:outline-none focus:border-[#0057FF] focus:ring-1 focus:ring-[#0057FF] min-h-[44px]"
+                  className="w-full px-3.5 py-2.5 text-sm border border-[#E5E7EB] rounded-[8px] focus:outline-none focus:border-[#774DFF] focus:ring-1 focus:ring-[#774DFF] min-h-[44px]"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label htmlFor="enquiry-email" className="block text-xs font-bold uppercase tracking-[1px] text-[#0A0A0A] mb-1">
+                <label htmlFor="enquiry-email" className="block text-xs font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
                   Email Address *
                 </label>
                 <input
@@ -225,13 +225,13 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. femi@example.com"
-                  className="w-full px-3.5 py-2.5 text-sm border border-[#E0E4FF] rounded-[8px] focus:outline-none focus:border-[#0057FF] focus:ring-1 focus:ring-[#0057FF] min-h-[44px]"
+                  className="w-full px-3.5 py-2.5 text-sm border border-[#E5E7EB] rounded-[8px] focus:outline-none focus:border-[#774DFF] focus:ring-1 focus:ring-[#774DFF] min-h-[44px]"
                 />
               </div>
 
               {/* Message */}
               <div>
-                <label htmlFor="enquiry-message" className="block text-xs font-bold uppercase tracking-[1px] text-[#0A0A0A] mb-1">
+                <label htmlFor="enquiry-message" className="block text-xs font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
                   Message / Special Request (Optional)
                 </label>
                 <textarea
@@ -240,7 +240,7 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Ask about title verification, installment plans, or site inspection..."
-                  className="w-full px-3.5 py-2 text-sm border border-[#E0E4FF] rounded-[8px] focus:outline-none focus:border-[#0057FF] focus:ring-1 focus:ring-[#0057FF]"
+                  className="w-full px-3.5 py-2 text-sm border border-[#E5E7EB] rounded-[8px] focus:outline-none focus:border-[#774DFF] focus:ring-1 focus:ring-[#774DFF]"
                 />
               </div>
 
@@ -249,7 +249,7 @@ export const PropertyEnquiryModal: React.FC<PropertyEnquiryModalProps> = ({
                 id="submit-enquiry-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#C8FF00] hover:bg-[#b5e600] text-[#0A0A0A] font-bold text-sm py-3.5 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 min-h-[44px]"
+                className="w-full bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-sm py-3.5 rounded-[8px] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 min-h-[44px]"
               >
                 <span>{isSubmitting ? 'Submitting Enquiry...' : 'Submit Property Enquiry'}</span>
                 <ArrowRight size={16} />

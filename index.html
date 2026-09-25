@@ -9,7 +9,7 @@
     <meta name="description" content="The Forge Properties helps young Nigerians own verified, titled land affordably and transparently. Explore available plots in Lagos and Ogun State." />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="The Forge Properties" />
-    <meta name="theme-color" content="#0057FF" />
+    <meta name="theme-color" content="#0F172A" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -18,7 +18,7 @@
     <meta property="og:site_name" content="The Forge Properties" />
 
     <!-- Fallback Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230057FF'/><path d='M30 75L50 25L70 75H58L50 52L42 75Z' fill='%23C8FF00'/></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230F172A'/><path d='M30 75L50 25L70 75H58L50 52L42 75Z' fill='%23774DFF'/></svg>" />
     
     <link rel="manifest" href="/manifest.json">
 
@@ -46,19 +46,23 @@
           extend: {
             colors: {
               forge: {
-                navy: '#0057FF',       // Primary Electric Blue (#0057FF)
-                blue: '#0057FF',
-                gold: '#C8FF00',       // Accent Yellow-Green (#C8FF00)
-                accent: '#C8FF00',
-                goldLight: '#F5F5F5',  // Light Gray
-                offwhite: '#F5F5F5',   // Background Light Gray (#F5F5F5)
-                dark: '#0A0A0A',       // Primary Dark Text (#0A0A0A)
+                navy: '#0F172A',       // Primary Dark Blue (#0F172A)
+                blue: '#0F172A',
+                purple: '#774DFF',     // Accent Energy Purple (#774DFF)
+                accent: '#774DFF',
+                gold: '#774DFF',
+                orange: '#FE4A23',     // Red-Orange (#FE4A23)
+                alert: '#FE4A23',
+                grey: '#F3F4F6',       // Grey surface (#F3F4F6)
+                goldLight: '#F3F4F6',
+                offwhite: '#F3F4F6',
+                dark: '#0F172A',       // Primary dark text (#0F172A)
                 white: '#FFFFFF',
-                borderLight: '#E0E4FF', // Soft blue-tinted gray border
+                borderLight: '#E5E7EB', // Subtle section dividers on light areas
                 wa: '#25D366',         // WhatsApp Green
-                navyDark: '#0047D4',
-                navyLight: '#1A68FF',
-                muted: '#6B7280',
+                navyDark: '#090D16',
+                navyLight: '#1E293B',
+                muted: '#64748B',
               }
             },
             fontFamily: {
@@ -77,32 +81,89 @@
       }
       html, body { 
         background-color: #FFFFFF !important; 
-        color: #0A0A0A;
+        color: #0F172A;
         margin: 0;
         padding: 0;
         min-height: 100vh;
         font-family: 'DM Sans', Inter, sans-serif;
       }
 
+      /* 10. Page load — smooth entrance: fade the entire page in from white over 0.4s */
+      @keyframes pageLoadFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      body {
+        animation: pageLoadFadeIn 0.4s ease-out forwards;
+      }
+
       /* Clean subtle scrollbar */
       ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #F5F5F5; }
+      ::-webkit-scrollbar-track { background: #F3F4F6; }
       ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #C8FF00; }
+      ::-webkit-scrollbar-thumb:hover { background: #774DFF; }
       
-      @keyframes pulseGlow {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
-        50% { transform: scale(1.05); box-shadow: 0 0 0 14px rgba(37, 211, 102, 0); }
+      /* 6. Floating WhatsApp button — pulse animation */
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(119, 77, 255, 0.4); }
+        70% { box-shadow: 0 0 0 12px rgba(119, 77, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(119, 77, 255, 0); }
       }
       .animate-whatsapp-pulse {
-        animation: pulseGlow 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        animation: pulse 2s infinite !important;
       }
       
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+      /* 4. Property cards — hover lift effect */
+      .property-card-lift {
+        border-left: 4px solid transparent !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-left-color 0.3s ease !important;
       }
-      .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+      .property-card-lift:hover {
+        transform: translateY(-8px) !important;
+        box-shadow: 0 20px 40px rgba(119, 77, 255, 0.15) !important;
+        border-left-color: #774DFF !important;
+      }
+
+      /* Buttons: smooth transition and hover scale 1.03 with slight brightness increase */
+      button, a[class*="rounded-[8px]"], .cta-button {
+        transition: all 0.2s ease !important;
+      }
+      button:hover:not(:disabled), a[class*="rounded-[8px]"]:hover, .cta-button:hover {
+        transform: scale(1.03) !important;
+        filter: brightness(1.06) !important;
+      }
+
+      /* 2. Hero animated headline word fade-up */
+      @keyframes heroWordFadeUp {
+        0% { opacity: 0; transform: translateY(24px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .animate-hero-word {
+        animation: heroWordFadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      /* 8. The Forge Nation banner — subtle shimmer sweep */
+      @keyframes shimmerSweep {
+        0% { transform: translateX(-150%) skewX(-15deg); }
+        100% { transform: translateX(250%) skewX(-15deg); }
+      }
+      .banner-shimmer-sweep {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(119, 77, 255, 0.18) 30%,
+          rgba(255, 255, 255, 0.15) 50%,
+          rgba(119, 77, 255, 0.18) 70%,
+          transparent 100%
+        );
+        animation: shimmerSweep 6s infinite ease-in-out;
+        pointer-events: none;
+      }
 
       .article-content {
         min-height: 400px;
@@ -135,7 +196,7 @@
       .article-content ul { list-style-type: disc !important; margin-left: 2rem !important; margin-bottom: 1.5rem !important; padding-left: 0.5rem !important; display: block !important; }
       .article-content ol { list-style-type: decimal !important; margin-left: 2rem !important; margin-bottom: 1.5rem !important; padding-left: 0.5rem !important; display: block !important; }
       .article-content li { display: list-item !important; margin-bottom: 0.5rem !important; line-height: 1.8 !important; font-size: 1.125rem !important; color: #334155 !important; }
-      .article-content blockquote { border-left: 4px solid #C8FF00 !important; padding-left: 1.5rem !important; margin-left: 0 !important; margin-right: 0 !important; margin-top: 1.5rem !important; margin-bottom: 1.5rem !important; font-style: italic !important; color: #475569 !important; }
+      .article-content blockquote { border-left: 4px solid #774DFF !important; padding-left: 1.5rem !important; margin-left: 0 !important; margin-right: 0 !important; margin-top: 1.5rem !important; margin-bottom: 1.5rem !important; font-style: italic !important; color: #475569 !important; }
     </style>
   
   <script type="importmap">
@@ -156,7 +217,7 @@
 }
 </script>
 </head>
-  <body class="bg-white text-[#0A0A0A] antialiased font-sans selection:bg-[#C8FF00] selection:text-[#0A0A0A]">
+  <body class="bg-white text-[#0F172A] antialiased font-sans selection:bg-[#774DFF] selection:text-white">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
