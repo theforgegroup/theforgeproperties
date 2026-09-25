@@ -86,7 +86,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   logo: "",
   // Homepage Hero & Visuals Defaults
   hero_image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600",
-  hero_headline: "Verified, Titled Land in Ogun & Lagos Growth Corridors",
+  hero_headline: "Verified, Titled Land Made Available for You",
   hero_subheadline: "Own titled land with zero legal risk, transparent documentation, and flexible installment plans tailored for young Nigerians and diaspora investors.",
   hero_badge_text: "Titled Land Only • 100% Surveyed & Verified",
   hero_partner_name: "Geofort Africa",

@@ -160,7 +160,7 @@ export const Navbar: React.FC = () => {
               <ArrowRight size={18} />
             </Link>
             <p className="text-center text-xs text-white/70">
-              Verified, Titled Land • Kobape & Lagos Growth Corridor
+              Verified, Titled Land Made Available for You
             </p>
           </div>
         </div>

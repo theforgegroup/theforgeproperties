@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -13,14 +13,156 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { PropertyEnquiryModal } from '../components/PropertyEnquiryModal';
-import { Property } from '../types';
 import { ScrollFade, CountUp, AnimatedDivider, ParallaxBackground } from '../components/AnimationUtils';
+
+/**
+ * 4. "4 WAYS" SECTION — SCROLL ANIMATION
+ * - The entire section background fades in or transitions in smoothly — not a hard appear
+ * - The section heading slides up and fades in first
+ * - Each of the four cards animates in one by one with a stagger of 0.15s between each card
+ * - Each card slides up from translateY(40px) to translateY(0) while fading from opacity: 0 to opacity: 1
+ * - Duration per card: 0.6s with cubic-bezier(0.4, 0, 0.2, 1) easing
+ * - Uses Intersection Observer so the animation only triggers when the section is in view, not on page load
+ */
+const FourWaysSection: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const cards = [
+    {
+      num: '01',
+      icon: <Calendar size={24} />,
+      title: 'Flexible Payment Plan',
+      text: 'Spread land payments across 3 to 12 months with low initial commitments and zero exploitative interest.',
+      link: '/properties',
+      delay: '0.15s'
+    },
+    {
+      num: '02',
+      icon: <Users size={24} />,
+      title: 'Co-Buy With a Friend',
+      text: 'Split a 300sqm or 500sqm plot cleanly with dual-agreement legal documentation and individual title allocations.',
+      link: '/properties',
+      delay: '0.30s'
+    },
+    {
+      num: '03',
+      icon: <Layers size={24} />,
+      title: 'Group Buying',
+      text: 'Pool purchasing power with your alumni, tech circle, or family club to unlock exclusive bulk price discounts.',
+      link: '/forge-nation',
+      delay: '0.45s'
+    },
+    {
+      num: '04',
+      icon: <Coins size={24} />,
+      title: 'Start Small',
+      text: 'Begin your real estate empire with an entry-level 150sqm parcel starting at just ₦900,000 in prime Kobape.',
+      link: '/properties',
+      delay: '0.60s'
+    }
+  ];
+
+  return (
+    <section 
+      ref={sectionRef} 
+      id="ways-to-own" 
+      className={`py-24 bg-[#0F172A] text-white relative overflow-hidden transition-opacity duration-1000 ease-out ${
+        inView ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      {/* Decorative background glow */}
+      <div 
+        className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-[#774DFF]/10 blur-3xl pointer-events-none" 
+        aria-hidden="true" 
+      />
+
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+        {/* Section Heading slides up and fades in first */}
+        <div 
+          className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-600 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <span className="text-xs font-bold uppercase tracking-[2px] text-[#774DFF] block mb-2">
+            Accessible Ownership
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white font-display leading-tight">
+            4 Ways Young Nigerians Can Own Land Without Breaking the Bank
+          </h2>
+          <p className="text-base text-slate-300 mt-4">
+            We eliminate traditional real estate gatekeeping with structures tailored for your current cash flow.
+          </p>
+        </div>
+
+        {/* 4 cards animate in one by one with 0.15s stagger */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+          {cards.map((card, idx) => (
+            <div
+              key={idx}
+              style={{
+                transitionDuration: '0.6s',
+                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDelay: inView ? card.delay : '0s'
+              }}
+              className={`relative p-7 sm:p-8 rounded-[12px] bg-[#1E293B] border border-[#774DFF]/30 hover:border-[#774DFF] overflow-hidden group h-full flex flex-col justify-between shadow-md transition-all ${
+                inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[40px]'
+              }`}
+            >
+              <div 
+                className="absolute -top-4 -right-2 text-7xl sm:text-8xl font-extrabold text-[#774DFF]/15 font-display select-none pointer-events-none group-hover:text-[#774DFF]/25 transition-colors"
+                aria-hidden="true"
+              >
+                {card.num}
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-[8px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] mb-5">
+                  {card.icon}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white font-display mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed mb-6">
+                  {card.text}
+                </p>
+              </div>
+
+              <Link 
+                to={card.link} 
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-white transition-colors uppercase tracking-[1.5px]"
+              >
+                <span>Learn More</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const Home: React.FC = () => {
   const { properties, settings, addSubscriber } = useProperties();
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
@@ -32,11 +174,6 @@ export const Home: React.FC = () => {
     if (flagged.length > 0) return flagged.slice(0, 2);
     return properties.slice(0, 2);
   }, [properties]);
-
-  const handleOpenEnquiry = (property: Property) => {
-    setSelectedProperty(property);
-    setIsEnquiryOpen(true);
-  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,7 +335,7 @@ export const Home: React.FC = () => {
               </button>
             </div>
 
-            {/* Below buttons: Three trust badges in a row */}
+            {/* 3. Below buttons: Three trust badges in a row (Updated trust badge text) */}
             <div className="pt-6 border-t border-white/15 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-slate-300">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-[6px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] shrink-0">
@@ -210,7 +347,7 @@ export const Home: React.FC = () => {
                 <div className="w-7 h-7 rounded-[6px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] shrink-0">
                   <FileCheck2 size={16} />
                 </div>
-                <span>Titled Land Only (100% Surveyed)</span>
+                <span>Verified, Titled Land Made Available for You</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-[6px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] shrink-0">
@@ -294,8 +431,8 @@ export const Home: React.FC = () => {
             {featuredProperties.map((prop, idx) => (
               <ScrollFade key={prop.id} delay={idx * 0.1} className="h-full">
                 <div className="property-card-lift bg-white rounded-[12px] border border-[#E5E7EB] overflow-hidden shadow-sm flex flex-col h-full group">
-                  {/* Property Image & Urgency / Available Badge */}
-                  <div className="relative h-60 sm:h-72 w-full overflow-hidden bg-[#F3F4F6]">
+                  {/* Property Image & Urgency / Available Badge — Links to Dedicated Details Page */}
+                  <Link to={`/listings/${prop.slug}`} className="block relative h-60 sm:h-72 w-full overflow-hidden bg-[#F3F4F6]">
                     <img
                       src={prop.images && prop.images[0] ? prop.images[0] : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200'}
                       alt={prop.title}
@@ -303,9 +440,8 @@ export const Home: React.FC = () => {
                       loading="lazy"
                     />
                     <div className="absolute top-4 left-4">
-                      {/* Urgency element: Red-Orange #FE4A23 */}
                       <span className="bg-[#FE4A23] text-white font-bold text-xs px-3 py-1.5 rounded-[6px] shadow-sm uppercase tracking-wider flex items-center gap-1.5">
-                        <ShieldCheck size={14} /> Available Now
+                        <ShieldCheck size={14} /> {prop.status_badge || 'Available Now'}
                       </span>
                     </div>
                     {prop.developer && (
@@ -313,7 +449,7 @@ export const Home: React.FC = () => {
                         Partner: {prop.developer}
                       </div>
                     )}
-                  </div>
+                  </Link>
 
                   {/* Card Content */}
                   <div className="p-6 sm:p-7 flex flex-col flex-grow justify-between bg-white">
@@ -323,9 +459,11 @@ export const Home: React.FC = () => {
                         <span>{prop.location}</span>
                       </div>
 
-                      <h3 className="text-2xl font-bold text-[#0F172A] font-display group-hover:text-[#774DFF] transition-colors mb-2">
-                        {prop.title}
-                      </h3>
+                      <Link to={`/listings/${prop.slug}`} className="block">
+                        <h3 className="text-2xl font-bold text-[#0F172A] font-display group-hover:text-[#774DFF] transition-colors mb-2">
+                          {prop.title}
+                        </h3>
+                      </Link>
 
                       <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4">
                         {prop.description}
@@ -348,7 +486,7 @@ export const Home: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Documentation */}
+                      {/* 2. Documentation Line Editable from Admin */}
                       <div className="p-3 bg-[#F3F4F6] rounded-[8px] border border-[#E5E7EB] text-xs text-[#0F172A] mb-6 flex items-center gap-2">
                         <FileCheck2 size={16} className="text-[#774DFF] shrink-0" />
                         <span className="font-semibold">
@@ -357,7 +495,7 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Pricing & CTA */}
+                    {/* Pricing & 1. Dedicated View Details Link */}
                     <div className="pt-4 border-t border-[#E5E7EB] flex items-center justify-between gap-4">
                       <div>
                         <span className="text-[11px] font-bold uppercase tracking-[1px] text-slate-400 block">
@@ -368,14 +506,15 @@ export const Home: React.FC = () => {
                         </span>
                       </div>
 
-                      <button
+                      {/* 1. Open dedicated full property detail page, not a modal or form */}
+                      <Link
                         id={`view-details-${prop.id}`}
-                        onClick={() => handleOpenEnquiry(prop)}
+                        to={`/listings/${prop.slug}`}
                         className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-[8px] min-h-[44px] transition-all flex items-center gap-2 shadow-sm hover:shadow"
                       >
                         <span>View Details</span>
                         <ArrowRight size={15} />
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -397,159 +536,8 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 5 — 4 WAYS TO OWN LAND (Dark Section: #0F172A) */}
-      <section id="ways-to-own" className="py-24 bg-[#0F172A] text-white relative overflow-hidden">
-        {/* Decorative background glow */}
-        <div 
-          className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-[#774DFF]/10 blur-3xl pointer-events-none" 
-          aria-hidden="true"
-        />
-
-        <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
-          <ScrollFade className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-bold uppercase tracking-[2px] text-[#774DFF] block mb-2">
-              Accessible Ownership
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white font-display leading-tight">
-              4 Ways Young Nigerians Can Own Land Without Breaking the Bank
-            </h2>
-            <p className="text-base text-slate-300 mt-4">
-              We eliminate traditional real estate gatekeeping with structures tailored for your current cash flow.
-            </p>
-          </ScrollFade>
-
-          {/* 4 cards in a 2x2 grid with stagger delays */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
-            {/* Card 1 */}
-            <ScrollFade delay={0.1}>
-              <div className="relative p-7 sm:p-8 rounded-[12px] bg-[#1E293B] border border-[#774DFF]/30 hover:border-[#774DFF] transition-all duration-300 overflow-hidden group h-full flex flex-col justify-between shadow-md">
-                <div 
-                  className="absolute -top-4 -right-2 text-7xl sm:text-8xl font-extrabold text-[#774DFF]/15 font-display select-none pointer-events-none group-hover:text-[#774DFF]/25 transition-colors"
-                  aria-hidden="true"
-                >
-                  01
-                </div>
-
-                <div>
-                  <div className="w-12 h-12 rounded-[8px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] mb-5">
-                    <Calendar size={24} />
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white font-display mb-2">
-                    Flexible Payment Plan
-                  </h3>
-                  <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                    Spread land payments across 3 to 12 months with low initial commitments and zero exploitative interest.
-                  </p>
-                </div>
-
-                <Link 
-                  to="/properties" 
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-white transition-colors uppercase tracking-[1.5px]"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </ScrollFade>
-
-            {/* Card 2 */}
-            <ScrollFade delay={0.2}>
-              <div className="relative p-7 sm:p-8 rounded-[12px] bg-[#1E293B] border border-[#774DFF]/30 hover:border-[#774DFF] transition-all duration-300 overflow-hidden group h-full flex flex-col justify-between shadow-md">
-                <div 
-                  className="absolute -top-4 -right-2 text-7xl sm:text-8xl font-extrabold text-[#774DFF]/15 font-display select-none pointer-events-none group-hover:text-[#774DFF]/25 transition-colors"
-                  aria-hidden="true"
-                >
-                  02
-                </div>
-
-                <div>
-                  <div className="w-12 h-12 rounded-[8px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] mb-5">
-                    <Users size={24} />
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white font-display mb-2">
-                    Co-Buy With a Friend
-                  </h3>
-                  <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                    Split a 300sqm or 500sqm plot cleanly with dual-agreement legal documentation and individual title allocations.
-                  </p>
-                </div>
-
-                <Link 
-                  to="/properties" 
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-white transition-colors uppercase tracking-[1.5px]"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </ScrollFade>
-
-            {/* Card 3 */}
-            <ScrollFade delay={0.3}>
-              <div className="relative p-7 sm:p-8 rounded-[12px] bg-[#1E293B] border border-[#774DFF]/30 hover:border-[#774DFF] transition-all duration-300 overflow-hidden group h-full flex flex-col justify-between shadow-md">
-                <div 
-                  className="absolute -top-4 -right-2 text-7xl sm:text-8xl font-extrabold text-[#774DFF]/15 font-display select-none pointer-events-none group-hover:text-[#774DFF]/25 transition-colors"
-                  aria-hidden="true"
-                >
-                  03
-                </div>
-
-                <div>
-                  <div className="w-12 h-12 rounded-[8px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] mb-5">
-                    <Layers size={24} />
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white font-display mb-2">
-                    Group Buying
-                  </h3>
-                  <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                    Pool purchasing power with your alumni, tech circle, or family club to unlock exclusive bulk price discounts.
-                  </p>
-                </div>
-
-                <Link 
-                  to="/forge-nation" 
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-white transition-colors uppercase tracking-[1.5px]"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </ScrollFade>
-
-            {/* Card 4 */}
-            <ScrollFade delay={0.4}>
-              <div className="relative p-7 sm:p-8 rounded-[12px] bg-[#1E293B] border border-[#774DFF]/30 hover:border-[#774DFF] transition-all duration-300 overflow-hidden group h-full flex flex-col justify-between shadow-md">
-                <div 
-                  className="absolute -top-4 -right-2 text-7xl sm:text-8xl font-extrabold text-[#774DFF]/15 font-display select-none pointer-events-none group-hover:text-[#774DFF]/25 transition-colors"
-                  aria-hidden="true"
-                >
-                  04
-                </div>
-
-                <div>
-                  <div className="w-12 h-12 rounded-[8px] bg-[#774DFF]/20 border border-[#774DFF]/40 flex items-center justify-center text-[#774DFF] mb-5">
-                    <Coins size={24} />
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white font-display mb-2">
-                    Start Small
-                  </h3>
-                  <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                    Begin your real estate empire with an entry-level 150sqm parcel starting at just ₦900,000 in prime Kobape.
-                  </p>
-                </div>
-
-                <Link 
-                  to="/properties" 
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-white transition-colors uppercase tracking-[1.5px]"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </ScrollFade>
-          </div>
-        </div>
-      </section>
+      {/* SECTION 5 — 4 WAYS TO OWN LAND (With dedicated IntersectionObserver scroll animations) */}
+      <FourWaysSection />
 
       {/* SECTION 6 — WHY THE FORGE */}
       <section id="why-the-forge" className="py-24 bg-white">
@@ -639,7 +627,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 7 — THE FORGE NATION BANNER (8. Subtle shimmer sweep animation) */}
+      {/* SECTION 7 — THE FORGE NATION BANNER */}
       <section 
         id="forge-nation-banner" 
         className="relative bg-[#0F172A] py-14 px-4 sm:px-6 border-t border-b border-[#774DFF]/30 overflow-hidden"
@@ -756,13 +744,6 @@ export const Home: React.FC = () => {
           </ScrollFade>
         </div>
       </section>
-
-      {/* Global Property Enquiry Modal */}
-      <PropertyEnquiryModal
-        isOpen={isEnquiryOpen}
-        onClose={() => setIsEnquiryOpen(false)}
-        property={selectedProperty}
-      />
     </div>
   );
 };

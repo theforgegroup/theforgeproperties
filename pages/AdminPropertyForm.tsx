@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, X, Upload, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info
+  ArrowLeft, Save, X, Upload, Loader2, Link as LinkIcon, AlertCircle, CheckCircle, Info, MapPin, FileCheck2, Layers
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
 import { extractErrorMessage } from '../utils/errorUtils';
@@ -29,24 +28,39 @@ export const AdminPropertyForm: React.FC = () => {
     slug: '',
     title: '',
     description: '',
-    price: 0,
+    price: 900000,
     location: '',
     bedrooms: 0,
     bathrooms: 0,
-    area_sq_ft: 0,
-    type: PropertyType.VILLA,
+    area_sq_ft: 150,
+    type: PropertyType.LAND,
     status: ListingStatus.FOR_SALE,
     images: [],
     features: [],
     agent: {
       name: settings?.listing_agent?.name || 'The Forge Properties',
       image: settings?.listing_agent?.image || '',
-      phone: settings?.listing_agent?.phone || '+234 800 FORGE 00'
+      phone: settings?.listing_agent?.phone || '+234 810 613 3572'
     },
-    featured: false
+    featured: false,
+    show_on_homepage: false,
+    developer: 'Geofort Africa',
+    plot_sizes: ['150 SQM', '300 SQM', '500 SQM'],
+    documentation: 'Deed of Assignment + Registered Survey Plan',
+    status_badge: 'Available Now',
+    map_url: 'Kobape, Abeokuta, Ogun State',
+    price_options: [
+      { size: '150 SQM', price: 900000, formattedPrice: '₦900,000' },
+      { size: '300 SQM', price: 1800000, formattedPrice: '₦1,800,000' },
+      { size: '500 SQM', price: 3000000, formattedPrice: '₦3,000,000' }
+    ]
   });
 
-  const [featuresInput, setFeaturesInput] = useState('');
+  const [featuresInput, setFeaturesInput] = useState('Perimeter Fencing, Secure Gate House, Paved Access Roads, Engineered Drainage, Recreational Centre, Gardening Spaces');
+  const [plotSizesInput, setPlotSizesInput] = useState('150 SQM, 300 SQM, 500 SQM');
+  const [price150, setPrice150] = useState<number>(900000);
+  const [price300, setPrice300] = useState<number>(1800000);
+  const [price500, setPrice500] = useState<number>(3000000);
 
   const slugify = (text: string) => {
     return text.toString().toLowerCase().trim()
@@ -63,7 +77,21 @@ export const AdminPropertyForm: React.FC = () => {
         const property = getProperty(id);
         if (property) {
           setFormData(property);
-          setFeaturesInput(property.features.join(', '));
+          setFeaturesInput(property.features ? property.features.join(', ') : '');
+          setPlotSizesInput(property.plot_sizes ? property.plot_sizes.join(', ') : '150 SQM, 300 SQM, 500 SQM');
+          
+          if (property.price_options && property.price_options.length > 0) {
+            const opt150 = property.price_options.find(p => p.size.includes('150'));
+            const opt300 = property.price_options.find(p => p.size.includes('300'));
+            const opt500 = property.price_options.find(p => p.size.includes('500'));
+            if (opt150) setPrice150(opt150.price);
+            if (opt300) setPrice300(opt300.price);
+            if (opt500) setPrice500(opt500.price);
+          } else if (property.price) {
+            setPrice150(property.price);
+            setPrice300(property.price * 2);
+            setPrice500(property.price * 3.33);
+          }
         } else {
           setError("Property not found.");
         }
@@ -74,7 +102,7 @@ export const AdminPropertyForm: React.FC = () => {
           agent: {
             name: settings?.listing_agent?.name || 'The Forge Properties',
             image: settings?.listing_agent?.image || '',
-            phone: settings?.listing_agent?.phone || '+234 800 FORGE 00'
+            phone: settings?.listing_agent?.phone || '+234 810 613 3572'
           }
         }));
       }
@@ -140,7 +168,31 @@ export const AdminPropertyForm: React.FC = () => {
     setError('');
 
     const finalFeatures = featuresInput.split(',').map(f => f.trim()).filter(f => f !== '');
-    const submissionData = { ...formData, features: finalFeatures };
+    const finalPlotSizes = plotSizesInput.split(',').map(s => s.trim()).filter(s => s !== '');
+    
+    const calculatedPriceOptions = [
+      { size: '150 SQM', price: Number(price150) || 900000, formattedPrice: `₦${Number(price150 || 900000).toLocaleString()}` },
+      { size: '300 SQM', price: Number(price300) || 1800000, formattedPrice: `₦${Number(price300 || 1800000).toLocaleString()}` },
+      { size: '500 SQM', price: Number(price500) || 3000000, formattedPrice: `₦${Number(price500 || 3000000).toLocaleString()}` }
+    ];
+
+    const submissionData: Property = { 
+      ...formData, 
+      price: Number(formData.price) || Number(price150) || 900000,
+      features: finalFeatures.length > 0 ? finalFeatures : [
+        'Perimeter Fencing', 
+        'Secure Gate House', 
+        'Paved Access Roads', 
+        'Engineered Drainage', 
+        'Recreational Centre', 
+        'Gardening Spaces'
+      ],
+      plot_sizes: finalPlotSizes.length > 0 ? finalPlotSizes : ['150 SQM', '300 SQM', '500 SQM'],
+      price_options: calculatedPriceOptions,
+      documentation: formData.documentation?.trim() || 'Deed of Assignment + Registered Survey Plan',
+      status_badge: formData.status_badge || 'Available Now',
+      map_url: formData.map_url?.trim() || 'Kobape, Abeokuta, Ogun State'
+    };
 
     try {
       if (isEditing) await updateProperty(submissionData);
@@ -159,14 +211,19 @@ export const AdminPropertyForm: React.FC = () => {
     <AdminLayout>
       <div className="max-w-5xl mx-auto pb-20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <button onClick={() => navigate('/admin')} className="text-slate-400 hover:text-forge-navy transition-colors flex items-center gap-2 text-sm font-medium">
+          <button 
+            onClick={() => navigate('/admin')} 
+            className="text-slate-500 hover:text-[#0F172A] transition-colors flex items-center gap-2 text-sm font-bold"
+          >
             <ArrowLeft size={16} /> Back to Dashboard
           </button>
-          <h1 className="text-3xl font-serif text-forge-navy font-bold">{isEditing ? 'Modify Residence' : 'Forge New Listing'}</h1>
+          <h1 className="text-3xl font-extrabold text-[#0F172A] font-display">
+            {isEditing ? 'Edit Property Listing' : 'Create New Property Listing'}
+          </h1>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-6 rounded mb-6 border border-red-200">
+          <div className="bg-red-50 text-[#FE4A23] p-6 rounded-[8px] mb-6 border border-red-200">
             <div className="flex items-start gap-3">
               <AlertCircle size={20} className="shrink-0 mt-0.5" />
               <div>
@@ -178,111 +235,292 @@ export const AdminPropertyForm: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="bg-white rounded-sm shadow-xl border-t-4 border-forge-gold overflow-hidden">
-            <div className="p-8 md:p-12 space-y-8">
+          <div className="bg-white rounded-[12px] shadow-sm border border-[#E5E7EB] overflow-hidden">
+            <div className="p-6 md:p-10 space-y-8">
+              
+              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Column 1 */}
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Property Title</label>
-                    <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold focus:outline-none" placeholder="e.g. Diplomatic Zone Mansion" required />
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Property Name / Title *
+                    </label>
+                    <input 
+                      type="text" 
+                      name="title" 
+                      value={formData.title} 
+                      onChange={handleChange} 
+                      className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] focus:outline-none text-[#0F172A]" 
+                      placeholder="e.g. Prasino Lush Phase 2" 
+                      required 
+                    />
                   </div>
                   
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Permalinks Slug</label>
-                    <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-100 p-3 rounded-sm border border-slate-200">
-                      <LinkIcon size={14} className="text-forge-gold" />
-                      <span className="font-mono text-xs">/listings/</span>
-                      <input type="text" name="slug" value={formData.slug} onChange={(e) => setFormData({...formData, slug: slugify(e.target.value)})} className="flex-grow bg-white border border-slate-200 px-2 py-1 rounded font-mono text-xs focus:border-forge-gold" required />
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Slug (URL Permalinks) *
+                    </label>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 bg-[#F3F4F6] p-2.5 rounded-[8px] border border-[#E5E7EB]">
+                      <LinkIcon size={14} className="text-[#774DFF] shrink-0" />
+                      <span className="font-mono text-xs text-slate-400">/listings/</span>
+                      <input 
+                        type="text" 
+                        name="slug" 
+                        value={formData.slug} 
+                        onChange={(e) => setFormData({...formData, slug: slugify(e.target.value)})} 
+                        className="flex-grow bg-white border border-[#E5E7EB] px-2.5 py-1.5 rounded-[6px] font-mono text-xs focus:border-[#774DFF] text-[#0F172A]" 
+                        required 
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Price (₦)</label>
-                      <input type="number" name="price" value={formData.price || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" required />
+                      <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                        Starting Price (₦) *
+                      </label>
+                      <input 
+                        type="number" 
+                        name="price" 
+                        value={formData.price || ''} 
+                        onChange={handleChange} 
+                        className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                        placeholder="900000"
+                        required 
+                      />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Type</label>
-                      <select name="type" value={formData.type} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm">
-                        {Object.values(PropertyType).map(t => <option key={t} value={t}>{t}</option>)}
+                      <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                        Property Status Badge *
+                      </label>
+                      <select 
+                        name="status_badge" 
+                        value={formData.status_badge || 'Available Now'} 
+                        onChange={handleChange} 
+                        className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] font-bold text-[#0F172A]"
+                      >
+                        <option value="Available Now">Available Now</option>
+                        <option value="Coming Soon">Coming Soon</option>
+                        <option value="Sold Out">Sold Out</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Location</label>
-                    <input type="text" name="location" value={formData.location} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" placeholder="e.g. Maitama, Abuja" required />
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Property Location *
+                    </label>
+                    <div className="relative">
+                      <MapPin size={16} className="absolute left-3.5 top-4 text-[#774DFF]" />
+                      <input 
+                        type="text" 
+                        name="location" 
+                        value={formData.location} 
+                        onChange={handleChange} 
+                        className="w-full bg-[#F3F4F6] border border-[#E5E7EB] pl-10 pr-3.5 py-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                        placeholder="e.g. Kobape, Abeokuta, Ogun State" 
+                        required 
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Description</label>
-                    <textarea name="description" value={formData.description} onChange={handleChange} rows={6} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold resize-none" placeholder="Detailed description..." required></textarea>
-                  </div>
-
-                  {/* Restored Key Features Input */}
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Key Features (comma separated)</label>
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Developer / Partner Name
+                    </label>
                     <input 
                       type="text" 
-                      value={featuresInput} 
-                      onChange={(e) => setFeaturesInput(e.target.value)} 
-                      className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:border-forge-gold" 
-                      placeholder="e.g. Swimming Pool, Gym, Smart Home, Security" 
+                      name="developer" 
+                      value={formData.developer || ''} 
+                      onChange={handleChange} 
+                      className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                      placeholder="e.g. Geofort Africa" 
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Beds</label>
-                      <input type="number" name="bedrooms" value={formData.bedrooms || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Baths</label>
-                      <input type="number" name="bathrooms" value={formData.bathrooms || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sq Ft</label>
-                      <input type="number" name="area_sq_ft" value={formData.area_sq_ft || ''} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-4 text-sm" />
-                    </div>
+                  {/* 2. Google Maps Location Link or Coordinates */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Google Maps Location Link or Coordinates</span>
+                      <span className="text-[11px] text-[#774DFF] font-semibold lowercase">embed & map url</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      name="map_url" 
+                      value={formData.map_url || ''} 
+                      onChange={handleChange} 
+                      className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                      placeholder="e.g. Kobape, Abeokuta, Ogun State OR https://maps.google.com/?q=..." 
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1.5">
+                      Enter coordinates, place name, or a Google Maps share link. For Prasino Lush Phase 2, defaults to Kobape, Abeokuta, Ogun State.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Column 2 */}
+                <div className="space-y-6">
+                  {/* 2. Property Description */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Full Property Description *
+                    </label>
+                    <textarea 
+                      name="description" 
+                      value={formData.description} 
+                      onChange={handleChange} 
+                      rows={6} 
+                      className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A] resize-y" 
+                      placeholder="Comprehensive property overview detailing location, accessibility, title security, and development features..." 
+                      required
+                    />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-6 pt-2">
+                  {/* 2. Documentation Type or Types */}
+                  <div className="p-4 rounded-[10px] bg-[#F3F4F6] border border-[#774DFF]/30 space-y-2">
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-2">
+                      <FileCheck2 size={16} className="text-[#774DFF]" />
+                      <span>Documentation Type or Types (Admin Editable) *</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      name="documentation" 
+                      value={formData.documentation || ''} 
+                      onChange={handleChange} 
+                      className="w-full bg-white border border-[#E5E7EB] p-3 text-sm rounded-[8px] focus:border-[#774DFF] font-semibold text-[#0F172A]" 
+                      placeholder="e.g. Deed of Assignment + Registered Survey Plan" 
+                      required
+                    />
+                    <p className="text-[11px] text-slate-600">
+                      Displayed on all property cards, featured blocks, and details pages. Customize per listing (e.g. "Deed of Assignment + Registered Survey Plan", "Governor's Consent", "Certificate of Occupancy (C of O)").
+                    </p>
+                  </div>
+
+                  {/* 2. Features List */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Features List (comma-separated tags) *
+                    </label>
+                    <textarea 
+                      value={featuresInput} 
+                      onChange={(e) => setFeaturesInput(e.target.value)} 
+                      rows={3}
+                      className="w-full bg-[#F3F4F6] border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                      placeholder="Perimeter Fencing, Gate House, Paved Roads, Drainage, Recreational Centre, Gardening Spaces" 
+                      required
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Separate items with commas. Icons automatically map to: fencing, gate house, roads, drainage, recreational centre, gardening, etc.
+                    </p>
+                  </div>
+
+                  {/* Listing Type & Homepage Toggles */}
+                  <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-[#E5E7EB]">
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.featured ? 'bg-forge-gold' : 'bg-slate-200'}`}>
+                      <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.featured ? 'bg-[#774DFF]' : 'bg-slate-200'}`}>
                         <div className={`absolute w-4 h-4 bg-white rounded-full transition-transform ${formData.featured ? 'translate-x-5' : 'translate-x-1'}`}></div>
                       </div>
                       <input type="checkbox" name="featured" checked={formData.featured} onChange={(e) => setFormData({...formData, featured: e.target.checked})} className="hidden" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Featured</span>
+                      <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">Featured</span>
                     </label>
 
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.show_on_homepage ? 'bg-forge-navy' : 'bg-slate-200'}`}>
+                      <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${formData.show_on_homepage ? 'bg-[#774DFF]' : 'bg-slate-200'}`}>
                         <div className={`absolute w-4 h-4 bg-white rounded-full transition-transform ${formData.show_on_homepage ? 'translate-x-5' : 'translate-x-1'}`}></div>
                       </div>
                       <input type="checkbox" name="show_on_homepage" checked={formData.show_on_homepage} onChange={(e) => setFormData({...formData, show_on_homepage: e.target.checked})} className="hidden" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Show on Homepage</span>
+                      <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">Show on Homepage</span>
                     </label>
+                  </div>
+                </div>
 
-                    <div className="flex-grow min-w-[150px]">
-                      <select name="status" value={formData.status} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-3 text-xs font-bold uppercase tracking-widest">
-                        {Object.values(ListingStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+              </div>
+
+              {/* 2. Plot Sizes & Prices Section */}
+              <div className="p-6 rounded-[12px] bg-[#F3F4F6] border border-[#E5E7EB] space-y-6">
+                <div className="flex items-center gap-2">
+                  <Layers size={18} className="text-[#774DFF]" />
+                  <h3 className="text-lg font-bold text-[#0F172A] font-display">
+                    Plot Sizes & Pricing Breakdown
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                      Available Plot Sizes (comma-separated tags)
+                    </label>
+                    <input 
+                      type="text" 
+                      value={plotSizesInput} 
+                      onChange={(e) => setPlotSizesInput(e.target.value)} 
+                      className="w-full bg-white border border-[#E5E7EB] p-3.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                      placeholder="150 SQM, 300 SQM, 500 SQM" 
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Rendered as badges on property cards and tables.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#0F172A] uppercase mb-1">
+                        150 SQM (₦)
+                      </label>
+                      <input 
+                        type="number" 
+                        value={price150} 
+                        onChange={(e) => setPrice150(Number(e.target.value))} 
+                        className="w-full bg-white border border-[#E5E7EB] p-2.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                        placeholder="900000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#0F172A] uppercase mb-1">
+                        300 SQM (₦)
+                      </label>
+                      <input 
+                        type="number" 
+                        value={price300} 
+                        onChange={(e) => setPrice300(Number(e.target.value))} 
+                        className="w-full bg-white border border-[#E5E7EB] p-2.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                        placeholder="1800000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#0F172A] uppercase mb-1">
+                        500 SQM (₦)
+                      </label>
+                      <input 
+                        type="number" 
+                        value={price500} 
+                        onChange={(e) => setPrice500(Number(e.target.value))} 
+                        className="w-full bg-white border border-[#E5E7EB] p-2.5 text-sm rounded-[8px] focus:border-[#774DFF] text-[#0F172A]" 
+                        placeholder="3000000"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
 
-          <div className="bg-white rounded-sm shadow-xl p-8 md:p-12 border-t border-slate-100">
+          {/* Property Image Gallery */}
+          <div className="bg-white rounded-[12px] shadow-sm p-6 md:p-10 border border-[#E5E7EB]">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="font-serif text-xl text-forge-navy mb-1">Property Gallery</h3>
-                <p className="text-slate-400 text-xs">Images are hosted on Supabase Storage for high-speed delivery.</p>
+                <h3 className="font-display font-bold text-xl text-[#0F172A] mb-1">Property Gallery</h3>
+                <p className="text-slate-500 text-xs">High-resolution images for hero display and thumbnails.</p>
               </div>
-              <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-slate-100 text-slate-600 px-5 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-forge-navy hover:text-white transition-all disabled:opacity-50">
+              <button 
+                type="button" 
+                disabled={isUploading} 
+                onClick={() => fileInputRef.current?.click()} 
+                className="flex items-center gap-2 bg-[#774DFF] text-white px-5 py-3 text-xs font-bold uppercase tracking-wider rounded-[8px] hover:bg-[#683de6] transition-all disabled:opacity-50"
+              >
                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Add Images
               </button>
               <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleImageUpload} />
@@ -290,10 +528,14 @@ export const AdminPropertyForm: React.FC = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {formData.images.map((img, idx) => (
-                <div key={idx} className="aspect-square relative group rounded-sm overflow-hidden border border-slate-200">
-                  <img src={img} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-forge-navy/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button type="button" onClick={() => removeImage(idx)} className="bg-white text-red-500 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all">
+                <div key={idx} className="aspect-square relative group rounded-[8px] overflow-hidden border border-[#E5E7EB]">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-[#0F172A]/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button 
+                      type="button" 
+                      onClick={() => removeImage(idx)} 
+                      className="bg-white text-[#FE4A23] p-2 rounded-full hover:bg-[#FE4A23] hover:text-white transition-all shadow-md"
+                    >
                       <X size={16} />
                     </button>
                   </div>
@@ -302,15 +544,26 @@ export const AdminPropertyForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8">
-            <div className="text-slate-400 text-xs italic flex items-center gap-1">
-              <Info size={14} /> Images are optimized for performance.
+          {/* Action Buttons */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4">
+            <div className="text-slate-500 text-xs italic flex items-center gap-1.5">
+              <Info size={14} className="text-[#774DFF]" /> All changes sync instantly with live property cards and details pages.
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
-              <button type="button" onClick={() => navigate('/admin')} className="flex-1 md:flex-none px-10 py-5 bg-white border border-slate-200 text-slate-400 font-bold uppercase tracking-widest text-xs">Cancel</button>
-              <button type="submit" disabled={isSubmitting || isUploading || isSuccess} className="flex-1 md:flex-none px-12 py-5 bg-forge-navy text-white font-bold uppercase tracking-widest text-xs hover:bg-forge-dark shadow-2xl transition-all flex items-center justify-center gap-2">
+              <button 
+                type="button" 
+                onClick={() => navigate('/admin')} 
+                className="flex-1 md:flex-none px-8 py-3.5 bg-transparent border border-[#774DFF] text-[#774DFF] hover:bg-[#774DFF] hover:text-white rounded-[8px] font-bold text-xs uppercase tracking-wider transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={isSubmitting || isUploading || isSuccess} 
+                className="flex-1 md:flex-none px-10 py-3.5 bg-[#774DFF] hover:bg-[#683de6] text-white rounded-[8px] font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
                 {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : (isSuccess ? <CheckCircle size={16} /> : <Save size={16} />)}
-                {isSubmitting ? 'Saving...' : (isSuccess ? 'Listing Saved' : 'Publish to Portfolio')}
+                {isSubmitting ? 'Saving...' : (isSuccess ? 'Saved Successfully' : 'Publish Property')}
               </button>
             </div>
           </div>

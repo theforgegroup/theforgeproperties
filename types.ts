@@ -62,6 +62,8 @@ export interface Property {
   plot_sizes?: string[];
   documentation?: string;
   is_coming_soon?: boolean;
+  status_badge?: 'Available Now' | 'Coming Soon' | 'Sold Out' | string;
+  map_url?: string;
   price_options?: { size: string; price: number; formattedPrice: string; }[];
   payment_plan?: string;
 }

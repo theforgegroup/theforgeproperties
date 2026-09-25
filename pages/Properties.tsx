@@ -5,7 +5,6 @@ import {
   MapPin, 
   FileCheck2, 
   ArrowRight, 
-  Bell, 
   RotateCcw,
   Sparkles, 
   ChevronRight,
@@ -13,8 +12,6 @@ import {
   Check
 } from 'lucide-react';
 import { useProperties } from '../context/PropertyContext';
-import { Property } from '../types';
-import { PropertyEnquiryModal } from '../components/PropertyEnquiryModal';
 import { ScrollFade, ParallaxBackground } from '../components/AnimationUtils';
 
 export const Properties: React.FC = () => {
@@ -22,10 +19,6 @@ export const Properties: React.FC = () => {
   const [locationFilter, setLocationFilter] = useState('All');
   const [plotSizeFilter, setPlotSizeFilter] = useState('All');
   const [priceRangeFilter, setPriceRangeFilter] = useState('All');
-  
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
-  const [enquiryPlotSize, setEnquiryPlotSize] = useState('150 SQM');
 
   // Filter listings based on dropdown values
   const filteredListings = useMemo(() => {
@@ -55,16 +48,6 @@ export const Properties: React.FC = () => {
     });
   }, [properties, locationFilter, plotSizeFilter, priceRangeFilter]);
 
-  const handleOpenEnquiry = (property: Property, plotSize: string = '150 SQM') => {
-    setSelectedProperty(property);
-    setEnquiryPlotSize(plotSize);
-    setIsEnquiryOpen(true);
-  };
-
-  const handleNotifyMe = (property: Property) => {
-    handleOpenEnquiry(property, 'Coming Soon Notification');
-  };
-
   const resetFilters = () => {
     setLocationFilter('All');
     setPlotSizeFilter('All');
@@ -73,111 +56,104 @@ export const Properties: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#0F172A] pt-20">
-      {/* PAGE HEADING SECTION — Dark Blue Background, Large White Text, Breadcrumbs */}
-      <section className="bg-[#0F172A] text-white py-16 px-4 sm:px-6 relative overflow-hidden border-b border-[#774DFF]/25">
-        {settings.properties_hero_image && (
+      {/* SECTION 1 — HEADER & BREADCRUMB */}
+      <section className="relative bg-[#0F172A] text-white py-14 overflow-hidden border-b border-[#774DFF]/30">
+        {/* Parallax background banner if uploaded */}
+        {settings?.properties_banner_image && (
           <ParallaxBackground 
-            imageUrl={settings.properties_hero_image}
-            alt="The Forge Properties"
-            overlayClassName="bg-[#0F172A]/85"
+            imageUrl={settings.properties_banner_image}
+            alt="The Forge Properties Portfolio"
+            overlayClassName="bg-gradient-to-r from-[#0F172A]/95 via-[#0F172A]/85 to-[#0F172A]/75"
           />
         )}
-        <div 
-          className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#774DFF]/15 blur-3xl pointer-events-none"
-          aria-hidden="true"
-        />
 
-        <div className="container mx-auto max-w-7xl relative z-10">
-          {/* Breadcrumb nav below heading */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-semibold text-slate-300 mb-4">
-            <Link to="/" className="hover:text-[#774DFF] transition-colors">
-              Home
-            </Link>
-            <ChevronRight size={14} className="text-[#774DFF]" />
-            <span className="text-[#774DFF]">Properties</span>
-          </nav>
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+          <div className="max-w-3xl">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-4">
+              <Link to="/" className="hover:text-[#774DFF] transition-colors">Home</Link>
+              <ChevronRight size={14} className="text-[#774DFF]" />
+              <span className="text-[#774DFF]">Properties</span>
+            </div>
 
-          <div className="max-w-2xl">
             <span className="text-xs font-bold uppercase tracking-[2px] text-[#774DFF] block mb-2">
-              Verified Titled Parcels
+              Verified Land Portfolio
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-white font-display mb-3">
-              Our Properties
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-white font-display mb-4">
+              Explore Available Properties
             </h1>
-            <p className="text-sm sm:text-base text-slate-300">
-              Explore verified titled land in Ogun and Lagos State growth corridors with transparent documentation and flexible installment plans.
+            <p className="text-base text-slate-300 max-w-2xl leading-relaxed">
+              Every parcel in our portfolio is vetted, titled, and developed with infrastructure in mind. No hidden agent fees, no Omo Onile disputes.
             </p>
           </div>
         </div>
       </section>
 
-      {/* FILTER BAR — Location, Plot Size, Price Range */}
-      <section className="bg-[#F3F4F6] border-b border-[#E5E7EB] py-6 px-4 sm:px-6 sticky top-[60px] sm:top-[68px] z-30 shadow-xs">
-        <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      {/* SECTION 2 — FILTER BAR */}
+      <section className="bg-[#F3F4F6] border-b border-[#E5E7EB] py-6 sticky top-20 z-20">
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             
-            {/* Filter Dropdowns */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-grow max-w-3xl">
-              {/* Location Filter */}
+            {/* Filter controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto flex-grow max-w-3xl">
+              {/* Location dropdown */}
               <div>
-                <label htmlFor="filter-location" className="block text-[11px] font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Location
                 </label>
                 <select
-                  id="filter-location"
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  className="w-full bg-white border border-[#E5E7EB] rounded-[8px] px-3 py-2 text-sm text-[#0F172A] font-medium focus:outline-none focus:border-[#774DFF] min-h-[44px]"
+                  className="w-full bg-white border border-[#E5E7EB] text-xs font-semibold rounded-[8px] px-3 py-2.5 text-[#0F172A] focus:outline-none focus:border-[#774DFF]"
                 >
                   <option value="All">All Locations</option>
-                  <option value="Kobape">Kobape / Abeokuta</option>
-                  <option value="Epe">Epe / Ijebu Corridor</option>
-                  <option value="Sangotedo">Sangotedo / Lagos</option>
+                  <option value="Kobape">Kobape, Abeokuta</option>
+                  <option value="Epe">Epe-Ijebu Corridor</option>
+                  <option value="Ogun">Ogun State</option>
+                  <option value="Lagos">Lagos State</option>
                 </select>
               </div>
 
-              {/* Plot Size Filter */}
+              {/* Plot size dropdown */}
               <div>
-                <label htmlFor="filter-plot-size" className="block text-[11px] font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Plot Size
                 </label>
                 <select
-                  id="filter-plot-size"
                   value={plotSizeFilter}
                   onChange={(e) => setPlotSizeFilter(e.target.value)}
-                  className="w-full bg-white border border-[#E5E7EB] rounded-[8px] px-3 py-2 text-sm text-[#0F172A] font-medium focus:outline-none focus:border-[#774DFF] min-h-[44px]"
+                  className="w-full bg-white border border-[#E5E7EB] text-xs font-semibold rounded-[8px] px-3 py-2.5 text-[#0F172A] focus:outline-none focus:border-[#774DFF]"
                 >
                   <option value="All">All Sizes</option>
-                  <option value="150 SQM">150 SQM (Starter)</option>
-                  <option value="300 SQM">300 SQM (Standard)</option>
-                  <option value="500 SQM">500 SQM (Full Plot)</option>
+                  <option value="150">150 SQM (Entry Plot)</option>
+                  <option value="300">300 SQM (Standard)</option>
+                  <option value="500">500 SQM (Executive)</option>
                 </select>
               </div>
 
-              {/* Price Range Filter */}
+              {/* Price range dropdown */}
               <div>
-                <label htmlFor="filter-price" className="block text-[11px] font-bold uppercase tracking-[1px] text-[#0F172A] mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Price Range
                 </label>
                 <select
-                  id="filter-price"
                   value={priceRangeFilter}
                   onChange={(e) => setPriceRangeFilter(e.target.value)}
-                  className="w-full bg-white border border-[#E5E7EB] rounded-[8px] px-3 py-2 text-sm text-[#0F172A] font-medium focus:outline-none focus:border-[#774DFF] min-h-[44px]"
+                  className="w-full bg-white border border-[#E5E7EB] text-xs font-semibold rounded-[8px] px-3 py-2.5 text-[#0F172A] focus:outline-none focus:border-[#774DFF]"
                 >
-                  <option value="All">All Price Ranges</option>
+                  <option value="All">All Prices</option>
                   <option value="under-1m">Under ₦1,000,000</option>
                   <option value="1m-2m">₦1,000,000 - ₦2,000,000</option>
-                  <option value="2m-plus">₦2,000,000+</option>
+                  <option value="2m-plus">₦2,000,000 and Above</option>
                 </select>
               </div>
             </div>
 
-            {/* Reset Filter Button */}
+            {/* Clear filters action */}
             {(locationFilter !== 'All' || plotSizeFilter !== 'All' || priceRangeFilter !== 'All') && (
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-[#683de6] transition-colors py-2 px-3 border border-[#E5E7EB] rounded-[8px] bg-white min-h-[44px] shrink-0"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#774DFF] hover:text-[#683de6] transition-colors py-2 px-3 self-end md:self-center"
               >
                 <RotateCcw size={14} />
                 <span>Reset Filters</span>
@@ -187,16 +163,31 @@ export const Properties: React.FC = () => {
         </div>
       </section>
 
-      {/* PROPERTY CARDS GRID */}
-      <section className="py-16 px-4 sm:px-6">
-        <div className="container mx-auto max-w-7xl">
+      {/* SECTION 3 — PROPERTY LISTINGS GRID */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+          
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-[2px] text-slate-400">
+              Showing {filteredListings.length} {filteredListings.length === 1 ? 'Development' : 'Developments'}
+            </h2>
+            <span className="text-xs text-slate-500">
+              Prices guaranteed with verified survey
+            </span>
+          </div>
+
           {filteredListings.length === 0 ? (
-            <div className="text-center py-20 bg-[#F3F4F6] rounded-[12px] p-8 max-w-md mx-auto border border-[#E5E7EB]">
-              <p className="text-base font-bold text-[#0F172A] mb-2">No matching properties found</p>
-              <p className="text-xs text-slate-500 mb-6">Try resetting your location, plot size, or price range filters.</p>
+            <div className="text-center py-20 bg-[#F3F4F6] rounded-[16px] border border-[#E5E7EB] p-8 max-w-xl mx-auto">
+              <ShieldCheck size={44} className="text-[#774DFF] mx-auto mb-3" />
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2 font-display">
+                No Properties Match Your Filter
+              </h3>
+              <p className="text-slate-600 text-sm mb-6">
+                Try widening your location or budget parameters to see available estates.
+              </p>
               <button
                 onClick={resetFilters}
-                className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-xs px-5 py-2.5 rounded-[8px] min-h-[44px] transition-all"
+                className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-[8px] transition-all shadow-sm"
               >
                 Reset Filters
               </button>
@@ -217,7 +208,7 @@ export const Properties: React.FC = () => {
                     >
                       <div>
                         {/* Property Image & Badge */}
-                        <div className="relative h-60 w-full overflow-hidden bg-[#F3F4F6]">
+                        <Link to={`/listings/${property.slug}`} className="block relative h-60 w-full overflow-hidden bg-[#F3F4F6]">
                           <img
                             src={property.images && property.images[0] ? property.images[0] : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200'}
                             alt={property.title}
@@ -229,11 +220,11 @@ export const Properties: React.FC = () => {
                           <div className="absolute top-3.5 left-3.5">
                             {isComingSoon ? (
                               <span className="bg-[#774DFF] text-white font-bold text-[11px] px-3 py-1 rounded-[6px] uppercase tracking-wider backdrop-blur-xs flex items-center gap-1.5 shadow-sm">
-                                <Sparkles size={13} className="text-white" /> Coming Soon
+                                <Sparkles size={13} className="text-white" /> {property.status_badge || 'Coming Soon'}
                               </span>
                             ) : (
                               <span className="bg-[#FE4A23] text-white font-bold text-[11px] px-3 py-1 rounded-[6px] uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                                <ShieldCheck size={14} /> Available Now
+                                <ShieldCheck size={14} /> {property.status_badge || 'Available Now'}
                               </span>
                             )}
                           </div>
@@ -243,7 +234,7 @@ export const Properties: React.FC = () => {
                               Developer: <strong className="text-[#774DFF]">{property.developer}</strong>
                             </div>
                           )}
-                        </div>
+                        </Link>
 
                         {/* Card Body */}
                         <div className="p-6">
@@ -254,17 +245,20 @@ export const Properties: React.FC = () => {
                           </div>
 
                           {/* Project Name */}
-                          <h2 className="text-xl font-bold text-[#0F172A] font-display mb-2">
-                            {property.title}
-                          </h2>
+                          <Link to={`/listings/${property.slug}`} className="block">
+                            <h2 className="text-xl font-bold text-[#0F172A] font-display hover:text-[#774DFF] transition-colors mb-2">
+                              {property.title}
+                            </h2>
+                          </Link>
 
+                          {/* Short Description */}
                           <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4">
                             {property.description}
                           </p>
 
-                          {/* Plot Size Tags */}
+                          {/* Plot Sizes as Tags */}
                           <div className="mb-4">
-                            <span className="text-[11px] font-bold uppercase tracking-[1px] text-slate-400 block mb-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-[1.5px] text-slate-400 block mb-1.5">
                               Plot Sizes:
                             </span>
                             <div className="flex flex-wrap gap-1.5">
@@ -316,29 +310,18 @@ export const Properties: React.FC = () => {
                             </span>
                           </div>
 
-                          {/* CTA button */}
-                          {isComingSoon ? (
-                            <button
-                              id={`notify-me-${property.id}`}
-                              onClick={() => handleNotifyMe(property)}
-                              className="bg-transparent border border-[#774DFF] hover:bg-[#774DFF] hover:text-white text-[#774DFF] font-bold text-xs px-4 py-2.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-1.5"
-                            >
-                              <Bell size={14} />
-                              <span>Notify Me</span>
-                            </button>
-                          ) : (
-                            <button
-                              id={`view-details-${property.id}`}
-                              onClick={() => handleOpenEnquiry(property)}
-                              className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-xs px-4 py-2.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-1.5 shadow-sm"
-                            >
-                              <span>View Details</span>
-                              <ArrowRight size={14} />
-                            </button>
-                          )}
+                          {/* 1. Dedicated View Details Link */}
+                          <Link
+                            id={`view-details-${property.id}`}
+                            to={`/listings/${property.slug}`}
+                            className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-xs px-4 py-2.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-1.5 shadow-sm"
+                          >
+                            <span>View Details</span>
+                            <ArrowRight size={14} />
+                          </Link>
                         </div>
 
-                        {/* Documentation line at bottom */}
+                        {/* Documentation line at bottom (editable from admin) */}
                         <div className="p-2.5 bg-[#F3F4F6] rounded-[6px] border border-[#E5E7EB] text-[11px] text-[#0F172A] flex items-center gap-2">
                           <FileCheck2 size={14} className="text-[#774DFF] shrink-0" />
                           <span className="font-semibold truncate">
@@ -388,16 +371,13 @@ export const Properties: React.FC = () => {
                 </div>
 
                 <div className="pt-2 flex flex-wrap gap-4">
-                  <button
-                    onClick={() => {
-                      const p = properties.find(x => x.slug === 'prasino-lush-phase-2') || properties[0];
-                      handleOpenEnquiry(p, '150 SQM');
-                    }}
+                  <Link
+                    to="/listings/prasino-lush-phase-2"
                     className="bg-[#774DFF] hover:bg-[#683de6] text-white font-bold text-sm px-6 py-3.5 rounded-[8px] min-h-[44px] transition-all flex items-center gap-2 shadow-lg"
                   >
-                    <span>Enquire About Prasino Lush Phase 2</span>
+                    <span>View Prasino Lush Phase 2 Details</span>
                     <ArrowRight size={16} />
-                  </button>
+                  </Link>
                   <a
                     href="https://wa.me/2348106133572?text=Hello%20The%20Forge%20Properties,%20I'm%20inquiring%20about%20Prasino%20Lush%20Phase%202."
                     target="_blank"
@@ -426,14 +406,6 @@ export const Properties: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Property Enquiry Modal */}
-      <PropertyEnquiryModal
-        isOpen={isEnquiryOpen}
-        onClose={() => setIsEnquiryOpen(false)}
-        property={selectedProperty}
-        initialPlotSize={enquiryPlotSize}
-      />
     </div>
   );
 };

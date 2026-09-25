@@ -44,7 +44,9 @@ export const DEFAULT_PROPERTIES: Property[] = [
     },
     featured: true,
     show_on_homepage: true,
-    is_coming_soon: false
+    is_coming_soon: false,
+    status_badge: 'Available Now',
+    map_url: 'Kobape, Abeokuta, Ogun State'
   },
   {
     id: 'prasino-heights-1',
@@ -79,7 +81,9 @@ export const DEFAULT_PROPERTIES: Property[] = [
     },
     featured: false,
     show_on_homepage: false,
-    is_coming_soon: true
+    is_coming_soon: true,
+    status_badge: 'Coming Soon',
+    map_url: 'Epe-Ijebu Corridor, Ogun State'
   },
   {
     id: 'forge-heritage-grove',
@@ -112,6 +116,8 @@ export const DEFAULT_PROPERTIES: Property[] = [
     },
     featured: false,
     show_on_homepage: false,
-    is_coming_soon: true
+    is_coming_soon: true,
+    status_badge: 'Coming Soon',
+    map_url: 'Sangotedo, Ajah, Lagos State'
   }
 ];
