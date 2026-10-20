@@ -81,6 +81,39 @@ export interface Lead {
   type: 'General Inquiry' | 'Viewing Request' | 'Offer';
 }
 
+export type WebinarCallStatus = 
+  | 'Not Called'
+  | 'Called — Registered'
+  | 'Called — Needs Follow Up'
+  | 'Called — Call Back Requested'
+  | 'Called — Not Interested'
+  | 'Called — No Answer'
+  | 'Called — Wrong Number';
+
+export interface WebinarLead {
+  id: number | string;
+  full_name: string;
+  whatsapp_number: string;
+  email: string;
+  call_status: WebinarCallStatus;
+  call_notes: string | null;
+  called_at: string | null;
+  follow_up_date: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WebinarLeadsStats {
+  total: number;
+  not_called: number;
+  registered: number;
+  needs_follow_up: number;
+  call_back_requested: number;
+  not_interested: number;
+  no_answer: number;
+  wrong_number: number;
+}
+
 export interface Agent {
   id: string;
   name: string;

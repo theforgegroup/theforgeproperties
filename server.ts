@@ -8,6 +8,8 @@ import { GoogleGenAI } from '@google/genai';
 import pg from 'pg';
 import multer from 'multer';
 import { authRouter } from './routes/auth';
+import { createWebinarLeadsRouter } from './routes/webinarLeadsRouter';
+import { initWebinarLeadsTable } from './services/webinarLeadsService';
 import db from './config/database';
 
 const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
@@ -252,6 +254,9 @@ async function runMigrations() {
         console.warn("[Migration WARNING] Counts verification failed:", errMsg);
       }
 
+      // Initialize webinar_leads schema
+      await initWebinarLeadsTable(dbPool);
+
     } finally {
       client.release();
     }
@@ -364,6 +369,7 @@ async function startServer() {
   });
 
   app.use('/api/auth', express.json(), authRouter);
+  app.use('/api/admin/webinar-leads', express.json(), createWebinarLeadsRouter(dbPool));
 
   // Return all realtors from PostgreSQL users table mapped as Agent objects
   app.get('/api/agents', async (req, res) => {
