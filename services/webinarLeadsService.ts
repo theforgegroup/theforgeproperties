@@ -13,10 +13,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const LOCAL_STORAGE_FILE = path.join(process.cwd(), 'config', 'webinar_leads.json');
 
-// Memory cache to avoid any disk latency or ephemeral container wipe
+// Memory cache to avoid disk latency
 let memoryLeads: WebinarLead[] = [];
 
-function loadLocalLeads(): WebinarLead[] {
+export function loadLocalLeads(): WebinarLead[] {
   if (memoryLeads.length > 0) {
     return memoryLeads;
   }
@@ -32,13 +32,14 @@ function loadLocalLeads(): WebinarLead[] {
   } catch (err) {
     console.error('Failed to read webinar_leads.json:', err);
   }
+
   const defaults = getDefaultWebinarLeads();
   saveLocalLeads(defaults);
   return defaults;
 }
 
-function saveLocalLeads(leads: WebinarLead[]): void {
-  memoryLeads = leads;
+export function saveLocalLeads(leads: WebinarLead[]): void {
+  memoryLeads = [...leads];
   try {
     const parentDir = path.dirname(LOCAL_STORAGE_FILE);
     if (!fs.existsSync(parentDir)) {
@@ -119,141 +120,89 @@ export async function getWebinarLeads(
 ): Promise<{ leads: WebinarLead[]; stats: WebinarLeadsStats }> {
   const { status, search } = options || {};
 
-  // 1. Try Supabase first if accessible
+  // 1. Always load current local leads
+  const allLeads = loadLocalLeads();
+
+  // 2. Try Supabase merge (without overwriting user's non-default status changes)
   try {
-    let query = supabase.from('webinar_leads').select('*');
-    if (status && status !== 'All') {
-      query = query.eq('call_status', status);
-    }
-    if (search && search.trim()) {
-      const q = search.trim();
-      query = query.or(`full_name.ilike.%${q}%,whatsapp_number.ilike.%${q}%,email.ilike.%${q}%`);
-    }
-    query = query.order('full_name', { ascending: true });
+    const { data: supaData, error: supaErr } = await supabase.from('webinar_leads').select('*');
+    if (!supaErr && Array.isArray(supaData) && supaData.length > 0) {
+      const localMap = new Map<string, WebinarLead>();
+      allLeads.forEach(l => localMap.set(l.full_name.trim().toLowerCase(), l));
 
-    const { data, error } = await query;
-    if (!error && Array.isArray(data) && data.length > 0) {
-      // Map Supabase rows
-      const supabaseLeads: WebinarLead[] = data.map((row: Record<string, unknown>) => ({
-        id: row.id as number | string,
-        full_name: String(row.full_name || ''),
-        whatsapp_number: String(row.whatsapp_number || ''),
-        email: String(row.email || ''),
-        call_status: (row.call_status as WebinarCallStatus) || 'Not Called',
-        call_notes: (row.call_notes as string) || null,
-        called_at: (row.called_at as string) || null,
-        follow_up_date: (row.follow_up_date as string) || null,
-        created_at: (row.created_at as string) || undefined,
-        updated_at: (row.updated_at as string) || undefined
-      }));
+      let hasNewData = false;
+      supaData.forEach((row: Record<string, unknown>) => {
+        const name = String(row.full_name || '').trim().toLowerCase();
+        const existing = localMap.get(name);
+        if (existing) {
+          // If remote has a changed status and local was 'Not Called', adopt remote
+          if (row.call_status && row.call_status !== 'Not Called' && existing.call_status === 'Not Called') {
+            existing.call_status = row.call_status as WebinarCallStatus;
+            hasNewData = true;
+          }
+          if (row.call_notes && !existing.call_notes) {
+            existing.call_notes = String(row.call_notes);
+            hasNewData = true;
+          }
+          if (row.called_at && !existing.called_at) {
+            existing.called_at = String(row.called_at);
+            hasNewData = true;
+          }
+          if (row.id) {
+            existing.id = row.id as number | string;
+          }
+        }
+      });
 
-      // Fetch all for complete stats
-      const { data: allSupabaseData } = await supabase.from('webinar_leads').select('call_status');
-      const allStatuses = (allSupabaseData || []).map((r: { call_status?: string }) => ({
-        call_status: (r.call_status as WebinarCallStatus) || 'Not Called'
-      })) as WebinarLead[];
-
-      const stats = computeWebinarStats(allStatuses.length > 0 ? allStatuses : supabaseLeads);
-      saveLocalLeads(supabaseLeads);
-      return { leads: supabaseLeads, stats };
+      if (hasNewData) {
+        saveLocalLeads(allLeads);
+      }
     }
-  } catch (supErr) {
-    console.warn('Supabase webinar_leads read skipped or restricted by RLS:', supErr);
+  } catch {
+    // Supabase RLS or offline notice - safe to ignore
   }
 
-  // 2. Try PostgreSQL pool if configured
+  // 3. PostgreSQL pool merge if available
   if (pool) {
     try {
-      const statsRes = await pool.query(`
-        SELECT
-          COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE call_status = 'Not Called') AS not_called,
-          COUNT(*) FILTER (WHERE call_status = 'Called — Registered') AS registered,
-          COUNT(*) FILTER (WHERE call_status = 'Called — Needs Follow Up') AS needs_follow_up,
-          COUNT(*) FILTER (WHERE call_status = 'Called — Call Back Requested') AS call_back_requested,
-          COUNT(*) FILTER (WHERE call_status = 'Called — Not Interested') AS not_interested,
-          COUNT(*) FILTER (WHERE call_status = 'Called — No Answer') AS no_answer,
-          COUNT(*) FILTER (WHERE call_status = 'Called — Wrong Number') AS wrong_number
-        FROM public.webinar_leads;
-      `);
+      const result = await pool.query(`SELECT * FROM public.webinar_leads;`);
+      if (result.rows && result.rows.length > 0) {
+        const localMap = new Map<string, WebinarLead>();
+        allLeads.forEach(l => localMap.set(l.full_name.trim().toLowerCase(), l));
 
-      const sRow = statsRes.rows[0] || {};
-      const stats: WebinarLeadsStats = {
-        total: parseInt(sRow.total || '0', 10),
-        not_called: parseInt(sRow.not_called || '0', 10),
-        registered: parseInt(sRow.registered || '0', 10),
-        needs_follow_up: parseInt(sRow.needs_follow_up || '0', 10),
-        call_back_requested: parseInt(sRow.call_back_requested || '0', 10),
-        not_interested: parseInt(sRow.not_interested || '0', 10),
-        no_answer: parseInt(sRow.no_answer || '0', 10),
-        wrong_number: parseInt(sRow.wrong_number || '0', 10)
-      };
+        let hasNewData = false;
+        result.rows.forEach(row => {
+          const name = String(row.full_name || '').trim().toLowerCase();
+          const existing = localMap.get(name);
+          if (existing) {
+            if (row.call_status && row.call_status !== 'Not Called' && existing.call_status === 'Not Called') {
+              existing.call_status = row.call_status;
+              hasNewData = true;
+            }
+            if (row.call_notes && !existing.call_notes) {
+              existing.call_notes = row.call_notes;
+              hasNewData = true;
+            }
+            if (row.called_at && !existing.called_at) {
+              existing.called_at = row.called_at;
+              hasNewData = true;
+            }
+          }
+        });
 
-      if (stats.total > 0) {
-        let queryText = `
-          SELECT
-            id,
-            full_name,
-            whatsapp_number,
-            email,
-            call_status,
-            call_notes,
-            called_at,
-            follow_up_date,
-            created_at,
-            updated_at
-          FROM public.webinar_leads
-        `;
-        const queryParams: unknown[] = [];
-        const whereClauses: string[] = [];
-
-        if (status && status !== 'All') {
-          queryParams.push(status);
-          whereClauses.push(`call_status = $${queryParams.length}`);
+        if (hasNewData) {
+          saveLocalLeads(allLeads);
         }
-
-        if (search && search.trim()) {
-          queryParams.push(search.trim());
-          const paramIdx = queryParams.length;
-          whereClauses.push(`(
-            full_name ILIKE '%' || $${paramIdx} || '%'
-            OR whatsapp_number ILIKE '%' || $${paramIdx} || '%'
-            OR email ILIKE '%' || $${paramIdx} || '%'
-          )`);
-        }
-
-        if (whereClauses.length > 0) {
-          queryText += ` WHERE ` + whereClauses.join(' AND ');
-        }
-
-        queryText += ` ORDER BY full_name ASC;`;
-
-        const result = await pool.query(queryText, queryParams);
-        const leads: WebinarLead[] = result.rows.map(row => ({
-          id: Number(row.id),
-          full_name: row.full_name,
-          whatsapp_number: row.whatsapp_number,
-          email: row.email,
-          call_status: row.call_status,
-          call_notes: row.call_notes,
-          called_at: row.called_at,
-          follow_up_date: row.follow_up_date,
-          created_at: row.created_at,
-          updated_at: row.updated_at
-        }));
-
-        saveLocalLeads(leads);
-        return { leads, stats };
       }
-    } catch (pgErr) {
-      console.warn('PostgreSQL query error, using local fallback:', pgErr);
+    } catch {
+      // PG query skipped
     }
   }
 
-  // 3. Fallback memory / file cache
-  const allLeads = loadLocalLeads();
+  // Compute full stats across all items
   const stats = computeWebinarStats(allLeads);
 
+  // Apply status and search filters on return only (NEVER overwrite disk with filtered list!)
   let filtered = [...allLeads];
   if (status && status !== 'All') {
     filtered = filtered.filter(l => l.call_status === status);
@@ -280,47 +229,19 @@ export async function getWebinarStats(pool: pg.Pool | null): Promise<WebinarLead
 export async function updateLeadStatus(
   pool: pg.Pool | null,
   id: string | number,
-  newStatus: WebinarCallStatus
+  newStatus: WebinarCallStatus,
+  leadNameHint?: string
 ): Promise<WebinarLead | null> {
   const nowIso = new Date().toISOString();
-
-  // Try updating in Supabase
-  try {
-    const updatePayload: Record<string, unknown> = {
-      call_status: newStatus,
-      updated_at: nowIso
-    };
-    if (newStatus !== 'Not Called') {
-      updatePayload.called_at = nowIso;
-    }
-    await supabase.from('webinar_leads').update(updatePayload).eq('id', id);
-  } catch (err) {
-    console.warn('Supabase lead status update skipped:', err);
-  }
-
-  // Try updating in PostgreSQL
-  if (pool) {
-    try {
-      await pool.query(`
-        UPDATE public.webinar_leads
-        SET
-          call_status = $1,
-          called_at = CASE
-            WHEN $1 != 'Not Called'
-            THEN NOW()
-            ELSE called_at
-          END,
-          updated_at = NOW()
-        WHERE id = $2;
-      `, [newStatus, id]);
-    } catch (err) {
-      console.warn('PostgreSQL update status warning:', err);
-    }
-  }
-
-  // Always update in memory / file cache
   const allLeads = loadLocalLeads();
-  const idx = allLeads.findIndex(l => String(l.id) === String(id));
+
+  // Find by ID or by full_name
+  let idx = allLeads.findIndex(l => String(l.id) === String(id));
+  if (idx === -1 && leadNameHint) {
+    const hint = leadNameHint.trim().toLowerCase();
+    idx = allLeads.findIndex(l => l.full_name.trim().toLowerCase() === hint);
+  }
+
   if (idx !== -1) {
     allLeads[idx].call_status = newStatus;
     if (newStatus !== 'Not Called') {
@@ -328,13 +249,51 @@ export async function updateLeadStatus(
     }
     allLeads[idx].updated_at = nowIso;
     saveLocalLeads(allLeads);
-    return allLeads[idx];
+
+    const updatedLead = allLeads[idx];
+
+    // Background Supabase update
+    try {
+      const payload: Record<string, unknown> = {
+        call_status: newStatus,
+        updated_at: nowIso
+      };
+      if (newStatus !== 'Not Called') {
+        payload.called_at = nowIso;
+      }
+      if (!isNaN(Number(id))) {
+        supabase.from('webinar_leads').update(payload).eq('id', Number(id)).then();
+      }
+      if (updatedLead.full_name) {
+        supabase.from('webinar_leads').update(payload).eq('full_name', updatedLead.full_name).then();
+      }
+    } catch {
+      // Supabase ignore
+    }
+
+    // Background PostgreSQL update
+    if (pool) {
+      try {
+        pool.query(`
+          UPDATE public.webinar_leads
+          SET
+            call_status = $1,
+            called_at = CASE WHEN $1 != 'Not Called' THEN NOW() ELSE called_at END,
+            updated_at = NOW()
+          WHERE id = $2 OR full_name = $3;
+        `, [newStatus, isNaN(Number(id)) ? 0 : Number(id), updatedLead.full_name]).catch(() => {});
+      } catch {
+        // PG ignore
+      }
+    }
+
+    return updatedLead;
   }
 
-  // If not found in cache, construct one
-  return {
+  // Construct fallback if missing
+  const constructed: WebinarLead = {
     id,
-    full_name: 'Webinar Lead',
+    full_name: leadNameHint || 'Webinar Lead',
     whatsapp_number: '',
     email: '',
     call_status: newStatus,
@@ -343,48 +302,59 @@ export async function updateLeadStatus(
     follow_up_date: null,
     updated_at: nowIso
   };
+  allLeads.push(constructed);
+  saveLocalLeads(allLeads);
+  return constructed;
 }
 
 export async function updateLeadNotes(
   pool: pg.Pool | null,
   id: string | number,
-  notes: string
+  notes: string,
+  leadNameHint?: string
 ): Promise<WebinarLead | null> {
   const nowIso = new Date().toISOString();
-
-  // Try updating in Supabase
-  try {
-    await supabase.from('webinar_leads').update({
-      call_notes: notes,
-      updated_at: nowIso
-    }).eq('id', id);
-  } catch (err) {
-    console.warn('Supabase lead notes update skipped:', err);
-  }
-
-  // Try updating in PostgreSQL
-  if (pool) {
-    try {
-      await pool.query(`
-        UPDATE public.webinar_leads
-        SET
-          call_notes = $1,
-          updated_at = NOW()
-        WHERE id = $2;
-      `, [notes, id]);
-    } catch (err) {
-      console.warn('PostgreSQL update notes warning:', err);
-    }
-  }
-
-  // Always update local memory / file
   const allLeads = loadLocalLeads();
-  const idx = allLeads.findIndex(l => String(l.id) === String(id));
+
+  let idx = allLeads.findIndex(l => String(l.id) === String(id));
+  if (idx === -1 && leadNameHint) {
+    const hint = leadNameHint.trim().toLowerCase();
+    idx = allLeads.findIndex(l => l.full_name.trim().toLowerCase() === hint);
+  }
+
   if (idx !== -1) {
     allLeads[idx].call_notes = notes;
     allLeads[idx].updated_at = nowIso;
     saveLocalLeads(allLeads);
-    return allLeads[idx];
+
+    const updatedLead = allLeads[idx];
+
+    // Background Supabase update
+    try {
+      if (!isNaN(Number(id))) {
+        supabase.from('webinar_leads').update({ call_notes: notes, updated_at: nowIso }).eq('id', Number(id)).then();
+      }
+      if (updatedLead.full_name) {
+        supabase.from('webinar_leads').update({ call_notes: notes, updated_at: nowIso }).eq('full_name', updatedLead.full_name).then();
+      }
+    } catch (err) {
+      console.warn('Supabase notes update skipped:', err);
+    }
+
+    // Background PG update
+    if (pool) {
+      try {
+        pool.query(`
+          UPDATE public.webinar_leads
+          SET call_notes = $1, updated_at = NOW()
+          WHERE id = $2 OR full_name = $3;
+        `, [notes, isNaN(Number(id)) ? 0 : Number(id), updatedLead.full_name]).catch(() => {});
+      } catch (err) {
+        console.warn('PG notes update skipped:', err);
+      }
+    }
+
+    return updatedLead;
   }
 
   return null;
@@ -393,59 +363,141 @@ export async function updateLeadNotes(
 export async function updateLeadPhone(
   pool: pg.Pool | null,
   id: string | number,
-  phone: string
+  phone: string,
+  leadNameHint?: string
 ): Promise<WebinarLead | null> {
   const nowIso = new Date().toISOString();
-
-  // Try updating in Supabase
-  try {
-    await supabase.from('webinar_leads').update({
-      whatsapp_number: phone,
-      updated_at: nowIso
-    }).eq('id', id);
-  } catch (err) {
-    console.warn('Supabase lead phone update skipped:', err);
-  }
-
-  // Try updating in PostgreSQL
-  if (pool) {
-    try {
-      await pool.query(`
-        UPDATE public.webinar_leads
-        SET
-          whatsapp_number = $1,
-          updated_at = NOW()
-        WHERE id = $2;
-      `, [phone, id]);
-    } catch (err) {
-      console.warn('PostgreSQL update phone warning:', err);
-    }
-  }
-
-  // Always update local memory / file
   const allLeads = loadLocalLeads();
-  const idx = allLeads.findIndex(l => String(l.id) === String(id));
+
+  let idx = allLeads.findIndex(l => String(l.id) === String(id));
+  if (idx === -1 && leadNameHint) {
+    const hint = leadNameHint.trim().toLowerCase();
+    idx = allLeads.findIndex(l => l.full_name.trim().toLowerCase() === hint);
+  }
+
   if (idx !== -1) {
     allLeads[idx].whatsapp_number = phone;
     allLeads[idx].updated_at = nowIso;
     saveLocalLeads(allLeads);
-    return allLeads[idx];
+
+    const updatedLead = allLeads[idx];
+
+    try {
+      if (!isNaN(Number(id))) {
+        supabase.from('webinar_leads').update({ whatsapp_number: phone, updated_at: nowIso }).eq('id', Number(id)).then();
+      }
+      if (updatedLead.full_name) {
+        supabase.from('webinar_leads').update({ whatsapp_number: phone, updated_at: nowIso }).eq('full_name', updatedLead.full_name).then();
+      }
+    } catch (err) {
+      console.warn('Supabase phone update skipped:', err);
+    }
+
+    if (pool) {
+      try {
+        pool.query(`
+          UPDATE public.webinar_leads
+          SET whatsapp_number = $1, updated_at = NOW()
+          WHERE id = $2 OR full_name = $3;
+        `, [phone, isNaN(Number(id)) ? 0 : Number(id), updatedLead.full_name]).catch(() => {});
+      } catch (err) {
+        console.warn('PG phone update skipped:', err);
+      }
+    }
+
+    return updatedLead;
   }
 
   return null;
 }
 
-export async function seedWebinarLeads(pool: pg.Pool | null): Promise<{ count: number; leads: WebinarLead[]; stats: WebinarLeadsStats }> {
-  const defaultLeads = getDefaultWebinarLeads();
+export async function syncWebinarLeads(
+  pool: pg.Pool | null,
+  incomingLeads: WebinarLead[]
+): Promise<{ count: number; leads: WebinarLead[]; stats: WebinarLeadsStats }> {
+  if (!Array.isArray(incomingLeads) || incomingLeads.length === 0) {
+    const current = loadLocalLeads();
+    return { count: current.length, leads: current, stats: computeWebinarStats(current) };
+  }
 
-  // 1. Always ensure memory and file storage have all 97 leads
+  const existingLeads = loadLocalLeads();
+  const leadMapById = new Map<string, WebinarLead>();
+  const leadMapByName = new Map<string, WebinarLead>();
+
+  existingLeads.forEach(l => {
+    leadMapById.set(String(l.id), l);
+    leadMapByName.set(l.full_name.trim().toLowerCase(), l);
+  });
+
+  for (const incoming of incomingLeads) {
+    const keyId = String(incoming.id);
+    const keyName = (incoming.full_name || '').trim().toLowerCase();
+    const existing = leadMapById.get(keyId) || leadMapByName.get(keyName);
+
+    if (existing) {
+      if (incoming.call_status) existing.call_status = incoming.call_status;
+      if (incoming.call_notes !== undefined) existing.call_notes = incoming.call_notes;
+      if (incoming.called_at) existing.called_at = incoming.called_at;
+      if (incoming.whatsapp_number) existing.whatsapp_number = incoming.whatsapp_number;
+      if (incoming.email) existing.email = incoming.email;
+      if (incoming.follow_up_date !== undefined) existing.follow_up_date = incoming.follow_up_date;
+      existing.updated_at = incoming.updated_at || new Date().toISOString();
+    } else {
+      existingLeads.push(incoming);
+      leadMapById.set(keyId, incoming);
+      leadMapByName.set(keyName, incoming);
+    }
+  }
+
+  saveLocalLeads(existingLeads);
+
+  // Background mirror to Supabase
+  try {
+    for (const l of incomingLeads) {
+      if (l.call_status && l.call_status !== 'Not Called') {
+        const payload = {
+          call_status: l.call_status,
+          call_notes: l.call_notes || null,
+          called_at: l.called_at || null,
+          updated_at: l.updated_at || new Date().toISOString()
+        };
+        if (!isNaN(Number(l.id))) {
+          supabase.from('webinar_leads').update(payload).eq('id', Number(l.id)).then();
+        }
+        if (l.full_name) {
+          supabase.from('webinar_leads').update(payload).eq('full_name', l.full_name).then();
+        }
+      }
+    }
+  } catch {
+    // Supabase background sync notice
+  }
+
+  const stats = computeWebinarStats(existingLeads);
+  return { count: existingLeads.length, leads: existingLeads, stats };
+}
+
+export async function seedWebinarLeads(pool: pg.Pool | null): Promise<{ count: number; leads: WebinarLead[]; stats: WebinarLeadsStats }> {
+  const currentLeads = loadLocalLeads();
+
+  // CRITICAL: If leads already exist and any lead has been called or has notes, PRESERVE them!
+  const hasUserActivity = currentLeads.some(l => l.call_status !== 'Not Called' || !!l.call_notes);
+  if (currentLeads.length >= 95 && hasUserActivity) {
+    return {
+      count: currentLeads.length,
+      leads: currentLeads,
+      stats: computeWebinarStats(currentLeads)
+    };
+  }
+
+  // Initialize or fill in default leads
+  const defaultLeads = getDefaultWebinarLeads();
   saveLocalLeads(defaultLeads);
 
-  // 2. Try inserting into Supabase if permitted
+  // Background attempt to populate Supabase if empty
   try {
     const { data: existingRows } = await supabase.from('webinar_leads').select('id').limit(1);
     if (!existingRows || existingRows.length === 0) {
-      // Prepare records for Supabase insert
       const rowsToInsert = defaultLeads.map(l => ({
         full_name: l.full_name,
         whatsapp_number: l.whatsapp_number,
@@ -453,18 +505,16 @@ export async function seedWebinarLeads(pool: pg.Pool | null): Promise<{ count: n
         call_status: 'Not Called'
       }));
 
-      // Insert in chunks of 50 to avoid size limits
       for (let i = 0; i < rowsToInsert.length; i += 50) {
         const chunk = rowsToInsert.slice(i, i + 50);
         await supabase.from('webinar_leads').insert(chunk);
       }
-      console.log(`[Supabase Seed] Attempted inserting ${rowsToInsert.length} leads into Supabase.`);
     }
-  } catch (supErr) {
-    console.warn('Supabase batch insert skipped (e.g. table RLS or already populated):', supErr);
+  } catch (err) {
+    console.warn('Supabase seed notice:', err);
   }
 
-  // 3. Try inserting into PostgreSQL if pool is available
+  // PostgreSQL seed if available
   if (pool) {
     try {
       const countCheck = await pool.query('SELECT COUNT(*) FROM public.webinar_leads;');
@@ -483,15 +533,12 @@ export async function seedWebinarLeads(pool: pg.Pool | null): Promise<{ count: n
           INSERT INTO public.webinar_leads (full_name, whatsapp_number, email)
           VALUES ${placeholders.join(', ')};
         `, valuesArr);
-
-        console.log(`[Postgres Seed SUCCESS] Inserted ${SEED_WEBINAR_LEADS.length} leads.`);
       }
-    } catch (pgErr) {
-      console.warn('PostgreSQL seed skipped:', pgErr);
+    } catch (err) {
+      console.warn('PG seed notice:', err);
     }
   }
 
-  // Always return the complete seeded set reliably
   return {
     count: defaultLeads.length,
     leads: defaultLeads,

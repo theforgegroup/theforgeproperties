@@ -6,7 +6,8 @@ import {
   updateLeadStatus,
   updateLeadNotes,
   updateLeadPhone,
-  seedWebinarLeads
+  seedWebinarLeads,
+  syncWebinarLeads
 } from '../services/webinarLeadsService';
 import { getDefaultWebinarLeads, computeWebinarStats } from '../services/defaultWebinarLeads';
 import { WebinarCallStatus } from '../types';
@@ -38,6 +39,30 @@ export const createWebinarLeadsRouter = (pool: pg.Pool | null): express.Router =
       console.error('Failed to get webinar leads, using fallback:', err);
       const defaults = getDefaultWebinarLeads();
       res.json({ leads: defaults, stats: computeWebinarStats(defaults) });
+    }
+  });
+
+  // POST /api/admin/webinar-leads/sync or PUT /api/admin/webinar-leads/bulk
+  // Body: { "leads": [...] }
+  router.post('/sync', async (req, res) => {
+    try {
+      const incomingLeads = req.body.leads || [];
+      const result = await syncWebinarLeads(pool, incomingLeads);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      console.error('Failed to sync webinar leads:', err);
+      res.status(500).json({ error: 'Failed to sync webinar leads' });
+    }
+  });
+
+  router.put('/bulk', async (req, res) => {
+    try {
+      const incomingLeads = req.body.leads || [];
+      const result = await syncWebinarLeads(pool, incomingLeads);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      console.error('Failed to bulk update webinar leads:', err);
+      res.status(500).json({ error: 'Failed to bulk update webinar leads' });
     }
   });
 
@@ -75,16 +100,16 @@ export const createWebinarLeadsRouter = (pool: pg.Pool | null): express.Router =
   });
 
   // PUT /api/admin/webinar-leads/:id/status
-  // Body: { "call_status": "" }
+  // Body: { "call_status": "", "full_name": "" }
   router.put('/:id/status', async (req, res) => {
     try {
       const { id } = req.params;
-      const { call_status } = req.body;
+      const { call_status, full_name } = req.body;
       if (!call_status) {
         return res.status(400).json({ error: 'call_status is required in body' });
       }
 
-      const updated = await updateLeadStatus(pool, id, call_status as WebinarCallStatus);
+      const updated = await updateLeadStatus(pool, id, call_status as WebinarCallStatus, full_name);
       if (!updated) {
         return res.status(404).json({ error: 'Lead not found' });
       }
@@ -97,16 +122,16 @@ export const createWebinarLeadsRouter = (pool: pg.Pool | null): express.Router =
   });
 
   // PUT /api/admin/webinar-leads/:id/notes
-  // Body: { "call_notes": "" }
+  // Body: { "call_notes": "", "full_name": "" }
   router.put('/:id/notes', async (req, res) => {
     try {
       const { id } = req.params;
-      const { call_notes } = req.body;
+      const { call_notes, full_name } = req.body;
       if (call_notes === undefined) {
         return res.status(400).json({ error: 'call_notes is required in body' });
       }
 
-      const updated = await updateLeadNotes(pool, id, String(call_notes || ''));
+      const updated = await updateLeadNotes(pool, id, String(call_notes || ''), full_name);
       if (!updated) {
         return res.status(404).json({ error: 'Lead not found' });
       }
@@ -119,16 +144,16 @@ export const createWebinarLeadsRouter = (pool: pg.Pool | null): express.Router =
   });
 
   // PUT /api/admin/webinar-leads/:id/phone
-  // Body: { "whatsapp_number": "" }
+  // Body: { "whatsapp_number": "", "full_name": "" }
   router.put('/:id/phone', async (req, res) => {
     try {
       const { id } = req.params;
-      const { whatsapp_number } = req.body;
+      const { whatsapp_number, full_name } = req.body;
       if (!whatsapp_number) {
         return res.status(400).json({ error: 'whatsapp_number is required in body' });
       }
 
-      const updated = await updateLeadPhone(pool, id, String(whatsapp_number));
+      const updated = await updateLeadPhone(pool, id, String(whatsapp_number), full_name);
       if (!updated) {
         return res.status(404).json({ error: 'Lead not found' });
       }

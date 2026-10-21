@@ -6,34 +6,34 @@
     "email": "jafaruabubakar027@gmail.com",
     "call_status": "Called — Registered",
     "call_notes": "Very keen on 500 SQM plot in Kobape.",
-    "called_at": "2026-10-20T10:13:21.622Z",
+    "called_at": "2026-10-21T08:09:07.567Z",
     "follow_up_date": null,
     "created_at": "2026-10-20T10:13:14.719Z",
-    "updated_at": "2026-10-20T10:13:31.654Z"
+    "updated_at": "2026-10-21T08:09:07.567Z"
   },
   {
     "id": 2,
     "full_name": "Abubakar Lami",
     "whatsapp_number": "+2348034546198",
     "email": "leaabubakar19@gmail.com",
-    "call_status": "Not Called",
+    "call_status": "Called — Needs Follow Up",
     "call_notes": null,
     "called_at": "2026-10-20T10:45:07.931Z",
     "follow_up_date": null,
     "created_at": "2026-10-20T10:13:14.719Z",
-    "updated_at": "2026-10-20T10:45:11.574Z"
+    "updated_at": "2026-10-21T08:09:20.666Z"
   },
   {
     "id": 3,
     "full_name": "Abubakar Olanrewaju",
     "whatsapp_number": "+2349127271407",
     "email": "olanrewajuabubaka@gmail.com",
-    "call_status": "Not Called",
+    "call_status": "Called — Call Back Requested",
     "call_notes": null,
     "called_at": null,
     "follow_up_date": null,
     "created_at": "2026-10-20T10:13:14.719Z",
-    "updated_at": "2026-10-20T10:13:14.719Z"
+    "updated_at": "2026-10-21T08:09:20.666Z"
   },
   {
     "id": 4,
@@ -64,12 +64,12 @@
     "full_name": "Abdullahi Balogun",
     "whatsapp_number": "+2348169462229",
     "email": "abdullahikola@5gmail.com",
-    "call_status": "Not Called",
+    "call_status": "Called — Registered",
     "call_notes": null,
-    "called_at": null,
+    "called_at": "2026-10-21T08:01:40.326Z",
     "follow_up_date": null,
     "created_at": "2026-10-20T10:13:14.719Z",
-    "updated_at": "2026-10-20T10:13:14.719Z"
+    "updated_at": "2026-10-21T08:01:40.326Z"
   },
   {
     "id": 7,

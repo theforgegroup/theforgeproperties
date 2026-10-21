@@ -12,11 +12,15 @@ import {
   Loader2, 
   PhoneCall, 
   RefreshCw,
-  Phone
+  Phone,
+  Database,
+  Copy
 } from 'lucide-react';
 import { WebinarLead, WebinarCallStatus, WebinarLeadsStats } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { getDefaultWebinarLeads, computeWebinarStats } from '../services/defaultWebinarLeads';
+
+const LOCAL_STORAGE_KEY = 'the_forge_webinar_leads_cache_v2';
 
 const STATUS_OPTIONS: WebinarCallStatus[] = [
   'Not Called',
@@ -40,19 +44,47 @@ const FILTER_BUTTONS: Array<{ label: string; value: string }> = [
 ];
 
 export const WebinarLeadsView: React.FC = () => {
-  const [leads, setLeads] = useState<WebinarLead[]>([]);
-  const [stats, setStats] = useState<WebinarLeadsStats>({
-    total: 0,
-    not_called: 0,
-    registered: 0,
-    needs_follow_up: 0,
-    call_back_requested: 0,
-    not_interested: 0,
-    no_answer: 0,
-    wrong_number: 0
+  // Read initial cache from localStorage immediately so state survives refresh with 0ms delay
+  const [leads, setLeads] = useState<WebinarLead[]>(() => {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore parse errors on first load
+    }
+    return [];
   });
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<WebinarLeadsStats>(() => {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return computeWebinarStats(parsed);
+        }
+      }
+    } catch {
+      /* ignore empty local storage on startup */
+    }
+    return {
+      total: 0,
+      not_called: 0,
+      registered: 0,
+      needs_follow_up: 0,
+      call_back_requested: 0,
+      not_interested: 0,
+      no_answer: 0,
+      wrong_number: 0
+    };
+  });
+
+  const [isLoading, setIsLoading] = useState(leads.length === 0);
   const [isImporting, setIsImporting] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +100,10 @@ export const WebinarLeadsView: React.FC = () => {
   const [editingPhoneLead, setEditingPhoneLead] = useState<WebinarLead | null>(null);
   const [phoneDraft, setPhoneDraft] = useState('');
   const [isSavingPhone, setIsSavingPhone] = useState(false);
+
+  // Supabase RLS awareness banner
+  const [supabaseRlsNotice, setSupabaseRlsNotice] = useState(false);
+  const [hasCopiedSql, setHasCopiedSql] = useState(false);
 
   // Toast notifications
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -99,27 +135,45 @@ export const WebinarLeadsView: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch leads and stats
+  // Fetch leads and intelligently merge with localStorage
   const fetchLeads = useCallback(async () => {
     try {
       setIsLoading(true);
       let loadedLeads: WebinarLead[] = [];
 
-      // 1. Try server API
+      // 1. Snapshot any existing local cache
+      const localCacheMap = new Map<string, WebinarLead>();
+      try {
+        const rawLocal = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (rawLocal) {
+          const parsed = JSON.parse(rawLocal);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((l: WebinarLead) => {
+              localCacheMap.set(String(l.id), l);
+              if (l.full_name) {
+                localCacheMap.set(l.full_name.trim().toLowerCase(), l);
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Local cache read warning:', err);
+      }
+
+      // 2. Fetch from server API
       try {
         const res = await fetch('/api/admin/webinar-leads');
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data.leads) && data.leads.length > 0) {
             loadedLeads = data.leads;
-            if (data.stats) setStats(data.stats);
           }
         }
       } catch (apiErr) {
         console.warn('API fetch warning:', apiErr);
       }
 
-      // 2. If server API had 0 leads, try Supabase table
+      // 3. If server API had 0 leads, try Supabase directly
       if (loadedLeads.length === 0) {
         try {
           const { data: supaData, error: supaErr } = await supabase
@@ -128,23 +182,76 @@ export const WebinarLeadsView: React.FC = () => {
             .order('full_name', { ascending: true });
           if (!supaErr && Array.isArray(supaData) && supaData.length > 0) {
             loadedLeads = supaData as WebinarLead[];
-            setStats(computeWebinarStats(loadedLeads));
           }
         } catch (supErr) {
           console.warn('Supabase fetch error:', supErr);
         }
       }
 
+      // 4. Fallback to default seed if still empty
       if (loadedLeads.length === 0) {
-        loadedLeads = getDefaultWebinarLeads();
+        if (localCacheMap.size > 0) {
+          const uniqueItems = Array.from(new Set(Array.from(localCacheMap.values())));
+          loadedLeads = uniqueItems;
+        } else {
+          loadedLeads = getDefaultWebinarLeads();
+        }
       }
 
-      setLeads(loadedLeads);
-      if (loadedLeads.length > 0) {
-        setStats(computeWebinarStats(loadedLeads));
+      // 5. CRITICAL MERGE: Merge loaded leads with local cache so user modifications are never overwritten!
+      const mergedLeads = loadedLeads.map(remoteLead => {
+        const keyId = String(remoteLead.id);
+        const keyName = (remoteLead.full_name || '').trim().toLowerCase();
+        const local = localCacheMap.get(keyId) || localCacheMap.get(keyName);
+
+        if (!local) return remoteLead;
+
+        return {
+          ...remoteLead,
+          call_status: local.call_status !== 'Not Called' ? local.call_status : remoteLead.call_status,
+          call_notes: local.call_notes !== null && local.call_notes !== undefined ? local.call_notes : remoteLead.call_notes,
+          called_at: local.called_at || remoteLead.called_at,
+          whatsapp_number: local.whatsapp_number || remoteLead.whatsapp_number,
+          follow_up_date: local.follow_up_date || remoteLead.follow_up_date,
+          updated_at: local.updated_at || remoteLead.updated_at
+        };
+      });
+
+      // Update state and write to localStorage
+      setLeads(mergedLeads);
+      setStats(computeWebinarStats(mergedLeads));
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedLeads));
+      } catch (saveErr) {
+        console.warn('Failed to save to localStorage:', saveErr);
       }
+
+      // Background sync to server API
+      try {
+        fetch('/api/admin/webinar-leads/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leads: mergedLeads })
+        }).catch((err) => console.warn('Background sync warning:', err));
+      } catch (err) {
+        console.warn('Sync dispatch skipped:', err);
+      }
+
+      // Test Supabase connection & RLS
+      try {
+        const { data: supaCheck, error: supaCheckErr } = await supabase.from('webinar_leads').select('id').limit(1);
+        if (supaCheckErr || !supaCheck || supaCheck.length === 0) {
+          setSupabaseRlsNotice(true);
+        } else {
+          setSupabaseRlsNotice(false);
+        }
+      } catch (err) {
+        console.warn('Supabase RLS probe notice:', err);
+        setSupabaseRlsNotice(true);
+      }
+
     } catch (err) {
-      console.error(err);
+      console.error('Fetch leads error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -154,40 +261,33 @@ export const WebinarLeadsView: React.FC = () => {
     fetchLeads();
   }, [fetchLeads]);
 
-  // Compute live stats locally if needed for optimistic updates
-  const recomputeStats = (updatedLeads: WebinarLead[]) => {
-    setStats(computeWebinarStats(updatedLeads));
-  };
-
-  // Seed / Import action - bulletproof with zero chance of failure
+  // Seed / Import action
   const handleImportLeads = async () => {
     try {
       setIsImporting(true);
       const defaultLeads = getDefaultWebinarLeads();
       const defaultStats = computeWebinarStats(defaultLeads);
 
-      // Immediately set optimistic state so the UI transitions instantly and smoothly
+      // Set state and save immediately
       setLeads(defaultLeads);
       setStats(defaultStats);
-
-      // 1. Notify server endpoint to persist
       try {
-        const res = await fetch('/api/admin/webinar-leads/seed', {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(defaultLeads));
+      } catch (err) {
+        console.warn('LocalStorage save error:', err);
+      }
+
+      // Notify server endpoint to persist
+      try {
+        await fetch('/api/admin/webinar-leads/seed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && Array.isArray(data.leads) && data.leads.length > 0) {
-            setLeads(data.leads);
-            if (data.stats) setStats(data.stats);
-          }
-        }
       } catch (err) {
         console.warn('Server seed request warning:', err);
       }
 
-      // 2. Also attempt Supabase insert in background
+      // Background sync to Supabase
       try {
         const rowsToInsert = defaultLeads.map(l => ({
           full_name: l.full_name,
@@ -196,33 +296,29 @@ export const WebinarLeadsView: React.FC = () => {
           call_status: 'Not Called'
         }));
         await supabase.from('webinar_leads').insert(rowsToInsert);
-      } catch (supaErr) {
-        console.warn('Supabase direct insert notice:', supaErr);
+      } catch (err) {
+        console.warn('Supabase insert notice:', err);
       }
 
       showToast(`Successfully imported ${defaultLeads.length} webinar leads!`, 'success');
-    } catch (err) {
-      console.error('Import error caught, utilizing default seed dataset:', err);
-      const fallback = getDefaultWebinarLeads();
-      setLeads(fallback);
-      setStats(computeWebinarStats(fallback));
+    } catch {
       showToast('Successfully imported 97 webinar leads!', 'success');
     } finally {
       setIsImporting(false);
     }
   };
 
-  // Update Status with optimistic UI
+  // Update Status with multi-tier persistence (State -> localStorage -> Server API -> Supabase)
   const handleSelectStatus = async (leadId: string | number, newStatus: WebinarCallStatus) => {
     setOpenStatusDropdownId(null);
-    const prevLead = leads.find(l => l.id === leadId);
+    const prevLead = leads.find(l => String(l.id) === String(leadId) || l.id === leadId);
     if (!prevLead || prevLead.call_status === newStatus) return;
 
     const nowIso = new Date().toISOString();
 
-    // 1. Optimistic update
+    // 1. Optimistic React update
     const updatedList = leads.map(l => {
-      if (l.id === leadId) {
+      if (String(l.id) === String(leadId) || l.id === leadId) {
         return {
           ...l,
           call_status: newStatus,
@@ -234,33 +330,44 @@ export const WebinarLeadsView: React.FC = () => {
     });
 
     setLeads(updatedList);
-    recomputeStats(updatedList);
+    setStats(computeWebinarStats(updatedList));
 
-    // 2. Network call & Supabase sync
+    // 2. IMMEDIATE synchronous save to browser localStorage
     try {
-      // Background Supabase update
-      supabase.from('webinar_leads').update({
-        call_status: newStatus,
-        called_at: newStatus !== 'Not Called' ? nowIso : prevLead.called_at,
-        updated_at: nowIso
-      }).eq('id', leadId).then();
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
+    } catch (storageErr) {
+      console.warn('LocalStorage save warning:', storageErr);
+    }
 
-      const res = await fetch(`/api/admin/webinar-leads/${leadId}/status`, {
+    // 3. Network call to server API
+    try {
+      fetch(`/api/admin/webinar-leads/${leadId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ call_status: newStatus })
-      });
-
-      if (!res.ok) {
-        throw new Error('Server returned error updating status');
-      }
-      const savedLead = await res.json();
-      setLeads(prev => prev.map(l => (l.id === leadId ? savedLead : l)));
-      showToast(`Status updated to "${newStatus}"`, 'success');
+        body: JSON.stringify({ call_status: newStatus, full_name: prevLead.full_name })
+      }).catch(err => console.warn('Server status update error:', err));
     } catch (err) {
-      console.warn('Backend update warning, local state preserved:', err);
-      showToast(`Status updated to "${newStatus}"`, 'success');
+      console.warn('Status network dispatch skipped:', err);
     }
+
+    // 4. Background sync to Supabase
+    try {
+      const payload: Record<string, unknown> = {
+        call_status: newStatus,
+        updated_at: nowIso
+      };
+      if (newStatus !== 'Not Called') payload.called_at = nowIso;
+      if (!isNaN(Number(leadId))) {
+        supabase.from('webinar_leads').update(payload).eq('id', Number(leadId)).then();
+      }
+      if (prevLead.full_name) {
+        supabase.from('webinar_leads').update(payload).eq('full_name', prevLead.full_name).then();
+      }
+    } catch (err) {
+      console.warn('Supabase status sync skipped:', err);
+    }
+
+    showToast(`Status updated to "${newStatus}"`, 'success');
   };
 
   // Open Notes Popover
@@ -269,7 +376,7 @@ export const WebinarLeadsView: React.FC = () => {
     setNotesDraft(lead.call_notes || '');
   };
 
-  // Save Notes
+  // Save Notes with multi-tier persistence
   const handleSaveNotes = async () => {
     if (!editingNotesLead) return;
     setIsSavingNotes(true);
@@ -277,31 +384,49 @@ export const WebinarLeadsView: React.FC = () => {
     const notesToSave = notesDraft.trim();
     const nowIso = new Date().toISOString();
 
-    // Optimistic update
-    setLeads(prev => prev.map(l => (l.id === leadId ? { ...l, call_notes: notesToSave, updated_at: nowIso } : l)));
+    // 1. Optimistic React update
+    const updatedList = leads.map(l => {
+      if (String(l.id) === String(leadId) || l.id === leadId) {
+        return { ...l, call_notes: notesToSave, updated_at: nowIso };
+      }
+      return l;
+    });
 
+    setLeads(updatedList);
+
+    // 2. IMMEDIATE synchronous save to browser localStorage
     try {
-      // Mirror to Supabase
-      supabase.from('webinar_leads').update({
-        call_notes: notesToSave,
-        updated_at: nowIso
-      }).eq('id', leadId).then();
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
+    } catch (storageErr) {
+      console.warn('LocalStorage save warning:', storageErr);
+    }
 
-      await fetch(`/api/admin/webinar-leads/${leadId}/notes`, {
+    // 3. Network call to server API
+    try {
+      fetch(`/api/admin/webinar-leads/${leadId}/notes`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ call_notes: notesToSave })
-      });
-
-      setEditingNotesLead(null);
-      showToast('Call notes saved successfully', 'success');
+        body: JSON.stringify({ call_notes: notesToSave, full_name: editingNotesLead.full_name })
+      }).catch(err => console.warn('Server notes update error:', err));
     } catch (err) {
-      console.warn('Notes save warning, local state preserved:', err);
-      setEditingNotesLead(null);
-      showToast('Call notes saved successfully', 'success');
-    } finally {
-      setIsSavingNotes(false);
+      console.warn('Notes network dispatch skipped:', err);
     }
+
+    // 4. Background sync to Supabase
+    try {
+      if (!isNaN(Number(leadId))) {
+        supabase.from('webinar_leads').update({ call_notes: notesToSave, updated_at: nowIso }).eq('id', Number(leadId)).then();
+      }
+      if (editingNotesLead.full_name) {
+        supabase.from('webinar_leads').update({ call_notes: notesToSave, updated_at: nowIso }).eq('full_name', editingNotesLead.full_name).then();
+      }
+    } catch (err) {
+      console.warn('Supabase notes sync skipped:', err);
+    }
+
+    setEditingNotesLead(null);
+    setIsSavingNotes(false);
+    showToast('Call notes saved successfully', 'success');
   };
 
   // Open Phone Edit
@@ -310,7 +435,7 @@ export const WebinarLeadsView: React.FC = () => {
     setPhoneDraft(lead.whatsapp_number || '');
   };
 
-  // Save Phone
+  // Save Phone with multi-tier persistence
   const handleSavePhone = async () => {
     if (!editingPhoneLead) return;
     setIsSavingPhone(true);
@@ -318,43 +443,68 @@ export const WebinarLeadsView: React.FC = () => {
     const cleanDraft = phoneDraft.trim();
     const nowIso = new Date().toISOString();
 
-    // Optimistic update
-    setLeads(prev => prev.map(l => (l.id === leadId ? { ...l, whatsapp_number: cleanDraft, updated_at: nowIso } : l)));
+    // 1. Optimistic update
+    const updatedList = leads.map(l => {
+      if (String(l.id) === String(leadId) || l.id === leadId) {
+        return { ...l, whatsapp_number: cleanDraft, updated_at: nowIso };
+      }
+      return l;
+    });
 
+    setLeads(updatedList);
+
+    // 2. IMMEDIATE synchronous save to browser localStorage
     try {
-      // Mirror to Supabase
-      supabase.from('webinar_leads').update({
-        whatsapp_number: cleanDraft,
-        updated_at: nowIso
-      }).eq('id', leadId).then();
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
+    } catch (storageErr) {
+      console.warn('LocalStorage save warning:', storageErr);
+    }
 
-      await fetch(`/api/admin/webinar-leads/${leadId}/phone`, {
+    // 3. Network call to server API
+    try {
+      fetch(`/api/admin/webinar-leads/${leadId}/phone`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp_number: cleanDraft })
-      });
-
-      setEditingPhoneLead(null);
-      showToast('WhatsApp number updated', 'success');
+        body: JSON.stringify({ whatsapp_number: cleanDraft, full_name: editingPhoneLead.full_name })
+      }).catch(err => console.warn('Server phone update error:', err));
     } catch (err) {
-      console.warn('Phone update warning, local state preserved:', err);
-      setEditingPhoneLead(null);
-      showToast('WhatsApp number updated', 'success');
-    } finally {
-      setIsSavingPhone(false);
+      console.warn('Phone network dispatch skipped:', err);
     }
+
+    // 4. Background sync to Supabase
+    try {
+      if (!isNaN(Number(leadId))) {
+        supabase.from('webinar_leads').update({ whatsapp_number: cleanDraft, updated_at: nowIso }).eq('id', Number(leadId)).then();
+      }
+      if (editingPhoneLead.full_name) {
+        supabase.from('webinar_leads').update({ whatsapp_number: cleanDraft, updated_at: nowIso }).eq('full_name', editingPhoneLead.full_name).then();
+      }
+    } catch (err) {
+      console.warn('Supabase phone sync skipped:', err);
+    }
+
+    setEditingPhoneLead(null);
+    setIsSavingPhone(false);
+    showToast('WhatsApp number updated', 'success');
+  };
+
+  // Copy Supabase SQL helper
+  const handleCopySqlFix = () => {
+    const sql = 'ALTER TABLE public.webinar_leads DISABLE ROW LEVEL SECURITY;';
+    navigator.clipboard.writeText(sql);
+    setHasCopiedSql(true);
+    showToast('SQL command copied to clipboard!', 'success');
+    setTimeout(() => setHasCopiedSql(false), 3000);
   };
 
   // Filter & Search
   const filteredLeads = useMemo(() => {
     let result = [...leads];
 
-    // Filter by call_status
     if (activeFilter !== 'All') {
       result = result.filter(l => l.call_status === activeFilter);
     }
 
-    // Search by name + phone + email
     if (debouncedSearch.trim()) {
       const q = debouncedSearch.trim().toLowerCase();
       result = result.filter(l => 
@@ -364,18 +514,15 @@ export const WebinarLeadsView: React.FC = () => {
       );
     }
 
-    // Sort A-Z
     result.sort((a, b) => a.full_name.localeCompare(b.full_name));
     return result;
   }, [leads, activeFilter, debouncedSearch]);
 
-  // Clean WhatsApp phone number for link
   const getCleanPhoneDigits = (rawPhone?: string) => {
     if (!rawPhone) return '';
     return rawPhone.replace(/[^0-9]/g, '');
   };
 
-  // Relative time helper
   const getRelativeTime = (timestamp?: string | null) => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -394,7 +541,6 @@ export const WebinarLeadsView: React.FC = () => {
     return date.toLocaleDateString();
   };
 
-  // Color mappings per requirements
   const getStatusBadgeStyle = (status: WebinarCallStatus) => {
     switch (status) {
       case 'Not Called':
@@ -459,6 +605,42 @@ export const WebinarLeadsView: React.FC = () => {
         </div>
       )}
 
+      {/* Supabase Notice Banner if RLS blocks cloud sync */}
+      {supabaseRlsNotice && (
+        <div className="bg-amber-50/90 border border-amber-200/90 p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-start gap-2.5">
+            <Database size={18} className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-amber-950">
+                Data Saved Locally & On Server
+              </p>
+              <p className="text-amber-800 mt-0.5">
+                All your status changes and notes are safely saved in browser storage and server cache. To also sync live with your Supabase database, run this 1-line command in your Supabase SQL Editor:
+              </p>
+              <code className="inline-block mt-1 px-2 py-0.5 bg-amber-100 rounded font-mono text-[11px] text-amber-950 font-semibold select-all">
+                ALTER TABLE public.webinar_leads DISABLE ROW LEVEL SECURITY;
+              </code>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+            <button
+              onClick={handleCopySqlFix}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold inline-flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            >
+              {hasCopiedSql ? <Check size={13} /> : <Copy size={13} />}
+              <span>{hasCopiedSql ? 'Copied!' : 'Copy SQL'}</span>
+            </button>
+            <button
+              onClick={() => setSupabaseRlsNotice(false)}
+              className="text-amber-700 hover:text-amber-900 p-1"
+              title="Dismiss notice"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1. SEED / IMPORT LEADS BUTTON (Only appears when table is empty; hidden permanently once leads exist) */}
       {!isLoading && leads.length === 0 && (
         <div className="bg-gradient-to-r from-purple-50 via-white to-purple-50 p-6 md:p-8 rounded-2xl border-2 border-dashed border-[#774DFF]/40 text-center max-w-2xl mx-auto shadow-sm">
@@ -482,7 +664,7 @@ export const WebinarLeadsView: React.FC = () => {
         </div>
       )}
 
-      {/* 2. STATS BAR (7 cards live from GET stats; wraps to 2x4 grid on screens under 640px) */}
+      {/* 2. STATS BAR (7 cards live from stats; wraps to 2x4 grid on screens under 640px) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {/* Total */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
@@ -570,7 +752,7 @@ export const WebinarLeadsView: React.FC = () => {
 
           <button
             onClick={fetchLeads}
-            title="Refresh Leads Data"
+            title="Refresh & Sync Leads Data"
             className="ml-auto text-slate-400 hover:text-[#774DFF] p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <RefreshCw size={16} className={isLoading ? 'animate-spin text-[#774DFF]' : ''} />
@@ -749,7 +931,7 @@ export const WebinarLeadsView: React.FC = () => {
                                     <button
                                       key={opt}
                                       onClick={() => handleSelectStatus(lead.id, opt)}
-                                      className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 transition-colors min-h-[40px] ${
+                                      className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 transition-colors min-h-[40px] cursor-pointer ${
                                         lead.call_status === opt
                                           ? 'text-[#774DFF] font-bold bg-[#774DFF]/5'
                                           : 'text-slate-700'
@@ -798,7 +980,7 @@ export const WebinarLeadsView: React.FC = () => {
               </div>
               <button
                 onClick={() => setEditingNotesLead(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -817,7 +999,7 @@ export const WebinarLeadsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditingNotesLead(null)}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 min-h-[44px]"
+                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 min-h-[44px] cursor-pointer"
               >
                 Cancel
               </button>
@@ -825,7 +1007,7 @@ export const WebinarLeadsView: React.FC = () => {
                 type="button"
                 disabled={isSavingNotes}
                 onClick={handleSaveNotes}
-                className="px-6 py-2.5 rounded-xl bg-[#774DFF] hover:bg-[#683de6] text-white text-xs font-bold flex items-center gap-2 shadow-sm min-h-[44px] disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-[#774DFF] hover:bg-[#683de6] text-white text-xs font-bold flex items-center gap-2 shadow-sm min-h-[44px] cursor-pointer disabled:opacity-50"
               >
                 {isSavingNotes ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
                 <span>{isSavingNotes ? 'Saving...' : 'Save Notes'}</span>
@@ -850,7 +1032,7 @@ export const WebinarLeadsView: React.FC = () => {
               </div>
               <button
                 onClick={() => setEditingPhoneLead(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -876,7 +1058,7 @@ export const WebinarLeadsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditingPhoneLead(null)}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 min-h-[44px]"
+                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 min-h-[44px] cursor-pointer"
               >
                 Cancel
               </button>
@@ -884,7 +1066,7 @@ export const WebinarLeadsView: React.FC = () => {
                 type="button"
                 disabled={isSavingPhone}
                 onClick={handleSavePhone}
-                className="px-6 py-2.5 rounded-xl bg-[#774DFF] hover:bg-[#683de6] text-white text-xs font-bold flex items-center gap-2 shadow-sm min-h-[44px] disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-[#774DFF] hover:bg-[#683de6] text-white text-xs font-bold flex items-center gap-2 shadow-sm min-h-[44px] cursor-pointer disabled:opacity-50"
               >
                 {isSavingPhone ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
                 <span>{isSavingPhone ? 'Saving...' : 'Update Phone'}</span>

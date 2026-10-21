@@ -10,7 +10,28 @@ type CRMView = 'leads' | 'subscribers';
 
 export const AdminCRM: React.FC = () => {
   const { leads, subscribers, updateLeadStatus } = useProperties();
-  const [crmTab, setCrmTab] = useState<CRMTab>('all-leads');
+  const [crmTab, setCrmTab] = useState<CRMTab>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'webinar-leads') {
+        return 'webinar-leads';
+      }
+    }
+    return 'all-leads';
+  });
+
+  const handleTabChange = (newTab: CRMTab) => {
+    setCrmTab(newTab);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (newTab === 'webinar-leads') {
+        url.searchParams.set('tab', 'webinar-leads');
+      } else {
+        url.searchParams.delete('tab');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
   const [view, setView] = useState<CRMView>('leads');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All Statuses');
@@ -67,7 +88,7 @@ export const AdminCRM: React.FC = () => {
         {/* Tab toggle at the top switching between: [ All Leads ] [ Webinar Leads ] */}
         <div className="flex gap-2 mb-6 md:mb-8 bg-slate-100 p-1.5 rounded-xl max-w-sm">
           <button 
-            onClick={() => setCrmTab('all-leads')} 
+            onClick={() => handleTabChange('all-leads')} 
             className={`flex-1 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${
               crmTab === 'all-leads'
                 ? 'bg-[#774DFF] text-white shadow-xs' 
@@ -77,7 +98,7 @@ export const AdminCRM: React.FC = () => {
             All Leads
           </button>
           <button 
-            onClick={() => setCrmTab('webinar-leads')} 
+            onClick={() => handleTabChange('webinar-leads')} 
             className={`flex-1 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${
               crmTab === 'webinar-leads' 
                 ? 'bg-[#774DFF] text-white shadow-xs' 
