@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck, MapPin, Quote } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Menu, X, BookOpen, Wallet, ShieldCheck, MapPin, Quote, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminLayoutProps {
@@ -22,6 +22,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/admin', label: 'Listings', icon: LayoutDashboard },
     { path: '/admin/crm', label: 'Leads', icon: Users },
+    { path: '/admin/whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { path: '/admin/agents', label: 'Agents', icon: ShieldCheck },
     { path: '/admin/training', label: 'Training', icon: BookOpen },
     { path: '/admin/payouts', label: 'Payouts', icon: Wallet },

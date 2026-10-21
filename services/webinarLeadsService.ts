@@ -17,9 +17,6 @@ const LOCAL_STORAGE_FILE = path.join(process.cwd(), 'config', 'webinar_leads.jso
 let memoryLeads: WebinarLead[] = [];
 
 export function loadLocalLeads(): WebinarLead[] {
-  if (memoryLeads.length > 0) {
-    return memoryLeads;
-  }
   try {
     if (fs.existsSync(LOCAL_STORAGE_FILE)) {
       const data = fs.readFileSync(LOCAL_STORAGE_FILE, 'utf-8');
@@ -31,6 +28,10 @@ export function loadLocalLeads(): WebinarLead[] {
     }
   } catch (err) {
     console.error('Failed to read webinar_leads.json:', err);
+  }
+
+  if (memoryLeads.length > 0) {
+    return memoryLeads;
   }
 
   const defaults = getDefaultWebinarLeads();

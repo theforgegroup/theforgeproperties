@@ -339,15 +339,18 @@ export const WebinarLeadsView: React.FC = () => {
       console.warn('LocalStorage save warning:', storageErr);
     }
 
-    // 3. Network call to server API
+    // 3. Network call to server API (awaited so refresh never interrupts disk persistence)
     try {
-      fetch(`/api/admin/webinar-leads/${leadId}/status`, {
+      const res = await fetch(`/api/admin/webinar-leads/${leadId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ call_status: newStatus, full_name: prevLead.full_name })
-      }).catch(err => console.warn('Server status update error:', err));
+      });
+      if (!res.ok) {
+        console.warn('Server status update returned status:', res.status);
+      }
     } catch (err) {
-      console.warn('Status network dispatch skipped:', err);
+      console.warn('Server status update error:', err);
     }
 
     // 4. Background sync to Supabase
@@ -401,13 +404,16 @@ export const WebinarLeadsView: React.FC = () => {
       console.warn('LocalStorage save warning:', storageErr);
     }
 
-    // 3. Network call to server API
+    // 3. Network call to server API (awaited)
     try {
-      fetch(`/api/admin/webinar-leads/${leadId}/notes`, {
+      const res = await fetch(`/api/admin/webinar-leads/${leadId}/notes`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ call_notes: notesToSave, full_name: editingNotesLead.full_name })
-      }).catch(err => console.warn('Server notes update error:', err));
+      });
+      if (!res.ok) {
+        console.warn('Server notes update returned status:', res.status);
+      }
     } catch (err) {
       console.warn('Notes network dispatch skipped:', err);
     }
@@ -460,15 +466,18 @@ export const WebinarLeadsView: React.FC = () => {
       console.warn('LocalStorage save warning:', storageErr);
     }
 
-    // 3. Network call to server API
+    // 3. Network call to server API (awaited)
     try {
-      fetch(`/api/admin/webinar-leads/${leadId}/phone`, {
+      const res = await fetch(`/api/admin/webinar-leads/${leadId}/phone`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ whatsapp_number: cleanDraft, full_name: editingPhoneLead.full_name })
-      }).catch(err => console.warn('Server phone update error:', err));
+      });
+      if (!res.ok) {
+        console.warn('Server phone update returned status:', res.status);
+      }
     } catch (err) {
-      console.warn('Phone network dispatch skipped:', err);
+      console.warn('Phone network dispatch error:', err);
     }
 
     // 4. Background sync to Supabase

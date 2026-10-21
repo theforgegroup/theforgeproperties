@@ -4,17 +4,27 @@ import { useProperties } from '../context/PropertyContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { Lead } from '../types';
 import { WebinarLeadsView } from '../components/WebinarLeadsView';
+import { WhatsAppCampaignManager } from '../components/WhatsAppCampaignManager';
 
-type CRMTab = 'all-leads' | 'webinar-leads';
+type CRMTab = 'all-leads' | 'webinar-leads' | 'whatsapp-campaigns';
 type CRMView = 'leads' | 'subscribers';
 
-export const AdminCRM: React.FC = () => {
+interface AdminCRMProps {
+  defaultTab?: CRMTab;
+}
+
+export const AdminCRM: React.FC<AdminCRMProps> = ({ defaultTab }) => {
   const { leads, subscribers, updateLeadStatus } = useProperties();
   const [crmTab, setCrmTab] = useState<CRMTab>(() => {
+    if (defaultTab) return defaultTab;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('tab') === 'webinar-leads') {
+      const tabParam = params.get('tab');
+      if (tabParam === 'webinar-leads') {
         return 'webinar-leads';
+      }
+      if (tabParam === 'whatsapp' || tabParam === 'whatsapp-campaigns') {
+        return 'whatsapp-campaigns';
       }
     }
     return 'all-leads';
@@ -26,6 +36,8 @@ export const AdminCRM: React.FC = () => {
       const url = new URL(window.location.href);
       if (newTab === 'webinar-leads') {
         url.searchParams.set('tab', 'webinar-leads');
+      } else if (newTab === 'whatsapp-campaigns') {
+        url.searchParams.set('tab', 'whatsapp');
       } else {
         url.searchParams.delete('tab');
       }
@@ -85,8 +97,8 @@ export const AdminCRM: React.FC = () => {
       <div className="w-full">
         <h1 className="text-3xl md:text-4xl font-serif text-forge-navy mb-6 md:mb-8">CRM Dashboard</h1>
 
-        {/* Tab toggle at the top switching between: [ All Leads ] [ Webinar Leads ] */}
-        <div className="flex gap-2 mb-6 md:mb-8 bg-slate-100 p-1.5 rounded-xl max-w-sm">
+        {/* Tab toggle at the top switching between: [ All Leads ] [ Webinar Leads ] [ WhatsApp Campaigns ] */}
+        <div className="flex flex-wrap gap-2 mb-6 md:mb-8 bg-slate-100 p-1.5 rounded-xl max-w-xl">
           <button 
             onClick={() => handleTabChange('all-leads')} 
             className={`flex-1 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${
@@ -107,10 +119,22 @@ export const AdminCRM: React.FC = () => {
           >
             Webinar Leads
           </button>
+          <button 
+            onClick={() => handleTabChange('whatsapp-campaigns')} 
+            className={`flex-1 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${
+              crmTab === 'whatsapp-campaigns' 
+                ? 'bg-[#774DFF] text-white shadow-xs' 
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            WhatsApp Campaigns
+          </button>
         </div>
 
         {crmTab === 'webinar-leads' ? (
           <WebinarLeadsView />
+        ) : crmTab === 'whatsapp-campaigns' ? (
+          <WhatsAppCampaignManager />
         ) : (
           /* All Leads shows existing CRM content completely unchanged */
           <div>

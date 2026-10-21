@@ -96,6 +96,7 @@ const AppLayout: React.FC = () => {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminEntry />} />
           <Route path="/admin/crm" element={<ProtectedRoute role="Admin"><AdminCRM /></ProtectedRoute>} />
+          <Route path="/admin/whatsapp" element={<ProtectedRoute role="Admin"><AdminCRM defaultTab="whatsapp-campaigns" /></ProtectedRoute>} />
           <Route path="/admin/agents" element={<ProtectedRoute role="Admin"><AdminAgents /></ProtectedRoute>} />
           <Route path="/admin/training" element={<ProtectedRoute role="Admin"><AdminTraining /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute role="Admin"><AdminPayouts /></ProtectedRoute>} />

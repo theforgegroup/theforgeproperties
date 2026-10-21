@@ -10,6 +10,8 @@ import multer from 'multer';
 import { authRouter } from './routes/auth';
 import { createWebinarLeadsRouter } from './routes/webinarLeadsRouter';
 import { initWebinarLeadsTable } from './services/webinarLeadsService';
+import { createWhatsAppRouter, createWhatsAppWebhookRouter } from './routes/whatsappRouter';
+import { whatsappQueueWorker } from './services/whatsappQueueWorker';
 import db from './config/database';
 
 const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
@@ -257,6 +259,87 @@ async function runMigrations() {
       // Initialize webinar_leads schema
       await initWebinarLeadsTable(dbPool);
 
+      // Initialize WhatsApp campaign manager tables and consent fields
+      await executeResilient(`
+        ALTER TABLE public.webinar_leads
+          ADD COLUMN IF NOT EXISTS whatsapp_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
+          ADD COLUMN IF NOT EXISTS whatsapp_opt_in_at TIMESTAMPTZ,
+          ADD COLUMN IF NOT EXISTS whatsapp_opt_in_source TEXT,
+          ADD COLUMN IF NOT EXISTS whatsapp_opt_out_at TIMESTAMPTZ;
+      `, "Alter webinar_leads with whatsapp consent fields");
+
+      await executeResilient(`
+        CREATE TABLE IF NOT EXISTS public.whatsapp_campaigns (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          name TEXT NOT NULL,
+          template_name TEXT NOT NULL,
+          template_language TEXT NOT NULL DEFAULT 'en',
+          template_variables JSONB DEFAULT '{}'::jsonb,
+          status TEXT NOT NULL DEFAULT 'draft',
+          created_by TEXT NOT NULL,
+          scheduled_at TIMESTAMPTZ,
+          total_recipients INT NOT NULL DEFAULT 0,
+          queued_count INT NOT NULL DEFAULT 0,
+          sent_count INT NOT NULL DEFAULT 0,
+          delivered_count INT NOT NULL DEFAULT 0,
+          read_count INT NOT NULL DEFAULT 0,
+          failed_count INT NOT NULL DEFAULT 0,
+          opted_out_count INT NOT NULL DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `, "Create whatsapp_campaigns table");
+
+      await executeResilient(`
+        CREATE TABLE IF NOT EXISTS public.whatsapp_campaign_messages (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          campaign_id UUID NOT NULL REFERENCES public.whatsapp_campaigns(id) ON DELETE CASCADE,
+          lead_id BIGINT,
+          recipient_number TEXT NOT NULL,
+          recipient_name TEXT NOT NULL DEFAULT 'Valued Investor',
+          template_name TEXT NOT NULL,
+          template_variables JSONB DEFAULT '{}'::jsonb,
+          queue_status TEXT NOT NULL DEFAULT 'pending',
+          provider_message_id TEXT,
+          attempt_count INT NOT NULL DEFAULT 0,
+          max_attempts INT NOT NULL DEFAULT 3,
+          next_retry_at TIMESTAMPTZ,
+          last_error TEXT,
+          idempotency_key TEXT UNIQUE NOT NULL,
+          queued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          sent_at TIMESTAMPTZ,
+          delivered_at TIMESTAMPTZ,
+          read_at TIMESTAMPTZ,
+          failed_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `, "Create whatsapp_campaign_messages table");
+
+      await executeResilient(`
+        CREATE TABLE IF NOT EXISTS public.whatsapp_opt_outs (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          phone_number TEXT NOT NULL UNIQUE,
+          reason TEXT,
+          source TEXT NOT NULL DEFAULT 'admin',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `, "Create whatsapp_opt_outs table");
+
+      await executeResilient(`
+        CREATE TABLE IF NOT EXISTS public.whatsapp_webhook_events (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          event_id TEXT UNIQUE NOT NULL,
+          provider TEXT NOT NULL DEFAULT 'meta_cloud_api',
+          event_type TEXT NOT NULL,
+          payload JSONB NOT NULL,
+          processed BOOLEAN NOT NULL DEFAULT FALSE,
+          processed_at TIMESTAMPTZ,
+          error TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `, "Create whatsapp_webhook_events table");
+
     } finally {
       client.release();
     }
@@ -370,6 +453,20 @@ async function startServer() {
 
   app.use('/api/auth', express.json(), authRouter);
   app.use('/api/admin/webinar-leads', express.json(), createWebinarLeadsRouter(dbPool));
+  app.use('/api/admin/whatsapp', express.json(), createWhatsAppRouter(dbPool));
+  app.use(
+    '/api/webhooks/whatsapp',
+    express.json({
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      }
+    }),
+    createWhatsAppWebhookRouter(dbPool)
+  );
+
+  // Initialize and start WhatsApp queue background worker
+  whatsappQueueWorker.setPool(dbPool);
+  whatsappQueueWorker.start();
 
   // Return all realtors from PostgreSQL users table mapped as Agent objects
   app.get('/api/agents', async (req, res) => {

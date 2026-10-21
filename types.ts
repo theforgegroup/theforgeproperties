@@ -99,6 +99,11 @@ export interface WebinarLead {
   call_notes: string | null;
   called_at: string | null;
   follow_up_date: string | null;
+  // WhatsApp Consent & Opt-in Tracking (Default: false)
+  whatsapp_opt_in?: boolean;
+  whatsapp_opt_in_at?: string | null;
+  whatsapp_opt_in_source?: string | null;
+  whatsapp_opt_out_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -112,6 +117,103 @@ export interface WebinarLeadsStats {
   not_interested: number;
   no_answer: number;
   wrong_number: number;
+}
+
+export type WhatsAppCampaignStatus = 
+  | 'draft'
+  | 'scheduled'
+  | 'queued'
+  | 'processing'
+  | 'paused'
+  | 'completed'
+  | 'cancelled';
+
+export type WhatsAppMessageQueueStatus = 
+  | 'pending'
+  | 'processing'
+  | 'sent'
+  | 'delivered'
+  | 'read'
+  | 'failed'
+  | 'cancelled'
+  | 'skipped';
+
+export interface WhatsAppTemplate {
+  name: string;
+  language: string;
+  category: 'MARKETING' | 'UTILITY';
+  status: 'APPROVED' | 'PENDING' | 'REJECTED';
+  body_text: string;
+  variables: string[];
+  example_preview: string;
+}
+
+export interface WhatsAppCampaign {
+  id: string;
+  name: string;
+  template_name: string;
+  template_language: string;
+  template_variables?: Record<string, string>;
+  status: WhatsAppCampaignStatus;
+  created_by: string;
+  scheduled_at?: string | null;
+  total_recipients: number;
+  queued_count: number;
+  sent_count: number;
+  delivered_count: number;
+  read_count: number;
+  failed_count: number;
+  opted_out_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WhatsAppCampaignMessage {
+  id: string;
+  campaign_id: string;
+  lead_id?: number | string | null;
+  recipient_number: string;
+  recipient_name: string;
+  template_name: string;
+  template_variables?: Record<string, string>;
+  queue_status: WhatsAppMessageQueueStatus;
+  provider_message_id?: string | null;
+  attempt_count: number;
+  max_attempts: number;
+  next_retry_at?: string | null;
+  last_error?: string | null;
+  idempotency_key: string;
+  queued_at?: string | null;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  failed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WhatsAppOptOut {
+  id: string;
+  phone_number: string;
+  reason?: string | null;
+  source: string;
+  created_at: string;
+}
+
+export interface WhatsAppStats {
+  total_campaigns: number;
+  draft_campaigns: number;
+  queued_campaigns: number;
+  processing_campaigns: number;
+  completed_campaigns: number;
+  total_messages_queued: number;
+  total_messages_sent: number;
+  total_messages_delivered: number;
+  total_messages_read: number;
+  total_messages_failed: number;
+  total_opt_outs: number;
+  delivery_rate: number;
+  read_rate: number;
 }
 
 export interface Agent {
