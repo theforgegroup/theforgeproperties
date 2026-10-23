@@ -457,7 +457,7 @@ async function startServer() {
   app.use(
     '/api/webhooks/whatsapp',
     express.json({
-      verify: (req: any, _res, buf) => {
+      verify: (req: express.Request & { rawBody?: Buffer }, _res, buf) => {
         req.rawBody = buf;
       }
     }),

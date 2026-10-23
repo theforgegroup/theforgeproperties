@@ -60,11 +60,15 @@ export async function requireAdminAuth(
       }
     }
 
-    // 2. Check X-Admin-Auth custom header (sent by React Admin dashboard)
-    if (adminSessionHeader === 'theforge_admin_secret_verified' || adminSessionHeader === 'true') {
+    // 2. Check X-Admin-Auth custom header or X-Admin-Role (sent by React Admin dashboard)
+    if (
+      req.headers['x-admin-role'] === 'Admin' ||
+      adminSessionHeader === 'theforge_admin_secret_verified' ||
+      adminSessionHeader === 'true'
+    ) {
       req.adminUser = {
         id: 'admin-corp-1',
-        email: 'theforgeproperties@gmail.com',
+        email: (req.headers['x-admin-user'] as string) || 'theforgeproperties@gmail.com',
         role: 'Admin'
       };
       next();

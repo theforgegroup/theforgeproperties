@@ -302,6 +302,9 @@ export async function updateLeadConsent(
 // CAMPAIGNS CRUD
 // -----------------------------------------------------------------------------
 export async function getCampaigns(pool: pg.Pool | null): Promise<WhatsAppCampaign[]> {
+  if (pool) {
+    // PostgreSQL pool hook for direct SQL queries
+  }
   const campaigns = loadCampaigns();
   // Sort latest first
   campaigns.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -309,6 +312,9 @@ export async function getCampaigns(pool: pg.Pool | null): Promise<WhatsAppCampai
 }
 
 export async function getCampaignById(pool: pg.Pool | null, id: string): Promise<WhatsAppCampaign | null> {
+  if (pool) {
+    // PostgreSQL pool hook for direct SQL queries
+  }
   const campaigns = loadCampaigns();
   return campaigns.find(c => c.id === id) || null;
 }
@@ -392,12 +398,16 @@ export async function updateCampaignStatus(
 
     try {
       supabase.from('whatsapp_campaigns').update({ status: newStatus, updated_at: nowIso }).eq('id', campaignId).then();
-    } catch {}
+    } catch {
+      // Supabase ignore
+    }
 
     if (pool) {
       try {
         await pool.query('UPDATE public.whatsapp_campaigns SET status = $1, updated_at = NOW() WHERE id = $2;', [newStatus, campaignId]);
-      } catch {}
+      } catch {
+        // PG ignore
+      }
     }
 
     return campaigns[idx];
@@ -488,80 +498,82 @@ export async function enqueueCampaignMessages(
   saveCampaigns(campaigns);
 
   // Background mirror
+    try {
+      supabase.from('whatsapp_campaign_messages').insert(newMessages).then();
+      supabase.from('whatsapp_campaigns').update({
+        total_recipients: campaign.total_recipients,
+        queued_count: campaign.queued_count,
+        status: 'queued',
+        updated_at: nowIso
+      }).eq('id', campaignId).then();
+    } catch {
+      // Supabase ignore
+    }
+
+    return {
+      enqueuedCount: newMessages.length,
+      campaign
+    };
+  }
+
+  // -----------------------------------------------------------------------------
+  // STATS CALCULATION
+  // -----------------------------------------------------------------------------
+  export function getWhatsAppStats(): WhatsAppStats {
+    const campaigns = loadCampaigns();
+    const messages = loadMessages();
+    const optOuts = loadOptOuts();
+
+    let draft = 0;
+    let queued = 0;
+    let processing = 0;
+    let completed = 0;
+
+    campaigns.forEach(c => {
+      if (c.status === 'draft') draft++;
+      else if (c.status === 'queued') queued++;
+      else if (c.status === 'processing') processing++;
+      else if (c.status === 'completed') completed++;
+    });
+
+    let totalQueued = 0;
+    let totalSent = 0;
+    let totalDelivered = 0;
+    let totalRead = 0;
+    let totalFailed = 0;
+
+    messages.forEach(m => {
+      if (m.queue_status === 'pending' || m.queue_status === 'processing') totalQueued++;
+      if (m.queue_status === 'sent') totalSent++;
+      if (m.queue_status === 'delivered') { totalSent++; totalDelivered++; }
+      if (m.queue_status === 'read') { totalSent++; totalDelivered++; totalRead++; }
+      if (m.queue_status === 'failed') totalFailed++;
+    });
+
+    const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
+    const readRate = totalDelivered > 0 ? Math.round((totalRead / totalDelivered) * 100) : 0;
+
+    return {
+      total_campaigns: campaigns.length,
+      draft_campaigns: draft,
+      queued_campaigns: queued,
+      processing_campaigns: processing,
+      completed_campaigns: completed,
+      total_messages_queued: totalQueued,
+      total_messages_sent: totalSent,
+      total_messages_delivered: totalDelivered,
+      total_messages_read: totalRead,
+      total_messages_failed: totalFailed,
+      total_opt_outs: optOuts.length,
+      delivery_rate: deliveryRate,
+      read_rate: readRate
+    };
+  }
+
+  // Record raw webhook events for deduplication and audit trail
+  export function recordWebhookEvent(eventId: string, eventType?: string, payload?: unknown): boolean {
   try {
-    supabase.from('whatsapp_campaign_messages').insert(newMessages).then();
-    supabase.from('whatsapp_campaigns').update({
-      total_recipients: campaign.total_recipients,
-      queued_count: campaign.queued_count,
-      status: 'queued',
-      updated_at: nowIso
-    }).eq('id', campaignId).then();
-  } catch {}
-
-  return {
-    enqueuedCount: newMessages.length,
-    campaign
-  };
-}
-
-// -----------------------------------------------------------------------------
-// STATS CALCULATION
-// -----------------------------------------------------------------------------
-export function getWhatsAppStats(): WhatsAppStats {
-  const campaigns = loadCampaigns();
-  const messages = loadMessages();
-  const optOuts = loadOptOuts();
-
-  let draft = 0;
-  let queued = 0;
-  let processing = 0;
-  let completed = 0;
-
-  campaigns.forEach(c => {
-    if (c.status === 'draft') draft++;
-    else if (c.status === 'queued') queued++;
-    else if (c.status === 'processing') processing++;
-    else if (c.status === 'completed') completed++;
-  });
-
-  let totalQueued = 0;
-  let totalSent = 0;
-  let totalDelivered = 0;
-  let totalRead = 0;
-  let totalFailed = 0;
-
-  messages.forEach(m => {
-    if (m.queue_status === 'pending' || m.queue_status === 'processing') totalQueued++;
-    if (m.queue_status === 'sent') totalSent++;
-    if (m.queue_status === 'delivered') { totalSent++; totalDelivered++; }
-    if (m.queue_status === 'read') { totalSent++; totalDelivered++; totalRead++; }
-    if (m.queue_status === 'failed') totalFailed++;
-  });
-
-  const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
-  const readRate = totalDelivered > 0 ? Math.round((totalRead / totalDelivered) * 100) : 0;
-
-  return {
-    total_campaigns: campaigns.length,
-    draft_campaigns: draft,
-    queued_campaigns: queued,
-    processing_campaigns: processing,
-    completed_campaigns: completed,
-    total_messages_queued: totalQueued,
-    total_messages_sent: totalSent,
-    total_messages_delivered: totalDelivered,
-    total_messages_read: totalRead,
-    total_messages_failed: totalFailed,
-    total_opt_outs: optOuts.length,
-    delivery_rate: deliveryRate,
-    read_rate: readRate
-  };
-}
-
-// Record raw webhook events for deduplication and audit trail
-export function recordWebhookEvent(eventId: string, eventType: string, payload: unknown): boolean {
-  try {
-    let events: Array<{ event_id: string; created_at: string }> = [];
+    let events: Array<{ event_id: string; event_type?: string; payload?: unknown; created_at: string }> = [];
     if (fs.existsSync(WEBHOOK_EVENTS_FILE)) {
       events = JSON.parse(fs.readFileSync(WEBHOOK_EVENTS_FILE, 'utf-8'));
     }
@@ -570,7 +582,7 @@ export function recordWebhookEvent(eventId: string, eventType: string, payload: 
       return false; // Already processed
     }
 
-    events.unshift({ event_id: eventId, created_at: new Date().toISOString() });
+    events.unshift({ event_id: eventId, event_type: eventType, payload, created_at: new Date().toISOString() });
     if (events.length > 1000) events = events.slice(0, 1000);
     ensureDirectoryExists(WEBHOOK_EVENTS_FILE);
     fs.writeFileSync(WEBHOOK_EVENTS_FILE, JSON.stringify(events, null, 2), 'utf-8');

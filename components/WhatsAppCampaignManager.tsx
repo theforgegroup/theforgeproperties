@@ -97,28 +97,7 @@ export interface WhatsAppCampaignMessage {
   updated_at: string;
 }
 
-export interface WhatsAppStats {
-  campaigns: {
-    total: number;
-    draft: number;
-    queued: number;
-    processing: number;
-    completed: number;
-    paused: number;
-    cancelled: number;
-  };
-  messages: {
-    total: number;
-    pending: number;
-    processing: number;
-    sent: number;
-    delivered: number;
-    read: number;
-    failed: number;
-    opted_out: number;
-  };
-  opt_outs_count: number;
-}
+import { WhatsAppStats } from '../types';
 
 const CONSENT_SOURCES = [
   'Webinar Registration Form',
@@ -198,6 +177,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
     try {
       const headers = {
         'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
         'x-admin-user': adminEmail
       };
 
@@ -247,7 +227,11 @@ export const WhatsAppCampaignManager: React.FC = () => {
   const fetchCampaignMessages = useCallback(async (campaignId: string) => {
     setIsLoadingMessages(true);
     try {
-      const headers = { 'x-admin-role': 'Admin', 'x-admin-user': adminEmail };
+      const headers = {
+        'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
+        'x-admin-user': adminEmail
+      };
       const res = await fetch(`/api/admin/whatsapp/campaigns/${campaignId}/messages`, { headers });
       if (res.ok) {
         const data = await res.json();
@@ -283,6 +267,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
       const headers = {
         'Content-Type': 'application/json',
         'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
         'x-admin-user': adminEmail
       };
 
@@ -357,7 +342,11 @@ export const WhatsAppCampaignManager: React.FC = () => {
 
   const handleCampaignAction = async (campaignId: string, action: 'pause' | 'resume' | 'cancel' | 'retry-failed') => {
     try {
-      const headers = { 'x-admin-role': 'Admin', 'x-admin-user': adminEmail };
+      const headers = {
+        'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
+        'x-admin-user': adminEmail
+      };
       const res = await fetch(`/api/admin/whatsapp/campaigns/${campaignId}/${action}`, {
         method: 'POST',
         headers
@@ -388,6 +377,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
       const headers = {
         'Content-Type': 'application/json',
         'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
         'x-admin-user': adminEmail
       };
 
@@ -421,6 +411,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
       const headers = {
         'Content-Type': 'application/json',
         'x-admin-role': 'Admin',
+        'x-admin-auth': 'theforge_admin_secret_verified',
         'x-admin-user': adminEmail
       };
 
@@ -641,46 +632,46 @@ export const WhatsAppCampaignManager: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Campaigns</p>
-          <p className="text-2xl font-black text-[#0F172A] mt-1 font-serif">{stats?.campaigns.total || campaigns.length}</p>
+          <p className="text-2xl font-black text-[#0F172A] mt-1 font-serif">{stats?.total_campaigns ?? campaigns.length}</p>
           <p className="text-[11px] text-slate-500 mt-1">
-            {stats?.campaigns.completed || 0} completed
+            {stats?.completed_campaigns ?? 0} completed
           </p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Queued / Sent</p>
           <p className="text-2xl font-black text-[#0F172A] mt-1 font-serif">
-            {(stats?.messages.sent || 0) + (stats?.messages.delivered || 0) + (stats?.messages.read || 0)}
+            {stats?.total_messages_sent ?? 0}
           </p>
           <p className="text-[11px] text-slate-500 mt-1">
-            {stats?.messages.pending || 0} in queue
+            {stats?.total_messages_queued ?? 0} in queue
           </p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Delivered</p>
           <p className="text-2xl font-black text-emerald-700 mt-1 font-serif">
-            {(stats?.messages.delivered || 0) + (stats?.messages.read || 0)}
+            {stats?.total_messages_delivered ?? 0}
           </p>
           <p className="text-[11px] text-emerald-600 mt-1">
-            Confirmed receipts
+            {stats?.delivery_rate ?? 0}% delivery rate
           </p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-sky-600">Read / Opened</p>
           <p className="text-2xl font-black text-sky-700 mt-1 font-serif">
-            {stats?.messages.read || 0}
+            {stats?.total_messages_read ?? 0}
           </p>
           <p className="text-[11px] text-sky-600 mt-1">
-            Blue tick verified
+            {stats?.read_rate ?? 0}% read rate
           </p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-rose-500">Failed / Retries</p>
           <p className="text-2xl font-black text-rose-600 mt-1 font-serif">
-            {stats?.messages.failed || 0}
+            {stats?.total_messages_failed ?? 0}
           </p>
           <p className="text-[11px] text-rose-500 mt-1">
             Bounded auto-retry
@@ -690,7 +681,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">Opt-Outs</p>
           <p className="text-2xl font-black text-amber-700 mt-1 font-serif">
-            {stats?.opt_outs_count || 0}
+            {stats?.total_opt_outs ?? 0}
           </p>
           <p className="text-[11px] text-amber-600 mt-1">
             Strictly excluded

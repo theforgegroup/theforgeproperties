@@ -8,15 +8,11 @@ import {
   isPhoneOptedOut, 
   normalizePhone,
   loadMessages,
-  saveMessages,
-  loadCampaigns,
-  saveCampaigns,
   recordWebhookEvent
 } from '../services/whatsappDatabase';
-import { whatsappProvider, APPROVED_WHATSAPP_TEMPLATES } from '../services/whatsappProvider';
+import { whatsappProvider } from '../services/whatsappProvider';
 import { whatsappQueueWorker } from '../services/whatsappQueueWorker';
-import { loadLocalLeads, saveLocalLeads } from '../services/webinarLeadsService';
-import { WhatsAppCampaignMessage } from '../types';
+import { loadLocalLeads } from '../services/webinarLeadsService';
 
 async function runTestSuite() {
   console.log('====================================================');
@@ -200,6 +196,7 @@ async function runTestSuite() {
     // Direct check
     const hmacExpected = crypto.createHmac('sha256', testSecret).update(payload).digest('hex');
     assert.strictEqual(signature, hmacExpected);
+    assert.strictEqual(validHeader, `sha256=${hmacExpected}`);
     assert.notStrictEqual(signature, invalidHeader.substring(7));
   });
 
