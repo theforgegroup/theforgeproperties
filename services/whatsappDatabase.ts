@@ -132,6 +132,10 @@ export function normalizePhone(rawPhone: string): string {
   if (digits.startsWith('0') && digits.length === 11) {
     return '234' + digits.substring(1);
   }
+  // Standardize Nigerian +234 080... (14 digits) to 23480...
+  if (digits.startsWith('2340') && digits.length === 14) {
+    return '234' + digits.substring(4);
+  }
   return digits;
 }
 

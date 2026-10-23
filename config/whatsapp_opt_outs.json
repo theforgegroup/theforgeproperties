@@ -12,5 +12,12 @@
     "reason": "Admin consent removal",
     "source": "admin_opt_out",
     "created_at": "2026-10-21T08:58:06.542Z"
+  },
+  {
+    "id": "df4dd5ba-0dcb-41dc-b2f8-6e795f5b13b1",
+    "phone_number": "+2348999999009",
+    "reason": "User sent STOP keyword",
+    "source": "webhook_stop",
+    "created_at": "2026-10-23T20:21:02.186Z"
   }
 ]
