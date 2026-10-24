@@ -12,6 +12,7 @@ import { createWebinarLeadsRouter } from './routes/webinarLeadsRouter';
 import { initWebinarLeadsTable } from './services/webinarLeadsService';
 import { createWhatsAppRouter, createWhatsAppWebhookRouter } from './routes/whatsappRouter';
 import { whatsappQueueWorker } from './services/whatsappQueueWorker';
+import { setAdminAuthDbPool } from './middleware/adminAuth';
 import db from './config/database';
 
 const devIndexHtmlPath = path.resolve(process.cwd(), 'index.html');
@@ -465,6 +466,7 @@ async function startServer() {
   );
 
   // Initialize and start WhatsApp queue background worker
+  setAdminAuthDbPool(dbPool);
   whatsappQueueWorker.setPool(dbPool);
   whatsappQueueWorker.start();
 

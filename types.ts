@@ -136,7 +136,9 @@ export type WhatsAppMessageQueueStatus =
   | 'read'
   | 'failed'
   | 'cancelled'
-  | 'skipped';
+  | 'skipped'
+  | 'opted_out'
+  | 'uncertain_delivery';
 
 export interface WhatsAppTemplate {
   name: string;
@@ -183,6 +185,10 @@ export interface WhatsAppCampaignMessage {
   next_retry_at?: string | null;
   last_error?: string | null;
   idempotency_key: string;
+  claim_token?: string | null;
+  claimed_at?: string | null;
+  claimed_by?: string | null;
+  lease_expires_at?: string | null;
   queued_at?: string | null;
   sent_at?: string | null;
   delivered_at?: string | null;
@@ -211,6 +217,7 @@ export interface WhatsAppStats {
   total_messages_delivered: number;
   total_messages_read: number;
   total_messages_failed: number;
+  total_messages_uncertain?: number;
   total_opt_outs: number;
   delivery_rate: number;
   read_rate: number;

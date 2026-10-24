@@ -71,11 +71,35 @@ export class WhatsAppProviderService {
   private liveSendingEnabled: boolean;
 
   constructor() {
-    this.phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID || '';
-    this.accessToken = process.env.META_WHATSAPP_ACCESS_TOKEN || '';
-    this.appSecret = process.env.META_WHATSAPP_APP_SECRET || '';
-    this.verifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'theforge_webhook_verify_2026';
+    // Standardize environment variable resolution with backwards-compatible aliases
+    this.phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    this.accessToken = process.env.META_WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || '';
+    this.appSecret = process.env.META_WHATSAPP_APP_SECRET || process.env.WHATSAPP_APP_SECRET || '';
+    this.verifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN || process.env.WHATSAPP_VERIFY_TOKEN || 'theforge_webhook_verify_2026';
+    
+    // Strict enforcement: WHATSAPP_LIVE_SENDING_ENABLED must be explicitly 'true'
     this.liveSendingEnabled = process.env.WHATSAPP_LIVE_SENDING_ENABLED === 'true';
+
+    this.logStartupDiagnostics();
+  }
+
+  /**
+   * Log startup configuration status without leaking sensitive tokens or secrets
+   */
+  private logStartupDiagnostics(): void {
+    const hasPhoneId = Boolean(this.phoneNumberId && this.phoneNumberId.trim().length > 0);
+    const hasToken = Boolean(this.accessToken && this.accessToken.trim().length > 0);
+    const hasSecret = Boolean(this.appSecret && this.appSecret.trim().length > 0);
+    const maskedToken = hasToken ? `${this.accessToken.substring(0, 6)}... (len: ${this.accessToken.length})` : 'NOT_SET';
+
+    console.log('[WhatsAppProvider] Initialized provider status:', {
+      hasPhoneNumberId: hasPhoneId,
+      hasAccessToken: hasToken,
+      hasAppSecret: hasSecret,
+      tokenMasked: maskedToken,
+      liveSendingEnabled: this.liveSendingEnabled,
+      mode: this.liveSendingEnabled && hasPhoneId && hasToken ? 'LIVE_META_API' : 'SAFE_TEST_SIMULATION'
+    });
   }
 
   /**

@@ -35,9 +35,9 @@ async function runTestSuite() {
 
   // TEST 1: Phone Normalization
   await test('Phone number normalization handles standard, Nigerian local 080..., and special characters', () => {
-    assert.strictEqual(normalizePhone('+234 803 301 8708'), '2348033018708');
-    assert.strictEqual(normalizePhone('08033018708'), '2348033018708');
-    assert.strictEqual(normalizePhone('+1 (803) 723-2324'), '18037232324');
+    assert.strictEqual(normalizePhone('+234 803 301 8708'), '+2348033018708');
+    assert.strictEqual(normalizePhone('08033018708'), '+2348033018708');
+    assert.strictEqual(normalizePhone('+1 (803) 723-2324'), '+18037232324');
     assert.strictEqual(normalizePhone(''), '');
   });
 

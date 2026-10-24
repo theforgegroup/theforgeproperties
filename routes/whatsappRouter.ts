@@ -13,25 +13,22 @@ import {
   recordOptOut,
   isPhoneOptedOut,
   normalizePhone,
-  loadMessages,
-  saveMessages,
-  loadCampaigns,
-  saveCampaigns,
-  recordWebhookEvent
+  recordWebhookEvent,
+  reconcileUncertainMessage,
+  reconcileWithWebhook
 } from '../services/whatsappDatabase';
 import { whatsappProvider, APPROVED_WHATSAPP_TEMPLATES } from '../services/whatsappProvider';
 import { loadLocalLeads } from '../services/webinarLeadsService';
-import { WebinarLead, WhatsAppCampaignMessage } from '../types';
+import { WebinarLead } from '../types';
 
 export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   const router = express.Router();
 
   // ---------------------------------------------------------------------------
-  // CONTACTS ENDPOINTS
+  // CONTACTS & CONSENT ENDPOINTS
   // ---------------------------------------------------------------------------
 
   // GET /api/admin/whatsapp/contacts
-  // Query params: ?search=&consent=(all|opted_in|pending_consent|opted_out)&page=1&limit=25
   router.get('/contacts', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const search = req.query.search ? String(req.query.search).trim().toLowerCase() : '';
@@ -41,66 +38,61 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
 
       const allLeads = loadLocalLeads();
 
-      // Filter leads
-      const filtered = allLeads.filter((lead: WebinarLead) => {
-        // Search filter
+      const contactsWithStatus = await Promise.all(allLeads.map(async (lead: WebinarLead) => {
+        const canonicalPhone = normalizePhone(lead.whatsapp_number);
+        const isOptedOut = Boolean(lead.whatsapp_opt_out_at) || (await isPhoneOptedOut(canonicalPhone, pool));
+        const isOptedIn = Boolean(lead.whatsapp_opt_in) && !isOptedOut;
+        const validPhone = canonicalPhone.length >= 10;
+
+        return {
+          id: lead.id,
+          full_name: lead.full_name,
+          whatsapp_number: lead.whatsapp_number,
+          email: lead.email,
+          call_status: lead.call_status,
+          whatsapp_opt_in: isOptedIn,
+          whatsapp_opt_in_at: lead.whatsapp_opt_in_at || null,
+          whatsapp_opt_in_source: lead.whatsapp_opt_in_source || null,
+          whatsapp_opt_out_at: isOptedOut ? (lead.whatsapp_opt_out_at || lead.updated_at || new Date().toISOString()) : null,
+          is_campaign_eligible: isOptedIn && validPhone
+        };
+      }));
+
+      const filtered = contactsWithStatus.filter(c => {
         if (search) {
-          const matchName = lead.full_name?.toLowerCase().includes(search);
-          const matchPhone = lead.whatsapp_number?.toLowerCase().includes(search);
-          const matchEmail = lead.email?.toLowerCase().includes(search);
+          const matchName = c.full_name?.toLowerCase().includes(search);
+          const matchPhone = c.whatsapp_number?.toLowerCase().includes(search);
+          const matchEmail = c.email?.toLowerCase().includes(search);
           if (!matchName && !matchPhone && !matchEmail) {
             return false;
           }
         }
 
-        const normPhone = normalizePhone(lead.whatsapp_number);
-        const isOptedOut = Boolean(lead.whatsapp_opt_out_at) || isPhoneOptedOut(normPhone);
-        const isOptedIn = Boolean(lead.whatsapp_opt_in) && !isOptedOut;
-
-        // Consent filter
-        if (consentFilter === 'opted_in' && !isOptedIn) return false;
-        if (consentFilter === 'pending_consent' && (isOptedIn || isOptedOut)) return false;
-        if (consentFilter === 'opted_out' && !isOptedOut) return false;
+        if (consentFilter === 'opted_in' && !c.whatsapp_opt_in) return false;
+        if (consentFilter === 'pending_consent' && (c.whatsapp_opt_in || c.whatsapp_opt_out_at)) return false;
+        if (consentFilter === 'opted_out' && !c.whatsapp_opt_out_at) return false;
 
         return true;
       });
 
-      // Sort A-Z
       filtered.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
       const totalCount = filtered.length;
       const startIndex = (page - 1) * limit;
       const paginated = filtered.slice(startIndex, startIndex + limit);
 
-      // Compute eligibility summary across all leads
       let totalEligible = 0;
       let totalPendingConsent = 0;
       let totalOptedOut = 0;
 
-      allLeads.forEach(l => {
-        const norm = normalizePhone(l.whatsapp_number);
-        const isOut = Boolean(l.whatsapp_opt_out_at) || isPhoneOptedOut(norm);
-        const isIn = Boolean(l.whatsapp_opt_in) && !isOut;
-        const validPhone = norm.length >= 10;
-
-        if (isOut) totalOptedOut++;
-        else if (isIn && validPhone) totalEligible++;
+      contactsWithStatus.forEach(c => {
+        if (c.whatsapp_opt_out_at) totalOptedOut++;
+        else if (c.is_campaign_eligible) totalEligible++;
         else totalPendingConsent++;
       });
 
       res.json({
-        contacts: paginated.map(l => ({
-          id: l.id,
-          full_name: l.full_name,
-          whatsapp_number: l.whatsapp_number,
-          email: l.email,
-          call_status: l.call_status,
-          whatsapp_opt_in: Boolean(l.whatsapp_opt_in) && !isPhoneOptedOut(normalizePhone(l.whatsapp_number)),
-          whatsapp_opt_in_at: l.whatsapp_opt_in_at || null,
-          whatsapp_opt_in_source: l.whatsapp_opt_in_source || null,
-          whatsapp_opt_out_at: l.whatsapp_opt_out_at || (isPhoneOptedOut(normalizePhone(l.whatsapp_number)) ? l.updated_at || new Date().toISOString() : null),
-          is_eligible: Boolean(l.whatsapp_opt_in) && !isPhoneOptedOut(normalizePhone(l.whatsapp_number)) && normalizePhone(l.whatsapp_number).length >= 10
-        })),
+        contacts: paginated,
         pagination: {
           page,
           limit,
@@ -121,7 +113,6 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // PUT /api/admin/whatsapp/contacts/:id/consent
-  // Body: { opt_in: boolean, source?: string, full_name?: string }
   router.put('/contacts/:id/consent', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const id = String(req.params.id);
@@ -164,7 +155,6 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // POST /api/admin/whatsapp/contacts/bulk-consent
-  // Body: { ids: Array<string | number>, opt_in: boolean, source?: string }
   router.post('/contacts/bulk-consent', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const { ids, opt_in, source } = req.body;
@@ -190,7 +180,7 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // ---------------------------------------------------------------------------
-  // CAMPAIGNS ENDPOINTS
+  // CAMPAIGNS ENDPOINTS (PostgreSQL / Supabase Authoritative)
   // ---------------------------------------------------------------------------
 
   // GET /api/admin/whatsapp/campaigns
@@ -205,7 +195,6 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // POST /api/admin/whatsapp/campaigns
-  // Body: { name: string, template_name: string, template_language?: string, template_variables?: object }
   router.post('/campaigns', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const { name, template_name, template_language, template_variables } = req.body;
@@ -219,7 +208,7 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
         template_name,
         template_language,
         template_variables,
-        created_by: req.adminUser?.email || 'admin'
+        created_by: req.adminUser?.email || 'theforgeproperties@gmail.com'
       });
 
       res.status(201).json({ success: true, campaign });
@@ -246,7 +235,6 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // POST /api/admin/whatsapp/campaigns/:id/preview
-  // Body: { contact_ids: Array<string | number>, sample_lead_id?: string | number }
   router.post('/campaigns/:id/preview', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const id = String(req.params.id);
@@ -271,23 +259,22 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
       const eligibleLeads: WebinarLead[] = [];
       const excludedLeads: Array<{ id: number | string; name: string; reason: string }> = [];
 
-      selectedLeads.forEach(l => {
-        const norm = normalizePhone(l.whatsapp_number);
-        const isOptedOut = Boolean(l.whatsapp_opt_out_at) || isPhoneOptedOut(norm);
+      for (const l of selectedLeads) {
+        const canonical = normalizePhone(l.whatsapp_number);
+        const isOptedOut = Boolean(l.whatsapp_opt_out_at) || (await isPhoneOptedOut(canonical, pool));
         const isOptedIn = Boolean(l.whatsapp_opt_in) && !isOptedOut;
 
         if (isOptedOut) {
           excludedLeads.push({ id: l.id, name: l.full_name, reason: 'Recipient opted out of WhatsApp messages' });
         } else if (!isOptedIn) {
-          excludedLeads.push({ id: l.id, name: l.full_name, reason: 'Recipient has not provided marketing opt-in consent' });
-        } else if (norm.length < 10) {
+          excludedLeads.push({ id: l.id, name: l.full_name, reason: 'Recipient has not provided explicit marketing opt-in consent' });
+        } else if (canonical.length < 10) {
           excludedLeads.push({ id: l.id, name: l.full_name, reason: 'Invalid phone number format (< 10 digits)' });
         } else {
           eligibleLeads.push(l);
         }
-      });
+      }
 
-      // Sample preview rendering
       const sample = eligibleLeads[0] || selectedLeads[0];
       let sampleMessage = template.body_text;
       if (sample) {
@@ -317,7 +304,6 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   });
 
   // POST /api/admin/whatsapp/campaigns/:id/queue
-  // Body: { contact_ids?: Array<string | number> }
   router.post('/campaigns/:id/queue', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const id = String(req.params.id);
@@ -338,17 +324,16 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
         ? allLeads.filter(l => contact_ids.some(cid => String(cid) === String(l.id)))
         : allLeads;
 
-      // Filter only strictly eligible opted-in recipients
       const eligibleRecipients = [];
       for (const l of targetLeads) {
-        const norm = normalizePhone(l.whatsapp_number);
-        const isOptedOut = Boolean(l.whatsapp_opt_out_at) || isPhoneOptedOut(norm);
+        const canonical = normalizePhone(l.whatsapp_number);
+        const isOptedOut = Boolean(l.whatsapp_opt_out_at) || (await isPhoneOptedOut(canonical, pool));
         const isOptedIn = Boolean(l.whatsapp_opt_in) && !isOptedOut;
 
-        if (isOptedIn && norm.length >= 10) {
+        if (isOptedIn && canonical.length >= 10) {
           eligibleRecipients.push({
             lead_id: l.id,
-            recipient_number: l.whatsapp_number,
+            recipient_number: canonical,
             recipient_name: l.full_name,
             template_variables: {
               '1': l.full_name,
@@ -360,7 +345,7 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
 
       if (eligibleRecipients.length === 0) {
         res.status(400).json({
-          error: 'Zero eligible recipients found. Contacts must have explicit WhatsApp opt-in consent and valid phone numbers to be queued.'
+          error: 'Zero eligible recipients found. Contacts must have explicit WhatsApp opt-in consent and valid phone numbers.'
         });
         return;
       }
@@ -420,15 +405,18 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
         return;
       }
 
-      // Mark all pending messages as cancelled
-      const messages = loadMessages();
-      messages.forEach(m => {
-        if (m.campaign_id === id && (m.queue_status === 'pending' || m.queue_status === 'processing')) {
-          m.queue_status = 'cancelled';
-          m.updated_at = new Date().toISOString();
-        }
-      });
-      saveMessages(messages);
+      if (pool) {
+        await pool.query(`
+          UPDATE public.whatsapp_campaign_messages
+          SET queue_status = 'cancelled',
+              claim_token = NULL,
+              claimed_at = NULL,
+              claimed_by = NULL,
+              lease_expires_at = NULL,
+              updated_at = NOW()
+          WHERE campaign_id = $1 AND queue_status IN ('pending', 'processing');
+        `, [id]);
+      }
 
       res.json({ success: true, campaign: updated });
     } catch (err) {
@@ -441,22 +429,27 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   router.post('/campaigns/:id/retry-failed', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
     try {
       const id = String(req.params.id);
-      const messages = loadMessages();
       let retriedCount = 0;
-      const nowIso = new Date().toISOString();
 
-      messages.forEach(m => {
-        if (m.campaign_id === id && m.queue_status === 'failed') {
-          m.queue_status = 'pending';
-          m.next_retry_at = null;
-          m.last_error = null;
-          m.updated_at = nowIso;
-          retriedCount++;
-        }
-      });
+      if (pool) {
+        const result = await pool.query(`
+          UPDATE public.whatsapp_campaign_messages
+          SET queue_status = 'pending',
+              attempt_count = 0,
+              next_retry_at = NULL,
+              last_error = NULL,
+              claim_token = NULL,
+              claimed_at = NULL,
+              claimed_by = NULL,
+              lease_expires_at = NULL,
+              updated_at = NOW()
+          WHERE campaign_id = $1 AND queue_status = 'failed'
+          RETURNING id;
+        `, [id]);
+        retriedCount = result.rowCount || 0;
+      }
 
       if (retriedCount > 0) {
-        saveMessages(messages);
         await updateCampaignStatus(pool, id, 'queued');
       }
 
@@ -464,6 +457,56 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
     } catch (err) {
       console.error('Error in retry failed:', err);
       res.status(500).json({ error: 'Failed to retry messages' });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // UNCERTAIN DELIVERY & MANUAL RECOVERY ENDPOINTS
+  // ---------------------------------------------------------------------------
+
+  // GET /api/admin/whatsapp/uncertain-messages
+  router.get('/uncertain-messages', requireAdminAuth, async (_req: AuthenticatedAdminRequest, res: Response) => {
+    try {
+      if (pool) {
+        const result = await pool.query(`
+          SELECT * FROM public.whatsapp_campaign_messages
+          WHERE queue_status = 'uncertain_delivery'
+          ORDER BY updated_at DESC;
+        `);
+        res.json({ uncertainMessages: result.rows, count: result.rows.length });
+        return;
+      }
+      res.json({ uncertainMessages: [], count: 0 });
+    } catch (err) {
+      console.error('Error fetching uncertain messages:', err);
+      res.status(500).json({ error: 'Failed to fetch uncertain messages' });
+    }
+  });
+
+  // POST /api/admin/whatsapp/messages/:id/reconcile
+  // Body: { resolution: 'mark_as_sent' | 'requeue_for_send' | 'mark_as_failed', provider_message_id?: string, notes?: string }
+  router.post('/messages/:id/reconcile', requireAdminAuth, async (req: AuthenticatedAdminRequest, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const { resolution, provider_message_id, notes } = req.body;
+
+      if (!['mark_as_sent', 'requeue_for_send', 'mark_as_failed'].includes(resolution)) {
+        res.status(400).json({
+          error: 'Invalid resolution. Must be mark_as_sent, requeue_for_send, or mark_as_failed.'
+        });
+        return;
+      }
+
+      const success = await reconcileUncertainMessage(pool, id, resolution, provider_message_id, notes);
+      if (!success) {
+        res.status(404).json({ error: 'Message not found or not in uncertain_delivery state' });
+        return;
+      }
+
+      res.json({ success: true, messageId: id, resolution });
+    } catch (err) {
+      console.error('Error reconciling message:', err);
+      res.status(500).json({ error: 'Failed to reconcile message' });
     }
   });
 
@@ -481,7 +524,8 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
     try {
       const id = String(req.params.id);
       const messages = await getCampaignMessages(pool, id);
-      res.json({ messages });
+      const campaign = await getCampaignById(pool, id);
+      res.json({ messages, campaign });
     } catch (err) {
       console.error('Error in GET messages:', err);
       res.status(500).json({ error: 'Failed to fetch campaign messages' });
@@ -491,8 +535,9 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
   // GET /api/admin/whatsapp/stats
   router.get('/stats', requireAdminAuth, async (_req: AuthenticatedAdminRequest, res: Response) => {
     try {
-      const stats = getWhatsAppStats();
-      res.json({ stats });
+      const stats = await getWhatsAppStats(pool);
+      const coexistence = whatsappProvider.getCoexistenceStatus();
+      res.json({ stats, coexistence });
     } catch (err) {
       console.error('Error in GET stats:', err);
       res.status(500).json({ error: 'Failed to fetch stats' });
@@ -514,7 +559,7 @@ export const createWhatsAppRouter = (pool: pg.Pool | null): express.Router => {
 };
 
 // -----------------------------------------------------------------------------
-// WEBHOOKS ROUTER
+// WEBHOOKS ROUTER (Public with HMAC-SHA256 verification)
 // -----------------------------------------------------------------------------
 export const createWhatsAppWebhookRouter = (pool: pg.Pool | null): express.Router => {
   const router = express.Router();
@@ -540,13 +585,11 @@ export const createWhatsAppWebhookRouter = (pool: pg.Pool | null): express.Route
       const rawBody = (req as unknown as { rawBody?: Buffer | string }).rawBody || JSON.stringify(payload);
       const signature = req.headers['x-hub-signature-256'] as string;
 
-      // Verify signature
       if (!whatsappProvider.verifyWebhookSignature(rawBody, signature)) {
         res.status(401).json({ error: 'Invalid webhook signature' });
         return;
       }
 
-      // Check entry structures
       const entries = payload?.entry || [];
       for (const entry of entries) {
         const changes = entry?.changes || [];
@@ -558,45 +601,15 @@ export const createWhatsAppWebhookRouter = (pool: pg.Pool | null): express.Route
           const statuses = value.statuses || [];
           for (const s of statuses) {
             const providerMsgId = s.id;
-            const statusType = s.status; // 'sent', 'delivered', 'read', 'failed'
-            const timestamp = s.timestamp ? new Date(parseInt(s.timestamp, 10) * 1000).toISOString() : new Date().toISOString();
+            const statusType = s.status as 'sent' | 'delivered' | 'read' | 'failed';
+            const recipientPhone = s.recipient_id;
 
             if (providerMsgId) {
-              const isNew = recordWebhookEvent(`status_${providerMsgId}_${statusType}`, 'status_update', s);
+              const isNew = await recordWebhookEvent(pool, `status_${providerMsgId}_${statusType}`, 'status_update', s);
               if (!isNew) continue; // Idempotent deduplication
 
-              const messages = loadMessages();
-              const msg = messages.find(m => m.provider_message_id === providerMsgId);
-              if (msg) {
-                // Out-of-order protection: don't downgrade 'read' or 'delivered' to 'sent'
-                const rankMap: Record<string, number> = { pending: 0, processing: 1, sent: 2, delivered: 3, read: 4, failed: 5 };
-                const currentRank = rankMap[msg.queue_status] || 0;
-                const newRank = rankMap[statusType] || 0;
-
-                if (newRank >= currentRank || statusType === 'failed') {
-                  msg.queue_status = statusType as WhatsAppCampaignMessage['queue_status'];
-                  if (statusType === 'sent') msg.sent_at = timestamp;
-                  if (statusType === 'delivered') msg.delivered_at = timestamp;
-                  if (statusType === 'read') msg.read_at = timestamp;
-                  if (statusType === 'failed') {
-                    msg.failed_at = timestamp;
-                    msg.last_error = s.errors?.[0]?.message || 'Delivery failure from WhatsApp provider';
-                  }
-                  msg.updated_at = new Date().toISOString();
-                  saveMessages(messages);
-
-                  // Update campaign counters
-                  const campaigns = loadCampaigns();
-                  const c = campaigns.find(item => item.id === msg.campaign_id);
-                  if (c) {
-                    if (statusType === 'delivered') c.delivered_count = (c.delivered_count || 0) + 1;
-                    if (statusType === 'read') c.read_count = (c.read_count || 0) + 1;
-                    if (statusType === 'failed') c.failed_count = (c.failed_count || 0) + 1;
-                    c.updated_at = new Date().toISOString();
-                    saveCampaigns(campaigns);
-                  }
-                }
-              }
+              // Reconcile uncertain or processing messages directly in database
+              await reconcileWithWebhook(pool, providerMsgId, recipientPhone, statusType);
             }
           }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   MessageSquare,
   Send,
@@ -24,7 +24,7 @@ import {
   Plus,
   Eye
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 // -----------------------------------------------------------------------------
 // TYPES & INTERFACES
@@ -82,7 +82,7 @@ export interface WhatsAppCampaignMessage {
   recipient_name: string;
   template_name: string;
   template_variables: Record<string, string>;
-  queue_status: 'pending' | 'processing' | 'sent' | 'delivered' | 'read' | 'failed' | 'opted_out';
+  queue_status: 'pending' | 'processing' | 'sent' | 'delivered' | 'read' | 'failed' | 'opted_out' | 'uncertain_delivery' | 'cancelled' | 'skipped';
   provider_message_id?: string | null;
   attempt_count: number;
   max_attempts: number;
@@ -109,9 +109,6 @@ const CONSENT_SOURCES = [
 ];
 
 export const WhatsAppCampaignManager: React.FC = () => {
-  const { user } = useAuth();
-  const adminEmail = user?.email || 'admin@theforgeproperties.com';
-
   // Navigation tab inside WhatsApp Manager: 'campaigns' | 'contacts' | 'templates'
   const [managerTab, setManagerTab] = useState<'campaigns' | 'contacts' | 'templates'>('campaigns');
 
@@ -170,16 +167,36 @@ export const WhatsAppCampaignManager: React.FC = () => {
   };
 
   // ---------------------------------------------------------------------------
+  // AUTHENTICATION HEADERS (Bearer Token from Supabase Session)
+  // ---------------------------------------------------------------------------
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    } catch (err) {
+      console.warn('Failed to retrieve Supabase session token:', err);
+    }
+    return headers;
+  }, []);
+
+  // Maintain ref to viewingCampaign so realtime message handlers always access current state
+  const viewingCampaignRef = useRef<WhatsAppCampaign | null>(viewingCampaign);
+  useEffect(() => {
+    viewingCampaignRef.current = viewingCampaign;
+  }, [viewingCampaign]);
+
+  // ---------------------------------------------------------------------------
   // DATA FETCHING
   // ---------------------------------------------------------------------------
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const headers = {
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
 
       // 1. Fetch campaigns
       const campRes = await fetch('/api/admin/whatsapp/campaigns', { headers });
@@ -217,7 +234,21 @@ export const WhatsAppCampaignManager: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [adminEmail]);
+  }, [getAuthHeaders]);
+
+  // Lightweight stats refresher for realtime events
+  const refreshStats = useCallback(async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const statsRes = await fetch('/api/admin/whatsapp/stats', { headers });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData.stats);
+      }
+    } catch {
+      // Ignore background stats refresh error
+    }
+  }, [getAuthHeaders]);
 
   useEffect(() => {
     fetchAllData();
@@ -227,11 +258,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
   const fetchCampaignMessages = useCallback(async (campaignId: string) => {
     setIsLoadingMessages(true);
     try {
-      const headers = {
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
       const res = await fetch(`/api/admin/whatsapp/campaigns/${campaignId}/messages`, { headers });
       if (res.ok) {
         const data = await res.json();
@@ -245,7 +272,117 @@ export const WhatsAppCampaignManager: React.FC = () => {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [adminEmail]);
+  }, [getAuthHeaders]);
+
+  // ---------------------------------------------------------------------------
+  // SUPABASE REALTIME SUBSCRIPTIONS
+  // Subscribes to both whatsapp_campaigns & whatsapp_campaign_messages
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    let isMounted = true;
+    const channelId = `admin-whatsapp-channel-${Date.now()}`;
+
+    const channel = supabase
+      .channel(channelId)
+      // 1. Listen for campaign events
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'whatsapp_campaigns' },
+        (payload) => {
+          if (!isMounted) return;
+          console.log('[Realtime] Campaign change:', payload.eventType);
+
+          if (payload.eventType === 'INSERT') {
+            const newCampaign = payload.new as WhatsAppCampaign;
+            if (newCampaign?.id) {
+              setCampaigns(prev => {
+                if (prev.some(c => c.id === newCampaign.id)) return prev;
+                return [newCampaign, ...prev];
+              });
+            } else {
+              fetchAllData();
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as WhatsAppCampaign;
+            if (updated?.id) {
+              setCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
+              if (viewingCampaignRef.current?.id === updated.id) {
+                setViewingCampaign(updated);
+              }
+            } else {
+              fetchAllData();
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRecord = payload.old as { id?: string };
+            if (oldRecord?.id) {
+              setCampaigns(prev => prev.filter(c => c.id !== oldRecord.id));
+              if (viewingCampaignRef.current?.id === oldRecord.id) {
+                setViewingCampaign(null);
+                setCampaignMessages([]);
+              }
+            } else {
+              fetchAllData();
+            }
+          }
+
+          refreshStats();
+        }
+      )
+      // 2. Listen for campaign message status changes
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'whatsapp_campaign_messages' },
+        (payload) => {
+          if (!isMounted) return;
+          console.log('[Realtime] Message change:', payload.eventType);
+
+          const currentViewing = viewingCampaignRef.current;
+          const msgPayload = payload.new as WhatsAppCampaignMessage;
+
+          if (msgPayload?.id) {
+            if (currentViewing && msgPayload.campaign_id === currentViewing.id) {
+              setCampaignMessages(prev => {
+                const idx = prev.findIndex(m => m.id === msgPayload.id);
+                if (idx !== -1) {
+                  const updated = [...prev];
+                  updated[idx] = { ...updated[idx], ...msgPayload };
+                  return updated;
+                } else if (payload.eventType === 'INSERT') {
+                  return [msgPayload, ...prev];
+                }
+                return prev;
+              });
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldMsg = payload.old as { id?: string };
+            if (oldMsg?.id) {
+              setCampaignMessages(prev => prev.filter(m => m.id !== oldMsg.id));
+            }
+          } else {
+            // Missing payload fallback
+            if (currentViewing) {
+              fetchCampaignMessages(currentViewing.id);
+            }
+          }
+
+          refreshStats();
+        }
+      )
+      .subscribe((status, err) => {
+        if (err) {
+          console.warn('[Realtime] Subscription warning:', err);
+        }
+        if (status === 'SUBSCRIBED') {
+          console.log('[Realtime] Subscribed to whatsapp_campaigns and whatsapp_campaign_messages');
+        }
+      });
+
+    // Cleanup subscription on unmount
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAllData, fetchCampaignMessages, refreshStats]);
 
   // ---------------------------------------------------------------------------
   // CAMPAIGN ACTIONS
@@ -264,12 +401,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
 
     setIsSubmittingCampaign(true);
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
 
       // 1. Create campaign
       const createRes = await fetch('/api/admin/whatsapp/campaigns', {
@@ -309,15 +441,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          recipients: targetContacts.map(c => ({
-            lead_id: c.id,
-            recipient_number: c.whatsapp_number,
-            recipient_name: c.full_name,
-            template_variables: {
-              '1': c.full_name,
-              ...templateVariables
-            }
-          }))
+          contact_ids: targetContacts.map(c => c.id)
         })
       });
 
@@ -342,11 +466,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
 
   const handleCampaignAction = async (campaignId: string, action: 'pause' | 'resume' | 'cancel' | 'retry-failed') => {
     try {
-      const headers = {
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
       const res = await fetch(`/api/admin/whatsapp/campaigns/${campaignId}/${action}`, {
         method: 'POST',
         headers
@@ -374,12 +494,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
   // ---------------------------------------------------------------------------
   const handleUpdateConsent = async (leadId: string | number, optIn: boolean, source: string) => {
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
 
       const res = await fetch(`/api/admin/whatsapp/contacts/${leadId}/consent`, {
         method: 'PUT',
@@ -408,18 +523,13 @@ export const WhatsAppCampaignManager: React.FC = () => {
     }
 
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-admin-role': 'Admin',
-        'x-admin-auth': 'theforge_admin_secret_verified',
-        'x-admin-user': adminEmail
-      };
+      const headers = await getAuthHeaders();
 
       const res = await fetch('/api/admin/whatsapp/contacts/bulk-consent', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          lead_ids: Array.from(selectedContactIds),
+          ids: Array.from(selectedContactIds),
           opt_in: optIn,
           source: consentSourceInput
         })
@@ -434,6 +544,39 @@ export const WhatsAppCampaignManager: React.FC = () => {
       showToast(`Updated consent for ${resData.updatedCount} contacts!`, 'success');
       setShowBulkConsentModal(false);
       setSelectedContactIds(new Set());
+      await fetchAllData();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(msg, 'error');
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // UNCERTAIN DELIVERY RECONCILIATION ACTION
+  // ---------------------------------------------------------------------------
+  const handleReconcileUncertainMessage = async (
+    messageId: string,
+    resolution: 'mark_as_sent' | 'requeue_for_send' | 'mark_as_failed',
+    providerMessageId?: string,
+    notes?: string
+  ) => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/whatsapp/messages/${messageId}/reconcile`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ resolution, provider_message_id: providerMessageId, notes })
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json();
+        throw new Error(errJson.error || 'Failed to reconcile message');
+      }
+
+      showToast(`Message successfully reconciled: ${resolution.replace(/_/g, ' ')}`, 'success');
+      if (viewingCampaignRef.current) {
+        await fetchCampaignMessages(viewingCampaignRef.current.id);
+      }
       await fetchAllData();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -531,6 +674,8 @@ export const WhatsAppCampaignManager: React.FC = () => {
         return <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded"><RotateCw size={13} className="animate-spin text-blue-600" /> Sending</span>;
       case 'failed':
         return <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded"><AlertCircle size={13} /> Failed</span>;
+      case 'uncertain_delivery':
+        return <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded"><AlertTriangle size={13} className="text-amber-700" /> Quarantined / Uncertain</span>;
       case 'opted_out':
         return <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded"><UserX size={13} /> Opted Out</span>;
       default:
@@ -1424,18 +1569,24 @@ export const WhatsAppCampaignManager: React.FC = () => {
 
             {/* Filter buttons for messages */}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                {(['all', 'pending', 'sent', 'delivered', 'read', 'failed'] as const).map(f => (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(['all', 'pending', 'sent', 'delivered', 'read', 'failed', 'uncertain_delivery'] as const).map(f => (
                   <button
                     key={f}
                     onClick={() => setMessageFilter(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       messageFilter === f
                         ? 'bg-[#774DFF] text-white'
+                        : f === 'uncertain_delivery' && campaignMessages.some(m => m.queue_status === 'uncertain_delivery')
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {f === 'all' ? 'All Messages' : f.charAt(0).toUpperCase() + f.slice(1)}
+                    {f === 'all'
+                      ? 'All Messages'
+                      : f === 'uncertain_delivery'
+                      ? `Quarantine (${campaignMessages.filter(m => m.queue_status === 'uncertain_delivery').length})`
+                      : f.charAt(0).toUpperCase() + f.slice(1)}
                   </button>
                 ))}
               </div>
@@ -1462,7 +1613,7 @@ export const WhatsAppCampaignManager: React.FC = () => {
                     <th className="py-2.5 px-3">Status</th>
                     <th className="py-2.5 px-3">Attempts</th>
                     <th className="py-2.5 px-3">Provider ID / Details</th>
-                    <th className="py-2.5 px-3">Timestamp</th>
+                    <th className="py-2.5 px-3">Timestamp / Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1496,11 +1647,37 @@ export const WhatsAppCampaignManager: React.FC = () => {
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-[10px] text-slate-400 whitespace-nowrap">
-                          {msg.delivered_at
-                            ? new Date(msg.delivered_at).toLocaleTimeString()
-                            : msg.sent_at
-                            ? new Date(msg.sent_at).toLocaleTimeString()
-                            : new Date(msg.queued_at || msg.created_at).toLocaleTimeString()}
+                          {msg.queue_status === 'uncertain_delivery' ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleReconcileUncertainMessage(msg.id, 'mark_as_sent', undefined, 'Manually confirmed via Meta Suite')}
+                                className="px-2 py-0.5 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded font-bold text-[10px] cursor-pointer"
+                                title="Confirm sent via WhatsApp Manager"
+                              >
+                                Mark Sent
+                              </button>
+                              <button
+                                onClick={() => handleReconcileUncertainMessage(msg.id, 'requeue_for_send', undefined, 'Admin re-queue')}
+                                className="px-2 py-0.5 bg-blue-100 text-blue-800 hover:bg-blue-200 rounded font-bold text-[10px] cursor-pointer"
+                                title="Re-queue for delivery"
+                              >
+                                Re-queue
+                              </button>
+                              <button
+                                onClick={() => handleReconcileUncertainMessage(msg.id, 'mark_as_failed', undefined, 'Marked failed during review')}
+                                className="px-2 py-0.5 bg-rose-100 text-rose-800 hover:bg-rose-200 rounded font-bold text-[10px] cursor-pointer"
+                                title="Mark as failed"
+                              >
+                                Fail
+                              </button>
+                            </div>
+                          ) : (
+                            msg.delivered_at
+                              ? new Date(msg.delivered_at).toLocaleTimeString()
+                              : msg.sent_at
+                              ? new Date(msg.sent_at).toLocaleTimeString()
+                              : new Date(msg.queued_at || msg.created_at).toLocaleTimeString()
+                          )}
                         </td>
                       </tr>
                     ))}

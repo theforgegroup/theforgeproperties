@@ -19,5 +19,12 @@
     "reason": "User sent STOP keyword",
     "source": "webhook_stop",
     "created_at": "2026-10-23T20:21:02.186Z"
+  },
+  {
+    "id": "d58bf0be-de05-4334-a060-ad84e38b85f4",
+    "phone_number": "+2348039999888",
+    "reason": "User sent STOP",
+    "source": "webhook_stop",
+    "created_at": "2026-10-24T09:22:18.538Z"
   }
 ]
